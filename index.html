@@ -2269,7 +2269,7 @@ function styleProfile(s){
   else if (s.dpm <= BENCH.dpm * 0.795) want.push(["惜命", "hi"]);
   if (s.spm >= 450) want.push(["高产出", "hi"]);
   else if (s.spm <= 300) want.push(["磨洋工", "bad"]);
-  /* 小队被打光次数与「被击杀次数」现在是同一个字段（squadDeaths），
+  /* 被打掉的班数（squadDeaths）和「被击杀次数」现在是同一个字段，
      再按 sqdPer 判一次会和上面的 dpm 标签重复，所以这里不再单独出标签。 */
   if (s.asstRate >= 12) want.push(["爱补刀", "hi"]);
   else if (s.asstRate >= 8) want.push(["会配合", ""]);
