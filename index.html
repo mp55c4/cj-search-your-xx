@@ -235,6 +235,20 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--green-d);bo
 .card-h h2{font-size:15px;font-weight:600;letter-spacing:1px;color:var(--txt);text-transform:uppercase}
 .card-h .ln{flex:1;height:1px;background:var(--line)}
 .card-h .tag{font-size:12px;color:var(--dim2);font-family:var(--mono);letter-spacing:0}
+.card-h .tag.monkey{
+  color:var(--amber);border:1px solid rgba(220,185,110,.45);background:rgba(220,185,110,.12);
+  padding:2px 9px;border-radius:20px;font-family:var(--sans);letter-spacing:.4px;
+}
+.card-h .tag.monkey.soft{color:var(--dim);border-color:var(--line);background:transparent}
+/* 填线徽标：战神用绿（正面换命是本事），宝宝用红（纯损耗） */
+.card-h .tag.fill{
+  color:var(--green);border:1px solid rgba(140,200,110,.45);background:rgba(140,200,110,.12);
+  padding:2px 9px;border-radius:20px;font-family:var(--sans);letter-spacing:.4px;
+}
+.card-h .tag.fillbaby{
+  color:var(--red);border:1px solid rgba(210,110,100,.45);background:rgba(210,110,100,.12);
+  padding:2px 9px;border-radius:20px;font-family:var(--sans);letter-spacing:.4px;
+}
 
 /* identity */
 .id-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
@@ -326,6 +340,8 @@ tbody tr:hover{background:rgba(150,196,122,.04)}
 .sq-note b{color:var(--red)}
 .sq-note.ok{border-left-color:var(--green-d)}
 .sq-note.ok b{color:var(--green)}
+.env-note{margin-top:13px;font-size:12.5px;line-height:1.75;color:var(--dim2);border-left:2px solid var(--line);padding-left:10px}
+.env-note b{color:var(--txt)}
 /* 阵营场次饼图 */
 .ov-split{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:18px}
 .ov-split .tbl-wrap{flex:1 1 430px;min-width:330px}
@@ -718,10 +734,16 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   （300 场 → 10 场、150 场 → 5 场、100 场 → 3 场、20 场 → 2 场，最低 2 场）。
   样本越大，同队两三场越可能只是巧合同场，门槛必须跟着抬高，否则人人都是"固定队友"。
 
-**人机局逐场降权（替代旧的"环境修正 −8"）**：每场的真人数从 `battleDetail` 数出来，
-双方真人合计 < 7 的局就是人机局，这一场按比例计权：**≥7 人 = 1 场、4~6 人 = 0.4 场、≤3 人 = 0.2 场**；
-拿不到阵容的场次按 1 场计（不猜）。所有场均、胜率、K/D、点内%、工程/场、载具/场都按这个加权口径算，
-「折合有效场次」= Σ权重。正文里必须说明"人机局已扣水分"，不许拿降权前的数字夸。
+**人机局（双方真人合计 < 7）的处理有两条，并行、不要混：**
+
+- **场均击杀 = 人机局整场剔除**（2026-11-08 起）：只拿满编局（≥7 人）的击杀总数 ÷ 满编场次。
+  一场满编都没有时回落到加权均值，避免新号出现 0 杀。拿不到阵容的场次仍按满编保留（不猜）。
+- **其余指标照旧逐场降权**：4~6 人 = 0.4 场、≤3 人 = 0.2 场、≥7 人 = 1 场；
+  胜率 / K/D / 场均死亡 / 场均得分 / 点内% / 工程·场 / 载具·场 都按这个加权口径算，
+  「折合有效场次」= Σ权重。
+
+正文里必须说明「场均击杀已剔除 X 场人机局」。**两套口径不要混着推**：
+`场均击杀 × 场次 ≠ 总击杀` 是正常的，别拿这个说"数据对不上"。
 
 ### 2. 胜负与逃跑的判定
 
@@ -788,7 +810,7 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 | 手枪 | 手枪占比 ≥0.8% 手枪侠 |
 | 一血 | 场均 ≥0.22 开团先锋 / ≤0.06 不打第一枪 |
 | 工程 | 场均工事 ≥4 修碉堡的 / 场均工程 ≥6 工兵 |
-| 生存 | 死亡/分 ≥2.8 拿命换头 / ≤2.05 惜命 |
+| 生存 | 死亡/分 ≥2.8 拿命换头 / ≤2.05 惜命（判「填线战神」时撤掉"拿命换头"，判「填线宝宝」时撤掉"惜命"） |
 | 产出 | 得分/分 ≥450 高产出 / ≤300 磨洋工 |
 | 小队 | 场均被打光 ≥7 小队常被打光 / ≤4 那一路挺稳 |
 | 助攻 | 助攻率 ≥12% 爱补刀 / ≥8% 会配合 |
@@ -796,15 +818,59 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 
 ### 4.5 玩家分级（12 级 / 6 大档 × 2 小档）
 
-**判定口径**：**总分 100 分 = 枪法分 + 六项额外加分**，不是六维加权；标准1的总分就是 100 分。
+**判定口径**：**总分 100 分 = 枪法分 + 六项额外加分 + 环境修正（填线 ±、少打多 +）**，不是六维加权；标准1的总分就是 100 分。
 **标尺是一条写死的基准战绩**：代号 `标准1`（UID 2341138，2026-11-08 取样 100 场，生涯 428 场）。
-- **枪法分 = 枪法比 × 100**。**枪法比 = 场均击杀 ÷ 标准1 的 120.7**（只看击杀数，K/D 不进枪法分）。
+- **枪法分 = 枪法比 × 100**。**枪法比 = 场均击杀（人机局整场剔除、只算满编局）÷ 标准1 的 120.7**
+  （只看击杀数，K/D 不进枪法分）。
   标准1枪法比 = 1.0 → **枪法分 100（满分）= 总分 100 分 = 6.2 的及格线**（它是刻度，不是天花板）。
 - **额外加分**（比例 4 : 2 : 1 : 1 : 1 : 1，只算**超出标准1的部分**，标准1本人恒 0）：
   修造复活点（工程设施/场，标准1 4.61）4 份、反击载具（**击毁台数/场，一台算一台，不折算战功**，标准1 1.52）2 份、
   占领点（占旗/场，标准1 1.81）1 份、点内击杀占比（标准1 25.7%）1 份、K/D（标准1 3.75）1 份、场均击杀（标准1 120.7）1 份。
   每份 **0.6 分**，加分封顶 **+6**。
-- **比标准1强 → 6.2+**：总分越过 **100** 只记「**6.2+ 超出刻度**」，这是真人能打出来的上限，**不许写成开挂**。
+- **击杀领先加成**（2026-11-08 新增，只放大枪法分，不动加分项）：
+  逐场取该局有战绩记录的真人名单，按**击杀数降序**排，取紧随其后的那一位，算
+  `领先度 =（本人击杀 − 下一位击杀）÷ 本人击杀`（0~1；本人不足 5 杀、或没有下一位的场次不计），
+  再按场次权重（人机局降权）求平均，**加成 = 18% × 平均领先度，封顶 18%**，直接乘在枪法比上。
+  对照：100 杀 vs 下一位 50 杀 → 领先 50% → 枪法权重 **+9%**（80 分 → 87.2 分）；
+  100 vs 25 → +13.5%；100 vs 0 → +18%（封顶）。含义是"把同场第二名甩开"比"跟一群人挤着刷人头"更值钱。
+  名单来自 `battleDetail`，只含**有战绩记录的真人**（每场 3~13 条），人机不在内，所以是"真人对真人"的领先度。
+- **被带判定（🐵）**（2026-11-08 新增，贴标签，**不改分数、不改分级**）：
+  逐场取同队（同 country）名单里**击杀最高的那个队友**，四条同时成立才算这一场「被带」：
+  ① 队友击杀 ≥ 本人击杀 × 1.8（他确实是队里的主攻手）；
+  ② 队友死亡 ≥ max(3, 本人死亡 × 2)（他在正面换命，不是缩着打）；
+  ③ 本人死亡 ≤ 队友击杀 × 0.4（自己这条命保得太干净）；
+  ④ 本人 K/D ≥ 3（不是打不动，是打得「太漂亮」）。
+  外加本人该场至少 5 杀，免得 3 杀 0 死的偶发局把人判死。
+  占比 = 命中场数 ÷ **能取到同队名单的场数**（`battleDetail` 名单残缺，只能这么算，界面必须写样本量）。
+  **占比 ≥ 40% 且命中 ≥ 3 场** → 贴「🐵 被带」标签（有倾向）；
+  **占比 ≥ 60% 且命中 ≥ 5 场** → 判定「**🐵 完了**」，正文直说这个 K/D 是队友挡出来的，往下砍一档看待。
+  用户口径的例子：队友 100 杀 7 死、本人 50 杀 2 死 → K/D 25，命中，判 🐵。
+  这条只影响**文案和标签**：不扣分、不加分、不动分级；正文禁止把「死亡少」夸成会走位、会惜命。
+- **填线判定**（2026-11-08 新增，**算进总分**，两种方向）：
+  "填线"=往战线上填人，正面顶、拿命换位置。只看 K/D 会把这种人看扁，所以要单独算一笔。
+  - **填线战神**（杀得多、死得也多、K/D 被死亡拖低）：三条同时成立
+    ① 场均击杀 ≥ 标准1 的 45%（≈54 杀/场）；② 场均死亡 ≥ 标准1 的 115%（≈37 死/场）；
+    ③ K/D ≤ 标准1 的 45%（≈1.69）。→ **总分 +2 ~ +6.5 分**，
+    强度 = 0.45×击杀规模 + 0.30×死亡规模 + 0.25×KD 之低，再线性映射到加分区间。
+    正文口径：死得多不是不会躲，是他在最前面；这号是按人头硬换、把对面按在正面，队友才推得上去。
+    **判了战神，「拿命换头」这个标签要撤掉**（那不是缺点，是他在顶）。
+  - **填线宝宝**（杀得少、死得还多）：三条同时成立
+    ① 场均击杀 ≤ 标准1 的 35%（≈42 杀/场）；② K/D ≤ 0.9（死多于杀）；③ 场均死亡 ≥ 24。
+    → **总分 −1.2 ~ −4 分**，强度 = 0.55×杀得少的程度 + 0.45×KD 之低。
+    正文口径：这不叫敢冲，是冲上去没换成（路线直、不看侧翼、死在还没抬枪的时候），属于纯兵力损耗。
+    **判了宝宝，「惜命」标签要撤掉**（死得多才被判的宝宝，惜命是反话）。
+  - 样本 < 8 场不判（噪声太大）；这笔**直接进总分、不改枪法比**，所以「枪法 100% = 标准1」这条刻度不受影响。
+  - 两个方向的正文都只描述打法与产出，**不许升级成人身攻击**，也不许说人"菜"。
+- **少打多加成**（2026-11-08 新增，**算进总分**，只加不减）：
+  逐场用 `battleDetail` 名单比人数，**对面名单比我们多 ≥2 个真人**（`opN − myN ≥ 2`）算一场「少打多」。
+  这局里还打得出来——**本人击杀 ≥ 我方人均击杀 ×1.25**（人少的一边还比队友能杀），**或本人是整场击杀第一**——记一场「逆势出彩」。
+  **命中 ≥ 3 场且命中率 ≥ 35%** 才给分：`强度 = 0.6 × min(1, 平均人数差/3) + 0.4 × min(1, 命中率)`，
+  加分 **+1 ~ +5 分**。正文口径：同样一个人头，在少打多的方向上换出来含金量不一样；这种局换谁打数据都会掉一截。
+  **口径必须写明**：`myN / opN` 来自战绩名单（每场只回 3~13 条，人机不在名单里），只能当"这一场哪边人多"的相对信号，
+  不是真实满编人数。
+- **环境修正不参与判级**：填线修正与少打多加成**直接进总分**，但 `6.2+ / 数据有疑问` 只看
+  **枪法分 + 额外加分**（`core`）。否则两笔补偿叠加最多 +11.5 分，会把一个正常号硬推过 115 那条"疑似开挂"线。
+  - **比标准1强 → 6.2+**：总分越过 **100** 只记「**6.2+ 超出刻度**」，这是真人能打出来的上限，**不许写成开挂**。
 - **超出 15% → 数据有疑问**：总分越过 **115**（即比标准1高出一成半以上）记「**6.2+ 数据有疑问（疑似开挂）**」。
   这种号正文要写"比标准1还高一成半以上，这个幅度不像真人打出来的"，但不许人身攻击，
   给一句"样本可能有问题（人机局/代打/车队刷）"或"建议自查"就够。
@@ -866,7 +932,8 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 2. **每个数字都要跟判断**。不许原样罗列，要说这说明他什么、强在哪、弱在哪。
 3. **必须指出至少一个真实短板**，并说明这个短板在实战里会造成什么后果。只夸不批不合格。
 4. **数据为空就跳过**。逃跑、氪金、作息这三块若没数据，不提，不许编。
-5. **语气像贴吧老哥**：直白、有点损、有火气，但不人身攻击，不用脏话，不用 emoji，
+5. **语气像贴吧老哥**：直白、有点损、有火气，但不人身攻击，不用脏话，不用 emoji
+   （唯一例外：被带判定可以原样写「🐵」，那是用户定的叫法），
    不说"作为一个AI""根据数据分析"，不用书面报告腔。
 6. **篇幅 1000~1500 字，分 8~12 段**，段落长短要交错。小标题最多 2 个（如 `## 先说结论`），爱用不用。
 7. **结尾单独一段给总评**，不许重复开头原话，短、有态度。
@@ -883,9 +950,22 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 14. **必须单列对局环境**：按 N 场统计的真人规模（每场双方几个活人、我方/对面各几个）、
     有固定车队要写出队友和同队场次，并点明「这不是纯单排数据」。
     人机占比只有回放子样本里有，有就带一句，没有就不要编。
-    **人机局被降权时，禁止把胜率和场均击杀当纯个人实力吹**，必须提一句"人机局已扣水分"。
+    **有人机局时，禁止把胜率当纯个人实力吹**，必须提一句"人机局已按权重折算"；
+    场均击杀是另一套口径，见下条。
 15. **人机降权与分级结论要一致**：折合有效场次明显小于名义场次时，正文必须提到，
     不许一边降权一边照着降权前的数字夸。
+    **场均击杀一律标注「已剔除 X 场人机局」**（满编局口径），不许写成"全部场次的场均"。
+16. **被带判定与夸奖要打架**：命中「🐵 被带」时，不许再把「死亡少」写成会走位、会惜命、生存意识好，
+    必须改口成"没上去 / 队友在前面替他挡"。这一条不改分数，但必须改说法。
+17. **填线判定必须点明称号**：资料里出现「填线战神 / 填线宝宝」时，正文要写出对应称号并解释那笔加减分。
+    - 战神：不许把「死得多、K/D 低」当缺点写（也不是"送"），要写成"在正面硬换、把对面按在点上"；
+      也不许说他"不会活"——他是不躲。加分已算进总分，**不许再额外给分**。
+    - 宝宝：不许把"敢冲、敢拼"当夸奖（那是冲上去没换成），要写成纯兵力损耗；
+      扣分已算进总分，**不许再额外扣分**，也不许用"菜""废物"这类词。
+18. **少打多必须写清前提**：资料里出现「少打多加成」时，正文要写出**几场是少打多／对面多几个真人／其中几场他打得出来**，
+    并点明「同样的人头在少打多的方向上换出来，含金量不一样」。加分已算进总分，**不许再额外加分**。
+    **不许**把这份加成说成"对面菜""打人机"；也要写明口径是战绩名单（每场 3~13 条、人机不在内），
+    不是真实满编人数。
 
 ### 7. 六个必须避开的判断陷阱
 
@@ -962,7 +1042,8 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
     最后给一句「多玩哪个、少碰哪个」的具体建议。
 15. 必须单列对局环境：回放样本场次（说明是抽样）、人机占比、对面真人平均几个；
     有固定车队要写队友和同队场次，并点明「这不是纯单排数据」。
-16. 若数据里给了「人机局降权」，正文必须提到折合场次，不许装作满编局。
+16. 若数据里给了「人机局」，正文必须提到折合场次与**场均击杀已剔除的场数**，不许装作满编局，
+    也不许把「场均击杀 × 场次」当成总击杀来质疑数据。
 ```
 
 ### USER（把尖括号内容换成实际数值）
@@ -979,9 +1060,10 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   最少 <X> 个、最多 <X> 个；真人名单里不含人机
   · 若有回放子样本：回放 <X> 场里人机 <X>/<X> 个（<X>%），对面真人平均 <X> 个
 - 组队：固定队友 <名字>（同队 <X> 场）、…；门槛 同队 ≥<X> 场（≈样本/30）；<X>/<X> 场有队友，最多一局 <X> 个　（无则写「全是单排」）
-- 人机局降权：人机局（双方真人 <7）<X> 场，折合有效场次 <X> 场（没有就写「无」）
+- 人机局处理：人机局（双方真人 <7）<X> 场 —— 场均击杀已整场剔除、只按 <X> 场满编局算；
+  其余指标按场次权重折算，折合有效场次 <X> 场（没有就写「无人机局」）
 - 取样：最近 <X> 场（其中全 0 逃跑 <X> 场、早退 <X> 场，占 <X>%；剔除后有效 <X> 场）
-- 有效战绩：<X> 胜 <X> 负，胜率 <X>%，K/D <X>，场均 <X> 杀 / <X> 死 / <X> 助，
+- 有效战绩：<X> 胜 <X> 负，胜率 <X>%，K/D <X>，场均 <X> 杀（满编局口径）/ <X> 死 / <X> 助，
   场均得分 <X>，单场最高 <X>，全场第一 <X>/<X>（全部为取样口径）
 - 总战斗时长：<X> 小时 <X> 分（得分效率 <X> 分/分，死亡 <X> 次/分）
 - 枪法：爆头率 <X>%
@@ -992,6 +1074,25 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 - 支援：一血 <X> 次（场均 <X>），助攻 <X>（占击杀 <X>%），工程设施 <X> 次、工事 <X> 次，
   小队被打光 <X> 次（场均 <X>）
 - 判分构成：总分 100 = 枪法分（枪法比 <X>% × 100 = <X> 分）+ 额外加分 +<X>（4:2:1:1:1:1）
+  + 填线修正 <±X>（没有填线判定就写 0）+ 少打多加成 +<X>（没有就写 0）
+  （6.2+ / 数据有疑问 只按「枪法 + 加分」判，这两笔环境修正不参与判级）
+- 击杀领先（如果给的资料里有这一项）：同场击杀排名甩开下一位 <X>%，击杀权重 ×<X>。
+  分数**已经加进枪法分**了，正文可以点一句「人头是硬抢的、不是跟着混的」，但**绝不许再额外加分**，
+  也别把这句写成又一项加分项。
+- 被带判定（如果给的资料里有这一项，**必须写进正文**）：能取到同队名单 <X> 场里 <X> 场（<X>%）是
+  「队友高杀高死、本人低死高 K/D」——队友平均 <X> 杀 / <X> 死，本人 <X> 杀 / <X> 死，K/D <X>；
+  判定 <🐵 完了 / 有被带倾向>。正文要直说「队友在正面换位置，他在后面收人头」，
+  **禁止**把死亡少写成会走位、会惜命，也**禁止**因此改总分或改分级。
+- 填线判定（如果给的资料里有这一项，**必须写进正文并点出称号**）：场均 <X> 杀 / <X> 死，K/D <X>；
+  - 「填线战神」：写成"死得多不是不会躲，是他在最前面"，称这号是按人头硬换、把对面按在正面，
+    并说明已加 <X> 分。**不许**把死得多/K/D 低当缺点，**不许**再额外加分。
+  - 「填线宝宝」：写成"冲上去没换成"的纯兵力损耗（路线直、不看侧翼、死在还没抬枪时），
+    并说明已扣 <X> 分。**不许**夸敢冲敢拼，**不许**再额外扣分，也不许用"菜/废物"这类词。
+- 少打多加成（如果给的资料里有这一项，**必须写进正文**）：能排出阵容 <X> 场里，<X> 场是少打多
+  （对面名单平均多 <X> 个真人：我方 <X> / 对面 <X>），其中 <X> 场（<X>%）他打得出来——
+  场均 <X> 杀 / <X> 死，胜率 <X>%，人少的一边还杀得比队友多。已加 <X> 分。
+  正文要写成「同样的人头在少打多的方向上换出来，含金量不一样」，并写明口径是战绩名单（每场 3~13 条、人机不在内）；
+  **不许**再额外加分，**不许**说成"对面菜"。
 - 分级：<几级几档，如 4.1 老兵>（<大档>档），总分 <X>/100（6.2 及格线 = 标准1 = 100 分）；
   总分越过 100 → 记「6.2+ 超出刻度」（真人上限，不许写成开挂）；
   超过 115（比标准1高 15% 以上）→ 记「6.2+ 数据有疑问」（疑似开挂，只写"幅度不像真人"，不人身攻击）
@@ -1636,9 +1737,44 @@ async function scanBattleEnv(rows, uid, log){
       if (!c) return;
       const my = d.filter(x => x.country === c);
       const op = d.filter(x => x.country !== c);
+
+      /* 击杀领先度（2026-11-08 新增）：这场按击杀排名，取紧随其后的那个真人。
+         他比我少得越多，说明这些人头不是捡的、是硬抢出来的，击杀权重就该往上抬。
+         只统计有「下一位」的场次；自己至少 5 杀才算数，免得 2 杀 1 杀的局瞎放大。 */
+      const kOf = x => (x.kills != null ? +x.kills : (x.kill != null ? +x.kill : 0));
+      const dOf = x => (x.deaths != null ? +x.deaths : 0);
+      let lead = null, myK = 0, myD = 0, nxK = 0, nxName = "", killTop = false;
+      /* 同队最强队友的击杀/死亡（2026-11-08 新增，用于「被带」判定）。
+         注意 battleDetail 名单不全（一场只回 3 人上下），所以只能算「名单里的同队」，
+         样本量必须跟着名单走，界面上也要写明。 */
+      let mK = 0, mD = 0, mName = "";
+      if (me){
+        myK = kOf(me); myD = dOf(me);
+        const byK = d.slice().sort((a, b) => kOf(b) - kOf(a));
+        const at = byK.findIndex(x => x.userId === uid);
+        killTop = at === 0;
+        if (at >= 0 && at + 1 < byK.length){
+          nxK = kOf(byK[at + 1]);
+          nxName = String(byK[at + 1].nickName || "").trim();
+          if (myK >= 5) lead = Math.max(0, Math.min(1, (myK - nxK) / myK));
+        }
+        const tm = my.filter(x => x.userId !== uid);
+        if (tm.length){
+          const top = tm.slice().sort((a, b) => kOf(b) - kOf(a))[0];
+          mK = kOf(top); mD = dOf(top);
+          mName = String(top.nickName || "").trim() || ("UID " + top.userId);
+        }
+      }
+
       recs.push({
         sid: r.sessionId, t: r.commitTime, c: c,
         n: d.length, myN: my.length, opN: op.length,
+        /* 少打多判定要用的两个数：我方名单总击杀（算人均）、这一场赢没赢
+           （胜负只在「出彩」里做加权，不单独算命中） */
+        myKSum: my.reduce((a, x) => a + kOf(x), 0),
+        win: (r.victories || 0) >= 1,
+        lead: lead, myK: myK, myD: myD, nxK: nxK, nxName: nxName, killTop: killTop,
+        mK: mK, mD: mD, mName: mName,
         mates: my.filter(x => x.userId !== uid)
           .map(x => ({ uid: x.userId, name: String(x.nickName || "").trim() || ("UID " + x.userId) }))
       });
@@ -1648,6 +1784,12 @@ async function scanBattleEnv(rows, uid, log){
   if (!recs.length) return null;
   return battleEnvStats(recs);
 }
+/* 少打多的门槛（2026-11-08）
+   gap    ：对面名单比我们多几个真人，才算「少打多」（2 = 至少多两个）
+   mine   ：人少的一边，本人击杀要达到我方人均的几倍，才算这局打得出来
+   minHit / minRate：至少命中几场、命中率多少，才给这笔加分（样本太小容易碰运气）
+   min / max：加分区间 1 ~ 5 分 */
+const OUT_W = { gap: 2, mine: 1.25, minHit: 3, minRate: 35, min: 1.0, max: 5.0 };
 function battleEnvStats(recs){
   const n = recs.length || 1;
   const sum = f => recs.reduce((a, x) => a + (x[f] || 0), 0);
@@ -1663,6 +1805,81 @@ function battleEnvStats(recs){
   const hum = recs.map(x => x.n).sort((a, b) => a - b);
   const botGames = recs.filter(x => x.n < 7).length;          // 双方真人 <7 = 人机局
   const wSum = recs.reduce((a, x) => a + wOfHumans(x.n), 0);  // 加权后的有效场次
+
+  /* 击杀领先加成（2026-11-08）：
+     lead = (我的击杀 - 同场击杀排名下一位的击杀) / 我的击杀，取值 0~1，再按场次权重平均。
+     加成 = 18% × 平均领先度，封顶 18%。
+     对照：100 杀 vs 下一位 50 杀 → 领先 50% → 击杀权重 +9%（用户给的例子）；
+           100 vs 25 → 领先 75% → +13.5%；100 vs 0 → +18%（封顶）。 */
+  const lr = recs.filter(x => x.lead != null);
+  const lw = lr.reduce((a, x) => a + wOfHumans(x.n), 0);
+  const leadAvg = lw ? lr.reduce((a, x) => a + x.lead * wOfHumans(x.n), 0) / lw : 0;
+  const killLead = {
+    n: lr.length, total: recs.length, lead: leadAvg,
+    boost: Math.min(0.18, leadAvg * 0.18),
+    top1: recs.filter(x => x.killTop).length,
+    gapAvg: lr.length ? lr.reduce((a, x) => a + (x.myK - x.nxK), 0) / lr.length : 0
+  };
+
+  /* 被带判定（2026-11-08，用户口径）：
+     同队有人顶着正面 —— 击杀近乎自己的两倍、死亡是自己的两倍以上；
+     自己人头也不少、却几乎不死 —— 那 K/D 是队友替他挡出来的，判「🐵」。
+     用户给的例子：队友 100 杀 7 死，本人 50 杀 2 死 → 命中。
+     四条同时成立才算：
+       ① 队友击杀 ≥ 自己 × 1.8   （确实是队里的主攻手）
+       ② 队友死亡 ≥ max(3, 自己×2)（他真在正面换命，不是缩在后面）
+       ③ 自己死亡 ≤ 队友击杀 × 0.4（自己这条命保得太干净）
+       ④ 自己 K/D ≥ 3            （不是打不动，是打得「太漂亮」）
+     外加自己该场至少 5 杀，免得 3 杀 0 死的偶发局把人判死。 */
+  const cr = recs.filter(x => x.mK > 0 && x.myK >= 5);
+  const hit = cr.filter(x =>
+    x.mK >= x.myK * 1.8 &&
+    x.mD >= Math.max(3, x.myD * 2) &&
+    x.myD <= x.mK * 0.4 &&
+    (x.myK / Math.max(1, x.myD)) >= 3
+  );
+  const avgOf = (arr, f) => (arr.length ? arr.reduce((a, x) => a + f(x), 0) / arr.length : 0);
+  const nameCnt = {};
+  hit.forEach(x => { if (x.mName) nameCnt[x.mName] = (nameCnt[x.mName] || 0) + 1; });
+  const nameTop = Object.keys(nameCnt).sort((a, b) => nameCnt[b] - nameCnt[a])[0];
+  const carried = {
+    n: cr.length, hit: hit.length,
+    rate: cr.length ? hit.length / cr.length * 100 : 0,
+    myKAvg: avgOf(hit, x => x.myK), mKAvg: avgOf(hit, x => x.mK),
+    myDAvg: avgOf(hit, x => x.myD), mDAvg: avgOf(hit, x => x.mD),
+    kdAvg: avgOf(hit, x => x.myK / Math.max(1, x.myD)),
+    mate: nameTop ? { name: nameTop, n: nameCnt[nameTop] } : null
+  };
+  carried.verdict = (carried.rate >= 60 && carried.hit >= 5) ? "monkey"
+    : (carried.rate >= 40 && carried.hit >= 3) ? "leaned" : "";
+
+  /* 少打多（2026-11-08，用户口径）：对面名单比我们多 ≥2 个真人，这一场就算「少打多」。
+     少打多的局里还打得出来（本人击杀 ≥ 我方人均 ×1.25，或全场击杀第一）→ 记一场「逆势出彩」。
+     口径提醒：myN / opN 是 battleDetail 名单（每场只回 3~13 条，人机不在内），
+     不是真实满编人数，只能当「这一场哪边人多」的相对信号看，界面和文案都要写明。 */
+  const shortAll = recs.filter(x => x.myN >= 1 && (x.opN - x.myN) >= OUT_W.gap);
+  const teamAvgK = x => (x.myN > 0 ? (x.myKSum || 0) / x.myN : 0);
+  const shortHit = shortAll.filter(x => {
+    const avg = teamAvgK(x);
+    const carry = x.myN >= 2 && avg > 0 && x.myK >= avg * OUT_W.mine;  // 人少的一边还比队友能杀
+    return carry || x.killTop;                                        // 或者整场击杀第一
+  });
+  const sumOf = (arr, f) => (arr.length ? arr.reduce((a, x) => a + f(x), 0) / arr.length : 0);
+  const outnumbered = {
+    n: shortAll.length, hit: shortHit.length,
+    rate: shortAll.length ? shortHit.length / shortAll.length * 100 : 0,
+    gapAvg: sumOf(shortAll, x => x.opN - x.myN),
+    myNAvg: sumOf(shortAll, x => x.myN), opNAvg: sumOf(shortAll, x => x.opN),
+    kAvg: sumOf(shortHit, x => x.myK), dAvg: sumOf(shortHit, x => x.myD),
+    winRate: shortHit.length ? shortHit.filter(x => x.win).length / shortHit.length * 100 : 0,
+    power: 0, adj: 0
+  };
+  if (outnumbered.hit >= OUT_W.minHit && outnumbered.rate >= OUT_W.minRate){
+    outnumbered.power = 0.6 * Math.min(1, outnumbered.gapAvg / 3)
+      + 0.4 * Math.min(1, outnumbered.rate / 100);
+    outnumbered.adj = OUT_W.min + (OUT_W.max - OUT_W.min) * outnumbered.power;
+  }
+
   return {
     n: recs.length, botGames: botGames, wSum: wSum,
     avgHumans: sum("n") / n, myHumans: sum("myN") / n, opHumans: sum("opN") / n,
@@ -1670,7 +1887,8 @@ function battleEnvStats(recs){
     medHumans: hum[Math.floor(hum.length / 2)],
     teamGames: recs.filter(x => (x.mates || []).length > 0).length,
     squadMax: recs.reduce((m, x) => Math.max(m, (x.mates || []).length), 0),
-    mates: mates, fixMin: fixMin, fixed: mates.filter(x => x.n >= fixMin), recs: recs
+    mates: mates, fixMin: fixMin, fixed: mates.filter(x => x.n >= fixMin), recs: recs,
+    killLead: killLead, carried: carried, outnumbered: outnumbered
   };
 }
 
@@ -1697,6 +1915,12 @@ function summarize(rows){
   const sum = f => rows.reduce((a, r) => a + Wt(r) * (r[f] || 0), 0);
   const raw = f => rows.reduce((a, r) => a + (r[f] || 0), 0);
   const k = sum("kills"), d = sum("deaths"), a = sum("assists"), hs = sum("headshots");
+  /* 场均击杀：人机局（双方真人 <7）整场剔除，只按满编局算（2026-11-08 用户要求）。
+     拿不到阵容的场次权重是 1.0、当真人对局保留（不猜）；一场满编都没有时回落加权均值，
+     免得新号/纯人机号出现 0 杀。别处（胜率、K/D、得分）仍按加权口径，两边别混。 */
+  const fullRows = rows.filter(r => Wt(r) >= 1);
+  const kFull = fullRows.reduce((x, r) => x + (r.kills || 0), 0);
+  const avgKFull = fullRows.length ? kFull / fullRows.length : k / wN;
   const cap = sum("pointsCaptured");
   const tk = sum("tankKills"), ak = sum("aircraftKills"), apc = sum("apcKills");
   const pinA = sum("killsWhileAttackingPoint"), pinD = sum("killsWhileDefendingPoint");
@@ -1719,7 +1943,8 @@ function summarize(rows){
   return {
     n: rows.length, wN: wN, wins, loss: rows.length - wins, winRate: winsW / wN * 100,
     kills: r1(k), deaths: r1(d), assists: r1(a), kd: d ? k / d : k,
-    avgK: k / wN, avgD: d / wN, avgA: a / wN,
+    avgK: avgKFull, avgKAll: k / wN, fullN: fullRows.length, botDrop: rows.length - fullRows.length,
+    avgD: d / wN, avgA: a / wN,
     hs: r1(hs), hsRate: hs / gk * 100,
     cap: r1(cap), capAvg: cap / wN,
     tk: r1(tk), ak: r1(ak), apc: r1(apc), veh: r1(veh),
@@ -1898,8 +2123,9 @@ function tier(v, table, def){
 }
 /* 基础分：沿用原来五项加权（满分 100），保证老结论大体可比 */
 function scoreBase(o){
+  const kb = 1 + Math.max(0, Math.min(0.18, o.killBoost || 0));  // 击杀领先加成，只作用于击杀项
   const a = Math.min(o.winRate / 95, 1) * 34;   // 胜率
-  const b = Math.min(o.avgWK / 150, 1) * 24;    // 场均击杀（载具已按战功折算，不再单列加分）
+  const b = Math.min(o.avgWK / 150, 1) * 24 * kb; // 场均击杀（载具已按战功折算，不再单列加分）
   const c = Math.min(o.kd / 4, 1) * 18;         // K/D
   const d = Math.min(o.capAvg / 2.5, 1) * 12;   // 场均占点
   const e = Math.min(o.top1Rate / 60, 1) * 12;  // 全场第一率
@@ -2182,11 +2408,15 @@ function renderBench(){
     + '<span class="gr">判级 ' + esc(b.grade) + " · " + f1(b.base) + " 分</span></div>"
     + '<div class="bench-g">' + cells.map(c =>
         '<div><span class="n">' + c[0] + '</span><span class="l">' + c[1] + "</span></div>").join("") + "</div>"
-    + '<div class="bench-f">总分 <b>100 分</b> = 枪法分（满分 ' + f1(BASE_SCORE) + '，场均击杀 ÷ 标准1 的 ' + f1(b.avgK) + '，KD 不进枪法）'
+    + '<div class="bench-f">总分 <b>100 分</b> = 枪法分（满分 ' + f1(BASE_SCORE) + '，场均击杀（人机局已剔除）÷ 标准1 的 ' + f1(b.avgK) + '，KD 不进枪法）'
     + " + 额外加分（修造复活点 4 : 反击载具 2 : 占领点 1 : 点内击杀 1 : K/D 1 : 击杀数量 1，"
     + "只算超出的部分，载具按台数一台算一台，每份 " + BONUS_PER + " 分，封顶 +" + BONUS_CAP + " 分）"
     + "。标准1 <b>" + f1(BASE_SCORE) + " 分 = 6.2 的及格线</b>；总分越过 100 记 <b>6.2+</b>，"
     + "越过 +" + Math.round((SUSPECT_RATE - 1) * 100) + "%（" + f1(SUSPECT_SCORE) + " 分以上）记「数据有疑问」。"
+    + "另有一笔<b>填线修正</b>：杀得多、死得也多、K/D 被拖低 → 加 2~6.5 分（填线战神）；"
+    + "杀得少、死得还多 → 扣 1.2~4 分（填线宝宝）。"
+    + "还有一笔<b>少打多加成</b>：对面名单比他这边多 ≥2 个真人、这一局他还打得出来 → 加 1~5 分。"
+    + "这两笔都直接进总分、不改枪法比，也<b>不参与 6.2+ / 数据有疑问的判定</b>（只看枪法 + 加分）。"
     + "人机局（双方真人 &lt;7）逐场降权：4~6 人按四成、≤3 人按两成计。这份数据写在页面里，不查接口也显示，也参与算分。</div>"
     + '<button class="bench-more" id="benchMore">展开全部 ' + (all.length + cells.length) + " 项数据 ▾</button>"
     + '<div class="bench-all" id="benchAll">'
@@ -2199,28 +2429,94 @@ function renderBench(){
   };
 }
 
+/* ---------------- 填线（2026-11-08，用户口径） ----------------
+   「填线」是往战线上填人：正面顶、拿命换位置。
+   光看 K/D 会把这种人看扁 —— 死得多被当成菜，其实是他在最前面。
+   所以分两种：
+
+   ① 填线战神：杀得多、死得也多，K/D 被死亡拖到很低。
+      三条同时成立：场均击杀 ≥ 标准1 的 45%（≈54）、场均死亡 ≥ 标准1 的 115%（≈37）、K/D ≤ 标准1 的 45%（≈1.69）。
+      这种人正面交换比是划算的（每场几十条人命换出来的人头），评分上单给一笔「填线加成」+2 ~ +6.5 分。
+   ② 填线宝宝：杀得少、死得还多，K/D 不到 1。
+      场均击杀 ≤ 标准1 的 35%（≈42）、K/D ≤ 0.9、场均死亡 ≥ 24。
+      不是「敢冲」，是冲上去没换成 —— 称号照给，总分倒扣 1.2 ~ 4 分。
+
+   两点约束：样本 <8 场不判（噪声太大）；加成/扣分直接进总分，不改枪法比，
+   所以「枪法 100% = 标准1」这条刻度不会被填线搅乱。 */
+const FILL = {
+  godK: BENCH.avgK * 0.45,      // ≈54.3 杀/场
+  godD: BENCH.avgD * 1.15,      // ≈37.0 死/场
+  godKd: BENCH.kd * 0.45,       // ≈1.689
+  babyK: BENCH.avgK * 0.35,     // ≈42.3 杀/场
+  babyKd: 0.9,                  // 死比杀多
+  babyD: 24,                    // 死得确实不少
+  godMin: 2.0, godMax: 6.5,     // 战神加分区间
+  babyMin: 1.2, babyMax: 4.0,   // 宝宝扣分区间（正数存，用的时候取负）
+  minN: 8
+};
+function fillOf(s){
+  const n = (s && s.n) || 0, K = (s && s.avgK) || 0, D = (s && s.avgD) || 0, kd = (s && s.kd) || 0;
+  const out = { kind: "", K: K, D: D, kd: kd, adj: 0, power: 0, why: "" };
+  if (n < FILL.minN){ out.why = "样本不足"; return out; }
+  if (K <= 0 && D <= 0){ out.why = "无数据"; return out; }
+
+  /* 战神：三条门槛必须先全过，再按「杀得多 / 死得多 / KD 低」三个方向算强度 */
+  if (K >= FILL.godK && D >= FILL.godD && kd <= FILL.godKd){
+    const kS = c01((K - FILL.godK) / Math.max(1, BENCH.avgK - FILL.godK));   // 54→0，120→1
+    const dS = c01((D - FILL.godD) / Math.max(1, BENCH.avgD * 1.5));          // 37→0，85→1
+    const rS = c01((FILL.godKd - kd) / FILL.godKd);                          // 1.69→0，0→1
+    out.power = 0.45 * kS + 0.30 * dS + 0.25 * rS;
+    out.kind = "god";
+    out.adj = FILL.godMin + (FILL.godMax - FILL.godMin) * out.power;
+    return out;
+  }
+  /* 宝宝：杀得少 + 死多于杀 + 死亡量够看 */
+  if (K <= FILL.babyK && kd <= FILL.babyKd && D >= FILL.babyD){
+    const weak = c01((FILL.babyK - K) / Math.max(1, FILL.babyK));            // 42→0，0→1
+    const deep = c01((FILL.babyKd - kd) / FILL.babyKd);                      // 0.9→0，0→1
+    out.power = 0.55 * weak + 0.45 * deep;
+    out.kind = "baby";
+    out.adj = -(FILL.babyMin + (FILL.babyMax - FILL.babyMin) * out.power);
+    return out;
+  }
+  return out;
+}
+
 /* 基础分只有一个维度：枪法 = 场均击杀 ÷ 标准1 的 120.74（K/D 不进基础分，挪到加分项里单算）
    枪法比 1.0 = 标准1 = 100 分（满分基准）= 6.2 的及格线（标准1是刻度，不是天花板）
-   总分 = 枪法分（0~100）+ 额外加分（封顶 +6）
-   >100 → 6.2+；>115（超出 15%）→ 数据有疑问 */
+   总分 = 枪法分（0~100）+ 额外加分（封顶 +6）+ 环境修正（填线 ±、少打多 +，封顶 +11.5）
+   >100 → 6.2+；>115（超出 15%）→ 数据有疑问（只看枪法 + 加分，环境修正不参与判级） */
 function gunOf(s, B){
   return (B.avgK || 0) / BENCH.avgK;
 }
 function gradeOf(s, B, ovBattles, fleeRate, env, who){
-  const gun = gunOf(s, B);
+  /* 击杀领先加成：同场击杀比下一位甩得越开，枪法权重越高（上限 +18%）。
+     只放大枪法这一项，加分项照旧，所以不会把「靠修点刷分」的号抬起来。 */
+  const boost = Math.max(0, Math.min(0.18, s.killBoost || 0));
+  const gun0 = gunOf(s, B);
+  const gun = gun0 * (1 + boost);
   const bn = bonusOf(s);
+  /* 环境修正两项：填线（杀得多死得多 / 杀得少死得多）+ 少打多（人少还打得出来）。
+     都是「把数据放回环境里看」的补偿，直接进总分，但**不参与 over / suspect 判定** ——
+     否则正常号会被这两笔补偿推到 115 那条「数据有疑问」线上。 */
+  const FL = s.fill || fillOf(s);
+  const OT = s.outnumbered || null;
   /* 标准1 本人 = 标尺本身：取样一变枪法会抖，抖到 100 以下就掉 6.1 了，所以直接钉死 */
   const selfBench = !!who && (String(who.uid) === String(BENCH.uid) || who.name === BENCH.name);
-  const raw = selfBench ? BASE_SCORE : Math.max(0, gun * BASE_SCORE + bn.total);
-  const over = !selfBench && raw > OVER_SCORE + 0.0001;              // 比标准1强 → 6.2+
-  const suspect = !selfBench && raw > SUSPECT_SCORE + 1e-9;          // 超出 15% → 数据有疑问
+  const core = gun * BASE_SCORE + bn.total;                 // 枪法 + 加分：只有这两项决定 6.2+ / 存疑
+  const envAdj = (FL.adj || 0) + ((OT && OT.adj) || 0);     // 填线 + 少打多
+  const raw = selfBench ? BASE_SCORE : Math.max(0, core + envAdj);
+  const over = !selfBench && core > OVER_SCORE + 0.0001;     // 比标准1强 → 6.2+
+  const suspect = !selfBench && core > SUSPECT_SCORE + 1e-9; // 超出 15% → 数据有疑问
   const v = Math.max(0, Math.min(100, raw));
   let idx = GRADE_BANDS.findIndex(b => v < b);
   if (idx < 0) idx = GRADES.length - 1;
   const g = suspect ? SUSPECT_G : over ? OVER_G : GRADES[idx];
   const nextBand = idx < GRADE_BANDS.length ? GRADE_BANDS[idx] : null;
   return {
-    v: v, raw: raw, gun: gun, bonus: bn.list, bonusSum: bn.total,
+    v: v, raw: raw, core: core, gun: gun, gun0: gun0, boost: boost, bonus: bn.list, bonusSum: bn.total,
+    fill: FL, fillAdj: FL.adj || 0,
+    outnumbered: OT, outAdj: (OT && OT.adj) || 0, envAdj: envAdj,
     idx: idx, g: g, selfBench: selfBench, over: over, suspect: suspect,
     gap: nextBand ? Math.max(0, nextBand - v) : 0
   };
@@ -2242,6 +2538,17 @@ function picker(seed){
 function buildVerdict(D){
   const { uid, name, ov, rows, clean, flee, quick, sq, segs } = D;
   const s = summarize(clean);
+  /* 击杀领先加成：来自「逐场阵容」那份统计（scanBattleEnv）。没取到阵容时为 null，
+     加成为 0，整套评分行为与旧版完全一致。 */
+  const KL = D.killLead || (D.env && D.env.killLead) || null;
+  s.killBoost = KL ? KL.boost : 0;
+  s.killLead = KL;
+  /* 被带判定：来自同一份逐场阵容统计。没有阵容数据时 CR 为 null，行为与旧版一致 */
+  const CR = D.carried || (D.env && D.env.carried) || null;
+  s.carried = CR;
+  /* 少打多：同一份逐场阵容数据算出来的，没有阵容时为 null，加成为 0 */
+  const OT = D.outnumbered || (D.env && D.env.outnumbered) || null;
+  s.outnumbered = OT;
   const rawN = rows.length;
   const rawWins = rows.filter(isWin).length;
   const fleeRate = rawN ? (flee.length + quick.length) / rawN * 100 : 0;
@@ -2251,6 +2558,29 @@ function buildVerdict(D){
   /* 评价只用这次取的 N 场；生涯的胜率 / K/D / 场均 / 最高分 / MVP 一律不参与判定 */
   const BTopRate = s.top1Rate, BTopN = s.n;
   const tags = styleProfile(s);
+  /* 填线判定（2026-11-08）：先算出来存进 s，gradeOf 直接取，正文也用它 */
+  const FL = fillOf(s);
+  s.fill = FL;
+  if (FL.kind === "god"){
+    /* 判了填线战神，「拿命换头」就不是缺点，是正面顶的代价 —— 这个标签撤掉，换成称号 */
+    const i3 = tags.findIndex(t => t.t === "拿命换头");
+    if (i3 >= 0) tags.splice(i3, 1);
+    tags.unshift({ t: "填线战神", tone: "hi" });
+  } else if (FL.kind === "baby"){
+    /* 判了填线宝宝，「惜命」这个标签就是反话（死得多才被判的宝宝），撤掉 */
+    const i4 = tags.findIndex(t => t.t === "惜命");
+    if (i4 >= 0) tags.splice(i4, 1);
+    tags.unshift({ t: "填线宝宝", tone: "bad" });
+  }
+  /* 少打多：只在这笔加分真的成立时贴标签，别给没加分的号也挂一个 */
+  if (OT && OT.adj > 0.05) tags.unshift({ t: "以少打多", tone: "hi" });
+  /* 被带领先贴在最前面：这是「怎么打出这个数据的」，比风格标签更该先看到。
+     同时把「惜命」这个夸奖改口 —— 判了被带，死得少就不是会走位，是没上去。 */
+  if (CR && CR.hit >= 3 && CR.rate >= 40){
+    const i2 = tags.findIndex(t => t.t === "惜命");
+    if (i2 >= 0) tags[i2] = { t: "躲后面", tone: "bad" };
+    tags.unshift({ t: "🐵 被带", tone: "bad" });
+  }
 
   // 分级：六维加权 + 纪律扣分
   const GB = { winRate: s.winRate, kd: s.kd, avgK: s.avgK };
@@ -2276,6 +2606,7 @@ function buildVerdict(D){
       + "最近取的 <b>" + s.n + "</b> 场" + (s.wN < s.n - 0.05 ? "（人机局降权后折合 " + f1(s.wN) + " 场）" : "")
       + "有效战绩：<b>" + s.wins + "胜" + s.loss + "负</b>，加权胜率 <b>"
       + f1(s.winRate) + "%</b>，K/D <b>" + f2(s.kd) + "</b>，场均 <b>" + f1(s.avgK) + "</b> 杀"
+      + (s.botDrop > 0 ? "（已剔除 " + s.botDrop + " 场人机局）" : "")
       + (G.selfBench
           ? "。这个号就是标准1本身（页面里写死的 " + num(BENCH.sample) + " 场样本），固定 <b>" + f1(BASE_SCORE) + "/100</b>"
           : "。枪法是标准1的 <b>" + f1(G.gun * 100) + "%</b>，折 <b>" + f1(G.gun * BASE_SCORE) + "</b> 分"
@@ -2283,6 +2614,11 @@ function buildVerdict(D){
             + "，总分 <b>" + f1(G.raw) + "/100</b>")
       + (G.suspect ? "，<b>超出 15% → 数据有疑问</b>。" : G.over ? "，<b>比标准1强 → 6.2+</b>。" : "")
       + (G.over ? "" : (gNext ? "，离 <b>" + gNext.no + " " + gNext.name + "</b>还差 " + f1(G.gap) + " 分" : "，已经在分级表顶端") + "。")
+      + (KL && KL.boost > 0.005
+          ? " 取样里有 <b>" + KL.n + "</b> 场能排出同场击杀名次，你的击杀平均甩开紧随其后的那位 <b>"
+            + f1(KL.lead * 100) + "%</b>（每场多 " + f1(KL.gapAvg) + " 杀），人头是从对面手里硬抢的，"
+            + "所以击杀权重按 <b>+" + f1(KL.boost * 100) + "%</b> 计（已包含在上面的总分里）。"
+          : "")
   });
 
   // 2 战绩细节
@@ -2377,12 +2713,64 @@ function buildVerdict(D){
   }
   pe += "得分效率 <b>" + num(Math.round(s.spm)) + " 分/分钟</b>，每战斗分钟死亡 <b>" + f2(s.dpm) + "</b> 次；"
     + "小队被打光 <b>" + num(s.sqd) + "</b> 次（场均 " + f1(s.sqdPer) + "）。";
-  if (s.dpm >= 2.8) pe += "<span class=\"hlr\">死得比谁都勤</span>，纯拿人头换时间。";
-  else if (s.dpm <= 2.05) pe += "<span class=\"hl\">惜命</span>，会算复活点，懂得什么时候该退。";
+  if (s.dpm >= 2.8) pe += (FL.kind === "god")
+    ? "<span class=\"hla\">死得比谁都勤</span>——但这笔账不能只按 K/D 记，下面单独算。"
+    : "<span class=\"hlr\">死得比谁都勤</span>，纯拿人头换时间。";
+  else if (s.dpm <= 2.05) pe += (CR && CR.hit >= 3 && CR.rate >= 40)
+    ? "<span class=\"hla\">死得极少</span>——但这跟「会算复活点」不是一回事，下面单独说。"
+    : "<span class=\"hl\">惜命</span>，会算复活点，懂得什么时候该退。";
   else pe += "死亡频率<b>属于常规水平</b>，不算莽也不算苟。";
   if (s.sqdPer >= 7) pe += "小队常被打光，说明<b>他那一路顶不住</b>，队友跟着一起遭殃。";
   else if (s.sqdPer <= 4) pe += "小队被打光的次数不多，<b>他所在的那一路相对稳</b>。";
   P.push({ html: pe });
+
+  // 3.7 填线（2026-11-08）：杀得多死得多 = 填线战神；杀得少死得多 = 填线宝宝
+  if (FL.kind === "god"){
+    let pf = rnd(["还有一条不能漏：<b>他是往里填的那种人。</b>",
+        "这笔账不能只按 K/D 算：<b>他是拿来填线的那种人。</b>",
+        "这号最容易看错的地方在这儿：<b>他死得多，但他是死在最前面。</b>"])
+      + "场均 <b>" + f1(FL.K) + " 杀 / " + f1(FL.D) + " 死</b>，K/D 只有 <b>" + f2(FL.kd) + "</b>——"
+      + "每换一个人头要交出 <b>" + f2(FL.D / Math.max(1, FL.K)) + "</b> 条命。光看这个比值，他像不会活；"
+      + "可同一份数据里场均能掏出 <b>" + f1(FL.K) + "</b> 个人头，说明<b>他没躲在后面算 K/D，是在正面硬换</b>。";
+    pf += "这种打法在点上真管用：他把人按在正面，队友才推得上去、才站得住旗子——"
+      + "<span class=\"hl\">死得多不是因为不会躲，是因为他不躲</span>。";
+    pf += "所以评分里单开了一项「填线加成」<b>+" + f1(FL.adj) + "</b> 分"
+      + (FL.power >= 0.6 ? "，这个量给得不算小，属于正面压制型玩家里比较典型的档" : "")
+      + "，标签给的是<b>填线战神</b>——夸的不是 K/D，是敢顶。";
+    pf += "要说短板就一条：<b>换命得有产出</b>。同样是死，死在点里和死在半路是两回事——"
+      + "他现在点内击杀占 <b>" + f1(s.pinRate) + "%</b>，这个数越高，那些命换得越值。";
+    P.push({ html: pf });
+  } else if (FL.kind === "baby"){
+    let pf = rnd(["这条不太好看，但得说：<b>他在往战线上填，标准的填线宝宝。</b>",
+        "有件事得点明：<b>他现在就是填线宝宝。</b>",
+        "这里实话实说：<b>死的人里，他是被填进去的那个——填线宝宝。</b>"])
+      + "场均 <b>" + f1(FL.K) + " 杀 / " + f1(FL.D) + " 死</b>，K/D <b>" + f2(FL.kd) + "</b>——"
+      + "每换掉一个人要交 <b>" + f2(FL.D / Math.max(1, FL.K)) + "</b> 条命。";
+    pf += "这不叫敢冲，<b>是冲上去没换成</b>：路线走得直、进点不看侧翼、死在还没抬枪的时候。"
+      + "在国服这叫纯兵力损耗，队友补位都补不赢。";
+    pf += "评分上扣了 <b>" + f1(Math.abs(FL.adj)) + "</b> 分，不是为了骂人，是因为这种死法不产生战果——"
+      + "同样是死，<span class=\"hl\">在点里换掉一个、和死在半路什么都不换，差着一整档</span>。";
+    if (s.dpm >= 2.8) pf += " 死亡频率也确实偏高（每战斗分钟 <b>" + f2(s.dpm) + "</b> 次），不是偶发。";
+    P.push({ html: pf });
+  }
+
+  // 3.8 少打多（2026-11-08）：对面人更多，他这局还打得出来
+  if (OT && OT.adj > 0.05){
+    let po = rnd(["还有一件事容易漏掉：<b>他不少场是少打多。</b>",
+        "环境这块也得算进去：<b>他有相当一部分局是人少打人多。</b>",
+        "数据之外还有个前提：<b>他经常是人数吃亏的那一边。</b>"])
+      + "能排出阵容的 " + ((env && env.n) || OT.n) + " 场里，有 <b>" + OT.n + "</b> 场是<b>少打多</b>——"
+      + "对面名单平均比他这边多 <b>" + f1(OT.gapAvg) + "</b> 个真人（我方 " + f1(OT.myNAvg)
+      + " / 对面 " + f1(OT.opNAvg) + "）；其中 <b>" + OT.hit + "</b> 场（" + f1(OT.rate) + "%）他打得出来。";
+    po += "这些局里他场均 <b>" + f1(OT.kAvg) + " 杀 / " + f1(OT.dAvg) + " 死</b>，胜率 <b>"
+      + f1(OT.winRate) + "%</b>，而且不是跟着混——<span class=\"hl\">人少的那一边，他还杀得比队友多</span>，"
+      + "好几场干脆是整场击杀第一。";
+    po += "所以评分里另加一笔「少打多加成」<b>+" + f1(OT.adj) + "</b> 分："
+      + "同样一个人头，在少打多的方向上换出来，含金量是不一样的——这种局换谁来打，数据都会往下掉一截。";
+    po += " 口径说明：这里的「人多」「人少」按战绩名单算（每场只回 3~13 条，人机不在名单里），"
+      + "只能当这一场哪边人多的相对信号看，不是真实满编人数。";
+    P.push({ html: po });
+  }
 
   // 4 稳定性 / 走势
   let p4 = "";
@@ -2507,6 +2895,27 @@ function buildVerdict(D){
       pe += " 组队方面：<b>全是单排</b>，一个熟脸都没有，这数据是自己一个人挣的。";
     }
     P.push({ html: pe });
+  }
+
+  // 6.5 是不是被队友带出来的（2026-11-08）
+  if (CR && CR.hit >= 3 && CR.rate >= 40){
+    let pc = CR.verdict === "monkey"
+      ? "这条得单独拎出来：<b>他是被带出来的。</b>"
+      : "有一点得提一句：<b>他有几场是被人带出来的。</b>";
+    pc += "能取到同队名单的 <b>" + CR.n + "</b> 场里，<span class=\"" + (CR.verdict === "monkey" ? "hlr" : "hla") + "\">"
+      + CR.hit + " 场</span>（" + f1(CR.rate) + "%）是这个结构：队友 <b>" + f1(CR.mKAvg) + "</b> 杀 / <b>"
+      + f1(CR.mDAvg) + "</b> 死，他 <b>" + f1(CR.myKAvg) + "</b> 杀 / <b>" + f1(CR.myDAvg) + "</b> 死，"
+      + "K/D 却高达 <b>" + f2(CR.kdAvg) + "</b>。";
+    pc += "翻译一下：<span class=\"hla\">队友在正面拿命换位置，他在后面数人头</span>——"
+      + "死得少不代表会玩，只代表<b>没上去</b>。";
+    if (CR.mate) pc += " 这种局里反复站在他前面的是 <b>" + esc(CR.mate.name) + "</b>（" + CR.mate.n + " 场，同队名单里击杀最高的那个）。";
+    if (CR.verdict === "monkey"){
+      pc += "<br><b>🐵 完了</b>：这个 K/D 是队友替他挡出来的，把这部分局扣掉，真实水平得往下砍一档——"
+        + "真要知道他几斤几两，得看他一个人单排的时候长什么样。";
+    } else {
+      pc += "好在比例还没到「全靠人带」，只能说<b>顺风这口饭吃得挺香</b>。";
+    }
+    P.push({ html: pc });
   }
 
   // 7 氪金（超级按名字认，type 字段不可信）
@@ -2923,7 +3332,11 @@ function renderEnv(D){
       + m("人机局（&lt;7 人）", (e.botGames || 0) + " 场", "", (e.botGames ? "bad" : "hi"))
       + m("折合有效场次", f1(e.wSum != null ? e.wSum : e.n), "场", (e.wSum < e.n - 0.05 ? "bad" : ""))
       + m("固定队友", e.fixed.length ? e.fixed.length + " 人" : "无", "", e.fixed.length ? "" : "hi")
-      + "</div>";
+      + "</div>"
+      + (e.botGames
+          ? '<div class="env-note">场均击杀：这 ' + e.botGames + " 场人机局已<b>整场剔除</b>，只按 "
+            + (e.n - e.botGames) + " 场满编局算；胜率 / K/D / 场均得分仍按 0.4、0.2 折权计入。</div>"
+          : "");
   } else {
     /* 兜底：只拿到回放样本时，按原来的口径显示 */
     const botCls = e.botRate >= 50 ? "bad" : e.botRate >= 30 ? "" : "hi";
@@ -3090,8 +3503,18 @@ function renderVerdict(V){
   /* 有没有可用的 AI：没 key（线上版默认就这样）就彻底当规则版用，
      不摆「AI 重写」按钮、不铺骨架、也不发任何请求 */
   const canAI = !AI_OFF && typeof aiKey === "function" && !!aiKey();
+  /* 被带徽标：monkey = 🐵 完了（判定成立且比例很高），leaned = 有这倾向 */
+  const CRV = (V.s && V.s.carried) || null;
+  /* 填线徽标：god = 填线战神（杀得多死得多），baby = 填线宝宝（杀得少死得多） */
+  const FLV = (G && G.fill) || (V.s && V.s.fill) || null;
   let h = '<div class="card" id="verdictCard"><div class="card-h"><h2>成分评价</h2><span class="ln"></span>'
     + '<span class="tag">' + (G ? G.g.no + " " + G.g.name + " · 总分 " + f1(G.raw) : "机器分 " + Math.round(V.sc)) + "</span>"
+    + (FLV && FLV.kind === "god" ? '<span class="tag fill">填线战神</span>'
+      : FLV && FLV.kind === "baby" ? '<span class="tag fillbaby">填线宝宝</span>' : "")
+    + (CRV && CRV.verdict
+        ? '<span class="tag monkey' + (CRV.verdict === "leaned" ? " soft" : "") + '">🐵 被带'
+          + (CRV.verdict === "leaned" ? " " + f1(CRV.rate) + "%" : "") + "</span>"
+        : "")
     + (canAI ? '<button class="ai-run" id="aiGo">AI 重写</button>' : "") + "</div>";
 
   // 分级条
@@ -3103,7 +3526,12 @@ function renderVerdict(V){
       + '<span class="gsc">总分 <b>' + f1(G.raw) + "</b>/100</span>"
       + (nxt ? '<span class="gsc">距 ' + esc(nxt.no + " " + nxt.name) + " 差 <b>" + f1(G.gap) + "</b></span>"
         : (G.over ? '<span class="gsc warn">已越过标准1</span>' : '<span class="gsc">已在分级表顶端</span>'))
-      + '<span class="gsw">枪法 <b>' + f1(G.gun * 100) + '%</b> · 加分 <b>+' + f1(G.bonusSum) + "</b></span>"
+      + '<span class="gsw">枪法 <b>' + f1(G.gun * 100) + '%</b>'
+      + ((G.boost || 0) > 0.005 ? '（击杀领先 +' + f1(G.boost * 100) + '%）' : "")
+      + ' · 加分 <b>+' + f1(G.bonusSum) + "</b>"
+      + (Math.abs(G.fillAdj || 0) > 0.05 ? " · 填线 <b>" + (G.fillAdj > 0 ? "+" : "") + f1(G.fillAdj) + "</b>" : "")
+      + ((G.outAdj || 0) > 0.05 ? " · 少打多 <b>+" + f1(G.outAdj) + "</b>" : "")
+      + "</span>"
       + (G.over ? '<span class="gsc' + (G.suspect ? " warn" : "") + '">比标准1高 <b>+' + f1(G.raw - BASE_SCORE) + "</b>"
           + (G.suspect ? "（超 15%）→ 数据有疑问" : " → 6.2+") + "</span>" : "")
       + "</div>";
@@ -3122,12 +3550,44 @@ function renderVerdict(V){
         + f1(s.avgK || 0) + "，标准1 " + f1(BENCH.avgK) + '（K/D 不计入枪法，在下面单独加分）">'
       + "枪法 " + f1(G.gun * 100) + '% <i>场均 ' + f1(s.avgK || 0) + " 杀</i></span>"
       + '<span class="tt">= ' + f1(G.gun * BASE_SCORE) + "</span></div>";
+    /* 击杀领先加成：只在真的算出差距时显示，免得人人多一行 */
+    if ((G.boost || 0) > 0.005){
+      const kl = (V.s && V.s.killLead) || {};
+      h += '<div class="scd"><span class="lb">击杀领先加成（同场按击杀排名，下一位比自己少多少）</span>'
+        + '<span class="up" title="样本 ' + (kl.n || 0) + "/" + (kl.total || 0) + " 场，平均领先 "
+          + f1((kl.lead || 0) * 100) + "%，平均每场比下一位多 " + f1(kl.gapAvg || 0) + ' 杀">'
+        + "击杀权重 ×" + (1 + G.boost).toFixed(3) + ' <i>+' + f1(G.boost * 100) + "%</i></span>"
+        + '<span class="tt">' + (G.gun0 * 100).toFixed(1) + "% → " + (G.gun * 100).toFixed(1) + "%</span></div>";
+    }
+    // 填线修正：战神加分 / 宝宝扣分，只有命中判定才显示这一行
+    if (Math.abs(G.fillAdj || 0) > 0.05){
+      const fl = G.fill || {};
+      h += '<div class="scd"><span class="lb">填线修正（'
+        + (fl.kind === "god" ? "杀得多、死得也多，正面拿命换位置" : "杀得少、死得也多，冲上去没换成") + "）</span>"
+        + '<span class="' + (fl.kind === "god" ? "up" : "dn") + '" title="场均 ' + f1(fl.K) + " 杀 / " + f1(fl.D)
+          + " 死，K/D " + f2(fl.kd)
+          + "｜战神门槛：场均 ≥" + f1(FILL.godK) + " 杀、≥" + f1(FILL.godD) + " 死、K/D ≤" + f2(FILL.godKd)
+          + "｜宝宝门槛：场均 ≤" + f1(FILL.babyK) + " 杀、K/D ≤" + f2(FILL.babyKd) + "、场均 ≥" + FILL.babyD + ' 死">'
+        + (fl.kind === "god" ? "填线战神" : "填线宝宝") + " " + (G.fillAdj > 0 ? "+" : "") + f1(G.fillAdj)
+        + ' <i>场均 ' + f1(fl.K) + " 杀 / " + f1(fl.D) + " 死 · K/D " + f2(fl.kd) + "</i></span>"
+        + '<span class="tt">' + (G.fillAdj > 0 ? "+" : "") + f1(G.fillAdj) + "</span></div>";
+    }
     // 额外加分：4:2:1:1:1:1
     h += '<div class="scd"><span class="lb">额外加分（4:2:1:1:1:1，只算超出标准1的部分）</span>'
       + G.bonus.map(x => '<span class="' + (x.pts > 0.05 ? "up" : "") + '" title="标准1 '
           + (x.d === 2 ? f2(x.ref) : f1(x.ref)) + x.unit + '">'
           + x.k + (x.pts > 0.05 ? " +" + f1(x.pts) : "") + " <i>" + gb(x) + "</i></span>").join("")
       + '<span class="tt">+' + f1(G.bonusSum) + "</span></div>";
+    // 少打多加成：只在真的给分时显示
+    if ((G.outAdj || 0) > 0.05){
+      const ot = G.outnumbered || {};
+      h += '<div class="scd"><span class="lb">少打多加成（对面名单人更多，这局还打得出来）</span>'
+        + '<span class="up" title="少打多样本 ' + (ot.n || 0) + " 场，出彩 " + (ot.hit || 0) + " 场（"
+          + f1(ot.rate || 0) + "%），对面平均多 " + f1(ot.gapAvg || 0) + ' 人；口径是战绩名单（每场 3~13 条）">'
+        + "以少打多 +" + f1(G.outAdj) + " <i>出彩 " + (ot.hit || 0) + "/" + (ot.n || 0) + " 场 · 对面多 "
+        + f1(ot.gapAvg || 0) + " 人</i></span>"
+        + '<span class="tt">+' + f1(G.outAdj) + "</span></div>";
+    }
   }
   /* 正文单独包一层：AI 生成成功后直接把这层换成 AI 版，分数条 / 加分项这些数据不动。
      AI 已测通时不先铺规则文案——否则用户先读一遍，几秒后整段被替换，很跳。 */
@@ -3330,12 +3790,15 @@ function aiFacts(D, V){
   const BTopRate = s.top1Rate;
   add("取样", "最近 " + rawN + " 场（其中全 0 逃跑 " + D.flee.length + " 场、早退 " + D.quick.length
     + " 场，占 " + f1(fleeRate) + "%；剔除后有效 " + s.n + " 场）");
-  if (s.wN < s.n - 0.05){
-    add("人机局降权（必须提）", "其中人机局（双方真人 <7）已按比例降权，折合有效场次 " + f1(s.wN) + " 场。"
-      + "下面所有场均、胜率、K/D 都是降权后的口径，正文里要说明「已扣掉人机局的水分」");
+  if (s.botDrop > 0){
+    add("人机局处理（必须提）", "抽样里有 " + s.botDrop + " 场人机局（双方真人 <7）。" 
+      + "「场均击杀」已把这 " + s.botDrop + " 场整场剔除，只按剩下 " + s.fullN + " 场满编局算；"
+      + "胜率、K/D、场均得分这些仍按场次权重降权（4~6 人算 0.4 场、≤3 人算 0.2 场，折合 "
+      + f1(s.wN) + " 场）。两套口径不要混着推，正文里要点明「场均击杀已剔除人机局」");
   }
   add("有效战绩", s.wins + " 胜 " + s.loss + " 负（加权胜率 " + f1(s.winRate) + "%），K/D " + f2(s.kd)
-    + "，场均 " + f1(s.avgK) + " 杀 / " + f1(s.avgD) + " 死 / " + f1(s.avgA) + " 助，场均得分 " + Math.round(s.score)
+    + "，场均 " + f1(s.avgK) + " 杀" + (s.botDrop > 0 ? "（已剔除人机局）" : "")
+    + " / " + f1(s.avgD) + " 死 / " + f1(s.avgA) + " 助，场均得分 " + Math.round(s.score)
     + "，单场最高 " + num(s.scoreMax)
     + "，全场第一 " + num(s.top1) + "/" + num(s.n) + "（" + f1(BTopRate) + "%）");
   add("总战斗时长", durLong(s.time) + "（得分效率 " + Math.round(s.spm) + " 分/分，死亡 " + f2(s.dpm) + " 次/分）");
@@ -3349,6 +3812,58 @@ function aiFacts(D, V){
   add("支援", "一血 " + num(s.fb) + " 次（场均 " + f2(s.fbPer) + "），助攻 " + num(s.assists) + "（占击杀 "
     + f1(s.asstRate) + "%），工程设施 " + num(s.eng) + " 次、工事 " + num(s.fort) + " 次，小队被打光 "
     + num(s.sqd) + " 次（场均 " + f1(s.sqdPer) + "）");
+
+  /* 击杀领先加成：已经算进枪法分，这里只是让正文能提，禁止再叠加 */
+  const kl = (V && V.s && V.s.killLead) || null;
+  if (kl && kl.boost > 0.005){
+    add("击杀领先（已计入枪法分，禁止重复加分）",
+      "同场按击杀排名，紧随其后的那位平均比自己少 " + f1(kl.lead * 100) + "%（平均每场少 "
+      + f1(kl.gapAvg) + " 杀），样本 " + kl.n + "/" + kl.total + " 场，其中 " + kl.top1
+      + " 场是全队击杀第一；由此击杀权重 ×" + (1 + kl.boost).toFixed(3)
+      + "（+" + f1(kl.boost * 100) + "%）。正文可以点出「人头是硬抢的、不是跟着混的」，"
+      + "但分数已经加完，不要再额外给分");
+  }
+
+  /* 被带判定：只让正文提，不额外加分也不额外扣分（总分口径已经定死） */
+  const cr = (V && V.s && V.s.carried) || null;
+  if (cr && cr.hit >= 3 && cr.rate >= 40){
+    add("被带判定（必须在正文里点明）",
+      "能取到同队名单的 " + cr.n + " 场里，有 " + cr.hit + " 场（" + f1(cr.rate) + "%）是「队友高杀高死、本人低死高 K/D」的结构："
+      + "队友平均 " + f1(cr.mKAvg) + " 杀 / " + f1(cr.mDAvg) + " 死，本人 " + f1(cr.myKAvg) + " 杀 / " + f1(cr.myDAvg) + " 死，"
+      + "本人 K/D " + f2(cr.kdAvg)
+      + (cr.mate ? "；最常见的那个队友是「" + cr.mate.name + "」（" + cr.mate.n + " 场）" : "")
+      + "。判定：" + (cr.verdict === "monkey"
+          ? "🐵 被带 —— 队友在正面拿命换位置，他在后面收人头，这个 K/D 有水分，必须直说"
+          : "有被带倾向 —— 提一句，但别当结论")
+      + "。禁止把「死亡少」夸成会玩、会走位、惜命，那是没上去；也禁止因此改总分或改分级");
+  }
+
+  /* 填线判定：已计入总分，只能复述，不许再加减 */
+  const fl = (V && V.grade && V.grade.fill) || (V && V.s && V.s.fill) || null;
+  if (fl && fl.kind){
+    add("填线判定（必须在正文里点明）",
+      "场均 " + f1(fl.K) + " 杀 / " + f1(fl.D) + " 死，K/D " + f2(fl.kd)
+      + (fl.kind === "god"
+          ? "，判「填线战神」：杀得多、死得也多，K/D 是被死亡拖低的，正面换命其实是产出——"
+            + "正文里要写清「死得多不是不会躲，是他在最前面」，并给出已加的 " + f1(fl.adj) + " 分"
+          : "，判「填线宝宝」：杀得少、死得还多，K/D 不到 1，属于纯兵力损耗——"
+            + "正文里要直说「冲上去没换成」，并给出已扣的 " + f1(Math.abs(fl.adj)) + " 分")
+      + "。这笔已经算进总分（填线修正 " + (fl.adj > 0 ? "+" : "") + f1(fl.adj)
+      + "），禁止再额外加分或扣分，也禁止改分级");
+  }
+
+  /* 少打多：已经算进总分，正文必须提，禁止再叠加 */
+  const ot = (V && V.grade && V.grade.outnumbered) || (V && V.s && V.s.outnumbered) || null;
+  if (ot && ot.adj > 0.05){
+    add("少打多加成（必须在正文里点明）",
+      "能排出阵容的 " + ((V.env && V.env.n) || ot.n) + " 场里，有 " + ot.n + " 场是「对面名单人更多」的少打多局"
+      + "（我方平均 " + f1(ot.myNAvg) + " 人 / 对面 " + f1(ot.opNAvg) + " 人，对面平均多 " + f1(ot.gapAvg) + " 个真人）；"
+      + "其中 " + ot.hit + " 场（" + f1(ot.rate) + "%）他打得出来：场均 " + f1(ot.kAvg) + " 杀 / " + f1(ot.dAvg)
+      + " 死，胜率 " + f1(ot.winRate) + "%，而且人少的一边还杀得比队友多（或整场击杀第一）。已加 " + f1(ot.adj) + " 分。"
+      + "正文要写成「同样的人头在少打多的方向上换出来，含金量不一样」，"
+      + "并说明口径是战绩名单（每场 3~13 条、人机不在内），不是真实满编人数。"
+      + "这笔已经算进总分，禁止再额外加分");
+  }
 
   const SD = V.detail;
   const items = SD.items.filter(x => x.v !== 0).map(x => x.k + " " + (x.v > 0 ? "+" : "") + f1(x.v) + "（" + x.note + "）");
@@ -3364,7 +3879,12 @@ function aiFacts(D, V){
     add("判分构成", "总分 100 = 枪法分（枪法比 × 100，枪法比 = 场均击杀 ÷ 标准1 的 " + f1(BENCH.avgK) + "，K/D 不进枪法分）+ 额外加分；枪法比 "
       + f1(g.gun * 100) + "% → " + f1(g.gun * BASE_SCORE) + " 分；额外加分 4:2:1:1:1:1"
       + "（修造复活点/反击载具/占领点/点内击杀/K/D/击杀数量，只算超出的部分，载具按台数一台算一台）合计 +"
-      + f1(g.bonusSum) + "；总分 " + f1(g.raw) + "；6.2 的及格线就是标准1（" + f1(BASE_SCORE) + " 分）"
+      + f1(g.bonusSum) + "；填线修正 " + ((g.fillAdj || 0) > 0 ? "+" : "") + f1(g.fillAdj || 0)
+      + "（满足填线判定才有，战神加分 / 宝宝扣分）；少打多加成 +" + f1(g.outAdj || 0)
+      + "；环境修正合计 " + ((g.envAdj || 0) > 0 ? "+" : "") + f1(g.envAdj || 0)
+      + "；总分 " + f1(g.raw) + "（总分 = 枪法 + 加分 + 环境修正；但 6.2+ / 数据有疑问只按「枪法 + 加分」判，"
+      + "环境修正不参与判级，避免补偿项把正常号推过 115）"
+      + "；6.2 的及格线就是标准1（" + f1(BASE_SCORE) + " 分）"
       + "；越过 100 记 6.2+，越过 " + f1(SUSPECT_SCORE) + "（+15%）记「数据有疑问」");
     const plus = g.bonus.filter(x => x.pts > 0.05).sort((a, b) => b.pts - a.pts);
     add("分级依据", plus.length
