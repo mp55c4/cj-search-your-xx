@@ -3087,9 +3087,12 @@ function vdRestore(V){
 function renderVerdict(V){
   const G = V.grade;
   const nxt = G ? (G.over ? null : GRADES[G.idx + 1]) : null;
+  /* 有没有可用的 AI：没 key（线上版默认就这样）就彻底当规则版用，
+     不摆「AI 重写」按钮、不铺骨架、也不发任何请求 */
+  const canAI = !AI_OFF && typeof aiKey === "function" && !!aiKey();
   let h = '<div class="card" id="verdictCard"><div class="card-h"><h2>成分评价</h2><span class="ln"></span>'
     + '<span class="tag">' + (G ? G.g.no + " " + G.g.name + " · 总分 " + f1(G.raw) : "机器分 " + Math.round(V.sc)) + "</span>"
-    + (AI_OFF ? "" : '<button class="ai-run" id="aiGo">AI 重写</button>') + "</div>";
+    + (canAI ? '<button class="ai-run" id="aiGo">AI 重写</button>' : "") + "</div>";
 
   // 分级条
   if (G){
@@ -3128,7 +3131,7 @@ function renderVerdict(V){
   }
   /* 正文单独包一层：AI 生成成功后直接把这层换成 AI 版，分数条 / 加分项这些数据不动。
      AI 已测通时不先铺规则文案——否则用户先读一遍，几秒后整段被替换，很跳。 */
-  const useAI = !AI_OFF && typeof aiAuto === "function" && aiAuto();
+  const useAI = canAI && typeof aiAuto === "function" && aiAuto();
   h += '<div id="vdBody"' + (useAI ? ' data-ai="pending"' : "") + ">";
   h += useAI ? vdSkeleton() : vdStatic(V);
   h += "</div>";
