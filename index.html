@@ -1,0 +1,4463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!-- 自动生成：由 生成线上版.py 从 成分分析.html 派生，唯一区别是 AI_CFG.key 为空。改逻辑请改主文件，别直接改这里。 -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从军 · 成分分析</title>
+<style>
+:root{
+  /* 长时间阅读的三条底线（照着眼睛舒适度的通行做法定的）：
+     ① 暗底正文按 AAA（≥7:1）做，不按 WCAG 的 4.5:1 —— 亮字在暗底会「泛光」(halation)，
+        边缘发虚，同样的对比度读起来更吃力；底色也不用纯黑，抬到 8% 左右亮度。
+     ② 等宽字体只给数字用。中文绝不能落进等宽栈的兜底（Windows 上是宋体，12px 就是毛边），
+        所以 --mono 里显式跟上中文无衬线兜底。
+     ③ 正文 15px / 行高 1.75 起步，长段落行宽压到 40 字上下，换行时眼睛才不丢锚点。 */
+  color-scheme:dark;
+  --bg:#17191a; --panel:#1e2123; --panel2:#262a2c; --line:#343a3c;
+  --input:#141617;
+  --txt:#e2e7e3; --dim:#adb6b0; --dim2:#939d96; --prose:#d6ddd8;
+  --green:#96c47a; --green-d:#5f8d47; --red:#e39a9a; --amber:#dcb96e;
+  --blue:#8ab7e4; --purple:#b9a5e0;
+  --sans:"MiSans","HarmonyOS Sans SC","Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Cascadia Mono","JetBrains Mono",Consolas,"SFMono-Regular",Menlo,"Microsoft YaHei UI","PingFang SC",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);}
+body{
+  font-family:var(--sans);
+  font-size:15px; line-height:1.75; letter-spacing:.012em;
+  background-image:radial-gradient(ellipse 900px 500px at 50% -10%,rgba(150,196,122,.035),transparent 70%);
+  min-height:100vh;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(23,25,26,.9);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.hd{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{display:flex;align-items:baseline;gap:9px}
+.logo b{font-size:18px;letter-spacing:.5px}
+.logo b span{color:var(--green)}
+.logo i{font-style:normal;font-size:12px;color:var(--dim2);letter-spacing:2px;font-family:var(--mono)}
+.hd-sp{flex:1}
+.tk-btn{
+  display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel);color:var(--dim);
+  font-size:13px;cursor:pointer;transition:.18s;font-family:inherit;
+}
+.tk-btn:hover{border-color:var(--green-d);color:var(--txt)}
+/* 右上角圆形图标按钮（评价体系） */
+.hbtn{
+  width:30px;height:30px;flex:none;border-radius:50%;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim);font:600 14px/1 var(--mono);
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:.18s;padding:0;
+}
+.hbtn:hover{border-color:var(--green-d);color:var(--green);background:rgba(150,196,122,.08)}
+.hbtn.on{border-color:var(--green-d);color:var(--green)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim2)}
+.dot.on{background:var(--green);box-shadow:0 0 8px rgba(150,196,122,.8)}
+.dot.err{background:var(--red);box-shadow:0 0 8px rgba(255,92,92,.7)}
+
+/* ---------- token panel ---------- */
+#tkPanel{
+  display:none;border-bottom:1px solid var(--line);background:var(--panel);
+}
+#tkPanel.open{display:block}
+#tkPanel .in{max-width:1120px;margin:0 auto;padding:16px 20px}
+#tkPanel label{display:block;font-size:13px;color:var(--dim);margin-bottom:7px}
+.tk-row{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text],input[type=password]{
+  flex:1;min-width:220px;padding:10px 13px;border-radius:8px;
+  border:1px solid var(--line);background:var(--input);color:var(--txt);
+  font-family:var(--mono);font-size:13px;outline:none;transition:.18s;
+}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--green-d);box-shadow:0 0 0 3px rgba(95,141,71,.12)}
+.hint{font-size:12.5px;color:var(--dim2);margin-top:9px;line-height:1.7}
+.hint code{color:var(--amber);font-family:var(--mono);font-size:12px}
+
+/* ---------- search ---------- */
+.search{
+  margin:34px 0 0;padding:22px;border-radius:14px;
+  border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));
+}
+.search h1{font-size:21px;font-weight:600;letter-spacing:.3px;margin-bottom:5px}
+.search p{font-size:13.5px;color:var(--dim);margin-bottom:17px}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.search-row input[type=text]{font-family:inherit;font-size:15px;padding:12px 15px;flex:1;min-width:200px}
+/* 注意：要用 input.num 提高权重，否则被上面 input[type=text] 的 flex:1 抢走宽度 */
+.search-row input.num{width:180px;min-width:180px;flex:none;font-family:var(--mono);text-align:center;font-size:14px;padding-left:8px;padding-right:8px}
+.search-row input.num::placeholder{font-family:inherit;font-size:13px;letter-spacing:0;color:var(--dim2);opacity:1}
+.uid-tip{margin-top:9px;font-size:12.5px;line-height:1.65;color:var(--dim2)}
+.uid-tip b,.uid-tip code{color:var(--dim)}
+
+/* ---------- 评分标尺卡（写死在页面里的基准玩家） ---------- */
+.bench{margin-top:16px;padding:15px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel);position:relative;overflow:hidden}
+.bench::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--amber),rgba(220,185,110,0))}
+.bench-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bench-h b{font-size:15px;letter-spacing:.2px}
+.bench-h .sub{font-size:13px;color:var(--dim);font-family:var(--mono);letter-spacing:.01em}
+.bench-h .gr{margin-left:auto;font-size:13px;color:var(--amber);border:1px solid rgba(220,185,110,.42);border-radius:20px;padding:2px 10px;background:rgba(220,185,110,.1);white-space:nowrap}
+.bench-g{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:14px}
+.bench-g div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bench-g .n{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.3}
+.bench-g .l{font-size:12px;color:var(--dim);letter-spacing:.2px}
+.bench-f{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);font-size:13px;line-height:1.9;color:var(--dim)}
+.bench-f b{color:var(--prose);font-weight:600}
+.bench-more{margin-top:12px;background:none;border:0;padding:0;font:inherit;font-size:13px;color:var(--dim2);cursor:pointer;letter-spacing:.02em}
+.bench-more:hover{color:var(--amber)}
+.bench-all{display:none;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px 16px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.bench-all.on{display:grid}
+.bench-all div{display:flex;justify-content:space-between;gap:8px;font-size:13px;line-height:1.7;min-width:0}
+.bench-all .k{color:var(--dim2);white-space:nowrap}
+.bench-all .v{color:var(--prose);font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:860px){.bench-g{grid-template-columns:repeat(3,1fr);gap:10px}.bench-g .n{font-size:15px}}
+.btn{
+  padding:12px 26px;border-radius:9px;border:none;cursor:pointer;
+  background:var(--green);color:#131a0f;font-weight:700;font-size:15px;
+  font-family:inherit;letter-spacing:.5px;transition:.18s;white-space:nowrap;
+}
+.btn:hover{background:#a4cf88;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{background:#2c3234;color:var(--dim2);cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);font-weight:600;padding:10px 18px;font-size:13.5px}
+.btn-ghost:hover{background:#2c3234;border-color:var(--green-d);transform:none}
+
+/* ---------- status ---------- */
+#status{margin-top:18px;display:none}
+#status.show{display:block}
+.st-line{
+  display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--dim);
+  padding:5px 0;font-family:var(--mono);
+}
+.st-line .ic{width:14px;text-align:center}
+.st-line.ok{color:var(--green)}
+.st-line.err{color:var(--red)}
+.st-line.skip{color:var(--dim2)}
+.st-line.skip .ic{color:var(--dim2)}
+.spin{
+  width:11px;height:11px;border:1.5px solid var(--dim2);border-top-color:var(--green);
+  border-radius:50%;animation:sp .7s linear infinite;display:inline-block;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- 查询中弹窗 ---------- */
+#ovl{
+  position:fixed;inset:0;z-index:200;display:none;
+  align-items:center;justify-content:center;padding:20px;
+  background:rgba(10,11,12,.74);backdrop-filter:blur(7px);
+}
+#ovl.show{display:flex}
+.ovl-box{
+  width:100%;max-width:430px;border-radius:15px;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  padding:20px 22px 18px;box-shadow:0 26px 70px rgba(0,0,0,.65);
+  animation:ovlin .2s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes ovlin{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.ovl-top{display:flex;align-items:center;gap:13px}
+.ovl-ring{
+  width:26px;height:26px;flex:none;border-radius:50%;
+  border:2.5px solid var(--line);border-top-color:var(--green);
+  animation:sp .8s linear infinite;
+}
+.ovl-top.done .ovl-ring{
+  border-color:var(--green);animation:none;
+  background:radial-gradient(circle,transparent 0 6px,var(--green) 6px);
+}
+.ovl-top.fail .ovl-ring{
+  border-color:var(--red);animation:none;
+  background:radial-gradient(circle,transparent 0 6px,var(--red) 6px);
+}
+.ovl-tt{font-size:15.5px;font-weight:600;letter-spacing:.3px}
+.ovl-ss{font-size:12.5px;color:var(--dim);font-family:var(--mono);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px}
+/* 失败时这句是给人看的错误说明，不能截成一行省略号 */
+.ovl-top.fail .ovl-ss{white-space:normal;overflow:visible;text-overflow:clip;max-width:392px;
+  font-family:var(--sans);line-height:1.65}
+.ovl-bar{height:3px;border-radius:2px;background:#2b3032;margin:15px 0 12px;overflow:hidden}
+.ovl-bar i{display:block;height:100%;width:5%;border-radius:2px;
+  background:linear-gradient(90deg,var(--green-d),var(--green));transition:width .4s ease}
+.ovl-list{display:flex;flex-direction:column;gap:2px;max-height:206px;overflow-y:auto}
+.ovl-list .st-line{font-size:12.5px;padding:3px 0;line-height:1.5}
+.st-line.st-sub{padding-left:18px;font-size:12.5px;color:var(--dim2)}
+.st-line.st-sub .spin{width:9px;height:9px;border-width:1.2px}
+#status .st-line.st-sub{padding-left:18px;font-size:12.5px}
+.ovl-list .st-line .spin{width:9px;height:9px;border-width:1.2px}
+.ovl-foot{display:flex;align-items:center;justify-content:space-between;
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.ovl-time{font-size:12px;color:var(--dim2);font-family:var(--mono)}
+.ovl-cancel{
+  padding:6px 15px;border-radius:7px;border:1px solid var(--line);background:transparent;
+  color:var(--dim);font-size:13px;cursor:pointer;font-family:inherit;transition:.16s;
+}
+.ovl-cancel:hover{border-color:var(--red);color:var(--red)}
+
+/* ---------- verdict tags ---------- */
+.tagrow{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 14px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+  color:var(--dim);background:rgba(255,255,255,.035);letter-spacing:.3px}
+.chip.hi{color:var(--green);border-color:rgba(150,196,122,.4);background:rgba(150,196,122,.09)}
+.chip.bad{color:var(--red);border-color:rgba(227,154,154,.4);background:rgba(227,154,154,.09)}
+/* 分级条 */
+.gstrip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 11px;padding:11px 14px;margin:0 0 14px;border-radius:10px;
+  border:1px solid var(--line);background:linear-gradient(90deg,rgba(150,196,122,.09),rgba(94,168,240,.05) 55%,transparent)}
+.gstrip .gno{font-family:var(--mono);font-size:13px;color:var(--green);border:1px solid var(--green-d);border-radius:5px;padding:0 6px;line-height:18px}
+.gstrip .gnm{font-size:18px;font-weight:700;letter-spacing:.5px}
+.gstrip .gbd{font-size:12px;color:var(--dim2);border:1px dashed var(--line);border-radius:999px;padding:1px 8px}
+.gstrip .gsc{font-size:12.5px;color:var(--dim);font-family:var(--mono)}
+.gstrip .gsc b{color:var(--txt)}
+.gstrip .gsc.warn{color:var(--amber)}
+.gstrip .gsc.warn b{color:var(--amber)}
+.gstrip .gsw{margin-left:auto;font-size:12.5px;color:var(--dim2)}
+.gstrip .gsw b{color:var(--dim);font-weight:600}
+.scd{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:12.5px;color:var(--dim2);
+  padding:9px 12px;margin-bottom:16px;border:1px dashed rgba(52,58,60,.9);border-radius:8px;background:rgba(255,255,255,.018)}
+.scd .lb{letter-spacing:1px;color:var(--dim)}
+.scd .bs{color:var(--dim)}
+.scd .up{color:var(--green)}
+.scd .dn{color:var(--red)}
+.scd i{font-style:normal;color:var(--dim2);opacity:.75}
+.scd .cap{color:var(--amber);opacity:.9}
+.scd .tt{color:var(--txt);font-family:var(--mono);margin-left:auto}
+
+/* ---------- cards ---------- */
+#result{margin-top:22px}
+.card{
+  border:1px solid var(--line);border-radius:14px;background:var(--panel);
+  padding:20px 22px;margin-bottom:16px;
+}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card-h h2{font-size:15px;font-weight:600;letter-spacing:1px;color:var(--txt);text-transform:uppercase}
+.card-h .ln{flex:1;height:1px;background:var(--line)}
+.card-h .tag{font-size:12px;color:var(--dim2);font-family:var(--mono);letter-spacing:0}
+
+/* identity */
+.id-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.avatar{
+  width:54px;height:54px;border-radius:12px;flex:none;
+  background:linear-gradient(135deg,var(--green-d),#26401f);
+  display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:#dcefd0;border:1px solid #40593a;
+}
+.id-main h3{font-size:19px;font-weight:600;letter-spacing:.4px}
+.id-main .sub{font-size:13px;color:var(--dim);font-family:var(--mono);margin-top:3px}
+.id-src{margin-left:auto;text-align:right;font-size:12.5px;color:var(--dim2);line-height:1.8}
+.id-src b{color:var(--dim);font-weight:500}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:11px}
+.metric{
+  border:1px solid var(--line);border-radius:10px;padding:14px 15px;background:var(--panel2);
+}
+.metric .k{font-size:12.5px;color:var(--dim);letter-spacing:.3px}
+.metric .v{font-size:23px;font-weight:700;font-family:var(--mono);margin-top:5px;letter-spacing:-.5px}
+.metric .u{font-size:12px;color:var(--dim2);margin-left:3px;font-family:inherit;font-weight:400}
+.srcm{font-size:11px;padding:0 4px;margin-left:4px;border-radius:3px;border:1px solid var(--blue);color:var(--blue);font-family:var(--mono);vertical-align:1px;white-space:nowrap}
+.metric.hi .v{color:var(--green)}
+.metric.warn .v{color:var(--amber)}
+.metric.bad .v{color:var(--red)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{
+  text-align:right;font-weight:500;color:var(--dim);font-size:12.5px;
+  padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 8px;text-align:right;border-bottom:1px solid rgba(52,58,60,.5);font-family:var(--mono);font-size:13px}
+td:first-child{font-family:inherit}
+tr:last-child td{border-bottom:none}
+td.win{color:var(--green)}
+td.lose{color:var(--red)}
+tbody tr:hover{background:rgba(150,196,122,.04)}
+.bar-cell{width:110px}
+.bar{height:5px;border-radius:3px;background:#2b3032;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));border-radius:3px}
+
+/* segments */
+.segs{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.seg{border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--panel2);text-align:center}
+.seg .t{font-size:12.5px;color:var(--dim2);font-family:var(--mono);margin-bottom:10px}
+.seg .chart{height:66px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px}
+.seg .col{width:26px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--green),var(--green-d));min-height:3px;transition:.4s}
+.seg .col.low{background:linear-gradient(180deg,var(--red),#7d484c)}
+.seg .col.mid{background:linear-gradient(180deg,var(--amber),#8d7743)}
+.seg .pct{font-size:18px;font-weight:700;font-family:var(--mono)}
+.seg .m{font-size:12px;color:var(--dim);margin-top:3px;font-family:var(--mono)}
+
+/* flee */
+.flee-item{
+  display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:8px;
+  background:rgba(227,154,154,.07);border:1px solid rgba(227,154,154,.22);
+  margin-bottom:7px;font-size:13px;
+}
+.flee-item .badge{
+  font-size:11.5px;padding:2px 7px;border-radius:4px;background:rgba(227,154,154,.18);
+  color:var(--red);font-weight:600;letter-spacing:.5px;flex:none;
+}
+.flee-item .badge.q{background:rgba(220,185,110,.16);color:var(--amber)}
+.flee-item .tm{font-family:var(--mono);color:var(--dim)}
+.flee-item .cn{color:var(--dim)}
+.flee-item .sp{flex:1}
+.flee-item .chain{font-size:12.5px;color:var(--red);opacity:.85}
+
+/* squads */
+.sq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:16px}
+.sq-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--panel2)}
+.sq-box .n{font-size:26px;font-weight:700;font-family:var(--mono);letter-spacing:-1px}
+.sq-box .l{font-size:12.5px;color:var(--dim);margin-top:4px}
+.sq-box.gold{border-color:#4f4427;background:linear-gradient(180deg,rgba(220,185,110,.09),var(--panel2))}
+.sq-box.gold .n{color:var(--amber)}
+.sq-box.hi .n{color:var(--green)}
+.sq-box.sup{border-color:#6d5729;background:linear-gradient(180deg,rgba(220,185,110,.15),var(--panel2))}
+.sq-box.sup .n{color:var(--amber)}
+.sqd-i .tag.sup{border-color:#7c6729;color:var(--amber);background:rgba(220,185,110,.12)}
+.sq-box.bad{border-color:#5a3a3a;background:linear-gradient(180deg,rgba(227,154,154,.10),var(--panel2))}
+.sq-box .n.err{font-size:15px;font-family:inherit;letter-spacing:0;color:var(--red)}
+.sq-box .l.warn{color:var(--red);opacity:.85}
+.sq-box.clk{position:relative;cursor:pointer;transition:.16s}
+.sq-box.clk:hover{border-color:var(--green-d);background:linear-gradient(180deg,rgba(150,196,122,.11),var(--panel2))}
+.sq-note{margin-top:12px;font-size:13px;line-height:1.75;color:var(--dim);border-left:2px solid #5a3a3a;padding-left:10px}
+.sq-note b{color:var(--red)}
+.sq-note.ok{border-left-color:var(--green-d)}
+.sq-note.ok b{color:var(--green)}
+/* 阵营场次饼图 */
+.ov-split{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.ov-split .tbl-wrap{flex:1 1 430px;min-width:330px}
+.ov-split .tbl-wrap table{margin-top:0}
+.ov-split .tbl-wrap td:first-child{white-space:nowrap}
+.donut{display:flex;gap:14px;align-items:center;flex-wrap:wrap;flex:none}
+.donut svg{display:block}
+.donut .ring{stroke:var(--line);fill:none}
+.donut text.t1{fill:var(--txt);font-family:var(--mono);font-weight:700}
+.donut text.t2{fill:var(--dim2);font-family:var(--mono);letter-spacing:.5px}
+.donut .lg{display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4}
+.donut .lg .r{display:flex;align-items:center;gap:7px;color:var(--dim);white-space:nowrap}
+.donut .lg .dot{width:9px;height:9px;border-radius:2px;flex:none}
+.donut .lg b{color:var(--txt);font-family:var(--mono);font-weight:600}
+.donut .lg .p{color:var(--dim2);font-family:var(--mono);font-size:12px}
+
+/* 氪金队明细弹窗 */
+#sqDlg{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(10,11,12,.74);backdrop-filter:blur(3px)}
+#sqDlg.on{display:flex}
+.sqd{width:100%;max-width:660px;max-height:80vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.6);animation:sqdIn .18s ease-out}
+@keyframes sqdIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+.sqd-h{display:flex;align-items:baseline;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.sqd-h h3{font-size:15px;letter-spacing:.3px}
+.sqd-h .sub{font-size:12.5px;color:var(--dim2);font-family:var(--mono)}
+.sqd-x{margin-left:auto;width:26px;height:26px;flex:none;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:16px;line-height:1;cursor:pointer;font-family:inherit}
+.sqd-x:hover{border-color:var(--red);color:var(--red)}
+.sqd-b{overflow:auto;padding:6px 18px 18px}
+.sqd-g{margin-top:12px}
+.sqd-gh{display:flex;justify-content:space-between;font-size:12.5px;color:var(--amber);font-family:var(--mono);letter-spacing:.5px;padding:6px 0;border-bottom:1px solid rgba(52,58,60,.9)}
+.sqd-i{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dashed rgba(52,58,60,.65);font-size:14px}
+.sqd-i:last-child{border-bottom:none}
+.sqd-i .idx{width:20px;flex:none;color:var(--dim2);font-family:var(--mono);font-size:12px}
+.sqd-i .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sqd-i .arm{font-size:12px;color:var(--dim2);flex:none;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sqd-i .tag{flex:none;font-size:12.5px;padding:1px 7px;border-radius:20px;border:1px solid var(--green-d);color:var(--green);background:rgba(150,196,122,.08)}
+.sqd-f{font-size:12.5px;color:var(--dim2);line-height:1.7;padding-top:12px;border-top:1px solid var(--line);margin-top:14px}
+@media(max-width:560px){.sqd-i .arm{display:none}.sqd{max-height:86vh}}
+
+/* ---------- TOKEN 自动提取弹窗（复用 .sqd 外壳，只有正文是新样式） ---------- */
+#tkDlg{position:fixed;inset:0;z-index:215;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(10,11,12,.74);backdrop-filter:blur(3px)}
+#tkDlg.on{display:flex}
+.tkd-b{font-size:14px;line-height:1.8;color:var(--prose)}
+.tkd-b p{margin:0}
+.tkd-b ol{margin:12px 0 0;padding-left:0;list-style:none}
+.tkd-b li{margin:11px 0;padding-left:2px}
+.tkd-b b{color:var(--txt);font-weight:600}
+.tkd-b code{font-family:var(--mono);font-size:12.5px;background:var(--input);border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--amber)}
+.tkd-bm{display:inline-block;margin:0 2px;padding:7px 15px;border-radius:9px;border:1px dashed var(--amber);background:rgba(220,185,110,.12);color:var(--amber);font-size:14px;font-weight:600;text-decoration:none;cursor:grab;user-select:none;white-space:nowrap;vertical-align:middle}
+.tkd-bm:hover{background:rgba(220,185,110,.2)}
+.tkd-old{display:block;margin-top:6px;font-size:12.5px;line-height:1.7;color:var(--amber)}
+.tkd-old b{color:var(--amber)}
+.tkd-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.tkd-st{margin-top:13px;font-size:13.5px;line-height:1.75;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--input);color:var(--dim)}
+.tkd-st.ok{color:var(--green);border-color:var(--green-d)}
+.tkd-st.bad{color:var(--red);border-color:rgba(227,154,154,.42)}
+.tkd-fine{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.75;color:var(--dim2)}
+/* 窄屏：字号别跟着缩，但表格密度放宽一点，避免列挤成一团 */
+@media(max-width:860px){
+  table{font-size:12.5px}
+  th,td{padding:7px 6px}
+  .metrics{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+}
+
+/* verdict */
+#verdictCard .block{
+  padding:18px 0;border-bottom:1px dashed var(--line);
+}
+#verdictCard .block:last-child{border-bottom:none;padding-bottom:4px}
+#verdictCard .lead{
+  font-size:18px;font-weight:600;line-height:1.75;letter-spacing:.2px;
+}
+#verdictCard .lead em{font-style:normal;color:var(--green)}
+#verdictCard .lead em.bad{color:var(--red)}
+#verdictCard p{font-size:15px;line-height:1.85;color:var(--prose);margin-bottom:9px}
+#verdictCard p:last-child{margin-bottom:0}
+#verdictCard p b{color:var(--txt);font-weight:600}
+#verdictCard p .hl{color:var(--green);font-weight:600}
+#verdictCard p .hlr{color:var(--red);font-weight:600}
+#verdictCard p .hla{color:var(--amber);font-weight:600}
+.final{
+  border-left:3px solid var(--green);padding:12px 0 12px 16px;margin-top:6px;
+  font-size:16px;line-height:1.9;color:var(--txt);font-weight:500;
+}
+.motto{font-size:13px;color:var(--dim2);margin-top:14px;font-family:var(--mono)}
+/* AI 重写后正文会落进这里（h4 是小标题），样式跟 AI 卡里保持一致 */
+#vdBody h4{font-size:13.5px;color:var(--green);letter-spacing:1.4px;margin:20px 0 9px;font-weight:600}
+#vdBody h4:first-child{margin-top:0}
+/* AI 正在写时的正文骨架：灰条 + 微光，避免先铺规则文案再被整段替换 */
+.vd-skel{padding:2px 0 0}
+.vd-skel .sk{
+  height:13px;border-radius:4px;margin:12px 0;
+  background:linear-gradient(90deg,var(--line) 0%,var(--panel2) 50%,var(--line) 100%);
+  background-size:220% 100%;animation:skmove 1.5s linear infinite;
+}
+.vd-skel .w92{width:92%}.vd-skel .w100{width:100%}.vd-skel .w86{width:86%}
+.vd-skel .w95{width:95%}.vd-skel .w58{width:58%}
+@keyframes skmove{0%{background-position:220% 0}100%{background-position:-220% 0}}
+.vd-skel-note{font-size:12.5px;color:var(--dim2);margin-top:16px;letter-spacing:.6px}
+.ai-tag{
+  display:inline-block;margin-left:9px;font-size:10.5px;padding:2px 7px;border-radius:20px;
+  border:1px solid var(--green-d);background:rgba(150,196,122,.13);color:var(--green);
+  font-family:var(--mono);letter-spacing:.6px;vertical-align:2px;font-style:normal;font-weight:400;
+}
+
+/* ---------- AI 点评 ---------- */
+.ai-card .ai-body p{font-size:15px;line-height:1.88;color:var(--prose);margin-bottom:11px}
+.ai-card .ai-body p b{color:var(--txt);font-weight:600}
+.ai-card .ai-body h4{font-size:13.5px;color:var(--green);letter-spacing:1px;margin:18px 0 9px;font-weight:600}
+.ai-card .ai-body h4:first-child{margin-top:0}
+.ai-card .ai-body p:last-child{margin-bottom:0}
+.ai-run{
+  font-size:12.5px;padding:5px 11px;border-radius:7px;border:1px solid var(--line);
+  background:transparent;color:var(--dim);cursor:pointer;font-family:inherit;transition:.18s;
+}
+.ai-run:hover{border-color:var(--green-d);color:var(--txt)}
+.ai-run:disabled{opacity:.45;cursor:not-allowed}
+.ai-state{font-size:12px;color:var(--dim2);font-family:var(--mono);letter-spacing:0}
+.ai-err{
+  font-size:13.5px;color:var(--red);line-height:1.85;background:rgba(227,154,154,.06);
+  border:1px solid rgba(227,154,154,.22);border-radius:8px;padding:12px 14px;
+}
+.ai-err code{font-family:var(--mono);font-size:12.5px;color:var(--amber)}
+/* AI 思考中：三点跳动 + 计时，正文到点才露出来 */
+.ai-think{display:flex;align-items:center;gap:10px;padding:8px 0 6px;font-size:14px;color:var(--dim2)}
+.ai-think .tdots{display:inline-flex;gap:4px;flex:0 0 auto}
+.ai-think .tdots i{width:6px;height:6px;border-radius:50%;background:var(--green);opacity:.22;animation:thinkdot 1.25s infinite}
+.ai-think .tdots i:nth-child(2){animation-delay:.16s}
+.ai-think .tdots i:nth-child(3){animation-delay:.32s}
+.ai-think b{color:var(--green);font-weight:600;letter-spacing:.4px}
+.ai-think em{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--dim)}
+@keyframes thinkdot{0%,65%,100%{opacity:.22;transform:translateY(0)}32%{opacity:1;transform:translateY(-3px)}}
+.caret{display:inline-block;width:7px;height:15px;background:var(--green);vertical-align:-2px;margin-left:3px;animation:blink .9s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* empty */
+.empty{
+  text-align:center;padding:60px 20px;color:var(--dim2);
+}
+.empty .big{font-size:40px;margin-bottom:14px;opacity:.25}
+.empty p{font-size:14px;line-height:1.9}
+.empty kbd{
+  padding:2px 6px;border:1px solid var(--line);border-radius:4px;
+  font-family:var(--mono);font-size:12.5px;color:var(--dim);background:var(--panel2);
+}
+
+/* history 样式已随「近期查询记录」一并移除（用户 2026-11-08 要求不显示） */
+
+.foot{text-align:center;font-size:12.5px;color:var(--dim2);margin-top:34px;line-height:1.9;font-family:var(--mono)}
+
+/* ---------- 评价体系弹窗 ---------- */
+#rb{position:fixed;inset:0;z-index:120;display:none;background:rgba(8,10,9,.8);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#rb.open{display:flex;align-items:center;justify-content:center;padding:24px}
+.rb-box{width:min(960px,100%);max-height:88vh;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 26px 80px rgba(0,0,0,.65);overflow:hidden}
+.rb-top{display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-bottom:1px solid var(--line);background:var(--panel2)}
+.rb-tt{font-size:15px;font-weight:600;letter-spacing:.3px}
+.rb-sub{font-size:12.5px;color:var(--dim2);font-family:var(--mono);margin-top:2px}
+.rb-tabs{display:flex;gap:5px;margin-left:auto;margin-right:4px}
+.rb-tab{padding:5px 11px;border-radius:7px;border:1px solid var(--line);background:transparent;
+  color:var(--dim);font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.rb-tab:hover{color:var(--txt)}
+.rb-tab.on{background:rgba(150,196,122,.13);border-color:var(--green-d);color:var(--green)}
+.rb-x{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);
+  background:transparent;color:var(--dim);cursor:pointer;font-size:16px;line-height:1;
+  font-family:inherit;flex:none}
+.rb-x:hover{border-color:var(--red);color:var(--red)}
+.rb-body{overflow-y:auto;padding:20px 24px 30px;font-size:13.5px;line-height:1.85;color:var(--txt)}
+.rb-body h2{font-size:15px;margin:22px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line);
+  color:var(--green);letter-spacing:.3px;font-weight:600}
+.rb-body h2:first-child{margin-top:2px}
+.rb-body h3{font-size:14px;margin:18px 0 8px;color:var(--txt);font-weight:600}
+.rb-body h3::before{content:"§ ";color:var(--green-d);font-family:var(--mono)}
+.rb-body p{margin:8px 0}
+.rb-body ul,.rb-body ol{margin:8px 0 8px 20px}
+.rb-body li{margin:3px 0}
+.rb-body strong{color:var(--green);font-weight:600}
+.rb-body code{font-family:var(--mono);font-size:12.5px;background:var(--panel2);
+  padding:1px 5px;border-radius:4px;color:var(--amber);border:1px solid var(--line)}
+.rb-body pre{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:12px 14px;overflow-x:auto;margin:10px 0}
+.rb-body pre code{background:none;border:none;padding:0;color:var(--txt);font-size:12.5px;line-height:1.7}
+.rb-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px}
+.rb-body th,.rb-body td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.rb-body th{background:var(--panel2);color:var(--dim);font-weight:600;white-space:nowrap}
+.rb-body td{color:var(--txt)}
+.rb-body tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+.rb-body hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+.rb-body blockquote{border-left:2px solid var(--green-d);margin:10px 0;padding:2px 0 2px 12px;
+  color:var(--dim)}
+.rb-foot{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  border-top:1px solid var(--line);background:var(--panel2)}
+.rb-note{font-size:12.5px;color:var(--dim2);font-family:var(--mono);line-height:1.5}
+.rb-copy{margin-left:auto;padding:6px 13px;border-radius:7px;border:1px solid var(--line);
+  background:transparent;color:var(--dim);font-size:12.5px;cursor:pointer;font-family:inherit;
+  transition:.15s;white-space:nowrap}
+.rb-copy:hover{border-color:var(--green-d);color:var(--green)}
+
+/* AI 卡片上的体系标记 */
+.ai-rb{font-size:11.5px;padding:3px 8px;border-radius:20px;border:1px solid var(--green-d);
+  color:var(--green);font-family:var(--mono);cursor:pointer;background:rgba(150,196,122,.08);
+  transition:.15s;white-space:nowrap}
+.ai-rb:hover{background:rgba(150,196,122,.2)}
+
+@media(max-width:720px){
+  .segs{grid-template-columns:repeat(2,1fr)}
+  .id-src{margin-left:0;text-align:left;width:100%}
+  .metric .v{font-size:21px}
+}
+/* ---------- 可读性微调（暗底长阅读） ---------- */
+/* 中文为主的行别用等宽字体，只有纯数字的格子才配 --mono */
+.st-line,.ovl-ss,.card-h .tag,.ai-state{font-family:var(--sans)}
+.st-line,.gstrip .gsc,.seg .m,td,.metric .v,.sq-box .n,.seg .pct{font-variant-numeric:tabular-nums}
+/* 长段落压行宽：40 字左右，眼睛换行不用回扫 */
+#verdictCard .block,.ai-card .ai-body{max-width:46em}
+#verdictCard p,.ai-card .ai-body p{font-size:15.5px;line-height:1.95;letter-spacing:.012em;color:var(--prose)}
+#verdictCard p+p,.ai-card .ai-body p+p{margin-top:2px}
+.ai-card .ai-body h4{font-size:13.5px;letter-spacing:1.6px}
+.card{padding:22px 24px}
+.card-h h2{font-size:14.5px;letter-spacing:1.2px}
+th{padding:8px 9px}
+td{padding:8px 9px}
+.sq-note,.uid-tip,.hint{line-height:1.8}
+/* 底部一次性提示条（AI 连通性测试结果用，几秒自动消失） */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);max-width:min(760px,92vw);
+  padding:11px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+  font-family:var(--mono);font-size:12.5px;line-height:1.65;box-shadow:0 14px 36px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:9999}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo"><b>从军<span>·</span>成分分析</b><i>ENLISTED PROFILER</i></div>
+    <div class="hd-sp"></div>
+    <!-- 评价体系入口暂时隐藏（体系文本仍保留，AI 提示词照旧读 rbDoc）；要恢复把 style 去掉即可 -->
+    <button class="hbtn" id="rbOpen" style="display:none" title="评价体系 · 12 级分级标准、数据口径与写作规则"><span id="rbDot">?</span></button>
+    <button class="tk-btn" id="aiTestTop" title="不查战绩，只验证地址 / KEY / 模型通不通"><span class="dot" id="aiDot"></span><span>测试 AI 连通性</span></button>
+    <button class="tk-btn" id="tkToggle"><span class="dot" id="tkDot"></span><span id="tkLabel">未设置 TOKEN</span></button>
+  </div>
+  <div id="tkPanel">
+    <div class="in">
+      <div class="tk-row">
+        <button class="btn btn-ghost" id="tkGrab" title="用一个小书签从已登录的战火页面自动取一份新 TOKEN">自动提取</button>
+      </div>
+      <div class="hint">
+        TOKEN 有时效，失效后接口会返回 <code>500100</code>。点「自动提取」按提示装一次书签，以后在已登录的战火页面点一下书签，
+        回来按 <code>Ctrl+V</code> 就自动填好、验证并保存。<br>
+        页面已内置一份 TOKEN，打开就能用；粘一份新的会覆盖它（只存本机浏览器）。
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="search">
+    <h1>查成分</h1>
+    <div class="search-row">
+      <input type="text" id="q" placeholder="昵称（大小写敏感），直接填玩家名" autocomplete="off">
+      <input type="text" class="num" id="qn" placeholder="请输入需要分析的场次" title="取样场次" inputmode="numeric" autocomplete="off">
+      <button class="btn" id="go">开始分析</button>
+    </div>
+    <div class="search-row" style="margin-top:9px">
+      <input type="text" id="qu" inputmode="numeric" autocomplete="off">
+      <button class="btn btn-ghost" id="goUid">按 UID 查</button>
+    </div>
+    <div class="uid-tip">
+      数据可靠，评价仅供参考 ｜ 评分只用本次取样的 N 场（hisBattles），生涯数据仅展示、不参与评价
+    </div>
+  </div>
+
+  <!-- 评分标尺：基准玩家的数据写死在 JS 的 BENCH 里，这里只挂容器
+       （按用户要求不展示这张卡，数据仍参与算分；要恢复把 display:none 去掉即可） -->
+  <div class="bench" id="bench" style="display:none"></div>
+
+  <div id="status"></div>
+  <div id="result"></div>
+
+  <div class="foot">
+    数据源 cjapi.zhanhuo.com
+  </div>
+</div>
+
+<div id="ovl">
+  <div class="ovl-box">
+    <div class="ovl-top" id="ovlTop">
+      <div class="ovl-ring"></div>
+      <div>
+        <div class="ovl-tt" id="ovlTitle">正在查询</div>
+        <div class="ovl-ss" id="ovlSub">连接 cjapi.zhanhuo.com</div>
+      </div>
+    </div>
+    <div class="ovl-bar"><i id="ovlBar"></i></div>
+    <div class="ovl-list" id="ovlList"></div>
+    <div class="ovl-foot">
+      <span class="ovl-time" id="ovlTime">已用 0.0 秒</span>
+      <button class="ovl-cancel" id="ovlCancel">取消查询</button>
+    </div>
+  </div>
+</div>
+
+<div id="rb">
+  <div class="rb-box">
+    <div class="rb-top">
+      <div>
+        <div class="rb-tt">评价体系</div>
+        <div class="rb-sub" id="rbMeta">载入中…</div>
+      </div>
+      <div class="rb-tabs">
+        <button class="rb-tab on" data-tab="core">体系正文</button>
+        <button class="rb-tab" data-tab="full">完整文档</button>
+      </div>
+      <button class="rb-x" id="rbClose" title="关闭（Esc）">×</button>
+    </div>
+    <div class="rb-body" id="rbBody"></div>
+    <div class="rb-foot">
+      <span class="rb-note" id="rbNote"></span>
+      <button class="rb-copy" id="rbCopy">复制当前页</button>
+    </div>
+  </div>
+</div>
+
+<script type="text/plain" id="rbDoc"># 从军·成分分析 · 评价体系与可移植提示词
+
+> 用途：换 API（DeepSeek → 通义 / 智谱 / Kimi / GPT / 本地模型）或换到网页版 AI 时，
+> 直接用本文件里的【第二部分】提示词 + 【第三部分】数据模板，不需要再解释任何规则。
+>
+> 一句话定位：**规则负责判，AI 只负责说。** 所有数字、结论、档位、标签都已算好，
+> 模型不许自己算、不许自己找规律，只把给定结论讲成一段有观点的人话。
+
+---
+
+<<AI-CORE>>
+## 第一部分：我理解的这套体系
+
+### 1. 数据口径（最容易搞错的三个点）
+
+| 字段 | 真实含义 | 常见误读 |
+|---|---|---|
+| `tankKills` / `aircraftKills` / `apcKills` | **击毁的敌方载具数**（坦克 / 飞机 / 运兵车） | 误读成"坐在载具上杀的人"→ 会反向判成"靠装备吃饭" |
+| `grenadeKills` | 手雷与炸药包合计击杀 | 一律判成"只会扔雷清点"，忽略其中炸坦克的部分 |
+| `pointsCaptured` | 实际占下旗子的次数 | 当成争夺参与度 → 会冤枉"在点里清人但没站上去"的人 |
+
+**载具折算权重**（战功口径）：坦克 5 人头、飞机 3、运兵车 3。
+炸车时乘员死亡本身已计入 `kills`，所以存在约 3 个人头/台的重叠，这是刻意的"战功口径"，不扣。
+> 战功值 `wKills = kills + 5×坦克 + 3×飞机 + 3×运兵车`
+
+**已核对（2026-11-08）：接口没有"坐在坦克/飞机里杀了几个人"这种数据。**
+- `battleDetail`（单场战绩详情）与 `hisBattles` 字段完全一致：24 个战斗字段 + 昵称/头像/军衔图，
+  没有任何武器或载具明细；另试了 13 个可能的细分路径，全部 404。
+- `overview.bestScore` 里有一个 `vehicleKills`（各国最高分局的载具总击毁，含卡车、防空炮等
+  没有单列的类型）。抽样 10 场全部满足 `坦克+飞机+运兵车 ≤ vehicleKills`，说明这三项是它的子集。
+- 669 条记录里 `坦克击毁 ÷ 总击杀` 中位数 1.5%、最高 8.7%，无一条超过 15%。
+  若这个字段是"在坦克里杀的人"，专职车长会到 40% 以上，实测不存在。
+- 结论：**只判反甲能力，不判"坐车吃饭"**。想侧面看载具依赖，只能用间接信号
+  （点内击杀占比低 + 近战/手枪/手雷≈0 + 场均载具击毁高），而且必须说清是推断。
+
+**只用取样口径（硬规则）**：评分、判级、结论全部来自这次取的 N 场（hisBattles 逐场聚合）。
+overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律不参与评价**，
+不许拿来对比、补强结论，也不许说「生涯其实更高」。生涯数字只在「生涯概览」卡片里展示，
+评价里最多提一句累计场次当资历。
+
+**身份是从哪来的**（写评价时可以据此判断证据强弱）：
+1. 直接给 UID —— 最硬；
+2. 该昵称自己的录像 → 阵容里反查 UID —— 硬，名字就是这个 UID 在用的；
+3. 昵称在录像里查不到（隐身号 / 改名 / 回放过期）→ 翻官方 33 个排行榜找这个昵称 —— 弱，
+   榜上同名不等于同一个人，遇到「弱证据」标记时评价里不要说得太绝对。
+   （程序不再先扫「全服最近 10 场回放」兜底：窗口太小、要多发十来个请求，已按用户要求删掉。）
+4. 两条路都落空 → 报「无法搜索该用户」，让用户把昵称反馈给作者，不许瞎猜一个 UID 顶上。
+
+**四国偏向**：按 `country` 聚合（`ger` 德国 / `ussr` 苏联 / `usa` 美国 / `jap` 日本），
+算每国的场次、占比、胜率、K/D、场均杀、点内占比；overview 的分国生涯数据只作背景对照，
+不参与判定（判定只看这 N 场）。
+判定看两件事：**玩得最多的是哪国（意愿）**、**胜率最高的是哪国（实绩）**。
+两者不重合就是「爱玩的不是最顺手的」，即情怀压过效率。偏向类型分四档：
+单国死忠（只打一国）/ 单国专精（主国 ≥70%）/ 主副搭配（50~70%）/ 多国轮换（35~50%）/ 四国通吃（<35%）。
+
+**对局环境（真人规模 / 组队）**：真人名单来自 `battleDetail?uid=&sessionId=`，每场返回的是**这一场有战绩记录的真人**
+（每场 3~13 条，按得分降序）。程序按查询的 N 场逐场取，所以样本场次＝你查的场次。
+- **人机不在这份名单里**：人机没有 userid、没有战绩行，接口不会返回它。
+  人机只在回放阵容里可见（`userid` 为空的席位），而回放库每人最多留 10 场，且回放 id 与战绩 sessionId 无法互转。
+- 因此：**真人规模（我方/对面/全场真人）与固定队友按 N 场统计；人机占比只有回放那 10 场的子样本**，
+  没有回放样本时这一项直接空着，不许拿"真人少"当成"人机占比"报出来。
+- **组队 = 同一个真人反复出现在他这边、且同队场次达到门槛**。门槛随样本量缩放：**≈ 样本场次 ÷ 30**
+  （300 场 → 10 场、150 场 → 5 场、100 场 → 3 场、20 场 → 2 场，最低 2 场）。
+  样本越大，同队两三场越可能只是巧合同场，门槛必须跟着抬高，否则人人都是"固定队友"。
+
+**人机局逐场降权（替代旧的"环境修正 −8"）**：每场的真人数从 `battleDetail` 数出来，
+双方真人合计 < 7 的局就是人机局，这一场按比例计权：**≥7 人 = 1 场、4~6 人 = 0.4 场、≤3 人 = 0.2 场**；
+拿不到阵容的场次按 1 场计（不猜）。所有场均、胜率、K/D、点内%、工程/场、载具/场都按这个加权口径算，
+「折合有效场次」= Σ权重。正文里必须说明"人机局已扣水分"，不许拿降权前的数字夸。
+
+### 2. 胜负与逃跑的判定
+
+```
+胜   : victories >= 1
+逃跑 : battleTime = 0 且 battleScore = 0     （全 0 记录）
+早退 : 非全 0，但 battleTime < 60 且 battleScore = 0
+有效场: 剔除"全 0"后的所有场次（早退仍计入有效场，单独统计比例）
+```
+
+**两条胜率必须分开报**：名义胜率（含逃跑，用原始场次算）与实战胜率（剔除全 0 后算）。
+逃跑比例 = (全 0 + 早退) / 原始场次。这个比例**不进基础分，只进修正分**，并且在正文里必须单列一段。
+
+### 3. 评分：基础分（100）+ 修正分（+6 ~ −12）
+
+**基础分 五项加权，满分 100，各自封顶归一化：**
+
+| 项 | 公式 | 满权 |
+|---|---|---|
+| 胜率 | min(胜率 / 95, 1) × 34 | 34 |
+| 场均战功 | min(场均战功 / 150, 1) × 24 | 24 |
+| K/D | min(K/D / 4, 1) × 18 | 18 |
+| 场均占点 | min(场均占点 / 2.5, 1) × 12 | 12 |
+| 全场第一率 | min(全场第一率 / 60, 1) × 12 | 12 |
+
+**修正分 六项，全部来自战绩接口的其余字段：**
+
+| 项 | 判据 | 加减 |
+|---|---|---|
+| 点内击杀 | 占比 ≥35% / ≥25% / ≥15% / 不足 15% | +4 / +2 / 0 / −5 |
+| 生存 | 每战斗分钟死亡 ≤2.0 / ≤2.4 / ≤2.8 / 更高 | +3 / +1.5 / 0 / −3 |
+| 纪律 | 逃跑+早退比例 ≤0.5% / ≤2% / ≤5% / 更高 | +3 / +1 / −1 / −4 |
+| 开团 | 场均一血 ≥0.25 / ≥0.10 / 更低 | +1.5 / +0.5 / −0.5 |
+| 支援 | 场均工程 ≥6 次或助攻率 ≥10% / ≥3 次或 ≥7% / 否则 | +1.5 / +0.5 / 0 |
+| 反甲 | 载具占战功 ≥20% / ≥10% / ≥4% / 更低 | +3 / +2 / +1 / 0 |
+
+**合成规则：**
+
+```
+修正合计先裁剪到 [−12, +6]      （强号不许顶满 100，逃跑多的真该扣）
+总分 = clamp(基础分 + 裁剪后修正, 0, 100)
+```
+
+**档位：**
+
+| 总分 | 档位 |
+|---|---|
+| ≥ 91 | 活爹级 |
+| ≥ 79 | 大佬级 |
+| ≥ 64 | 硬手 |
+| ≥ 49 | 能打 |
+| ≥ 34 | 路人 |
+| < 34 | 混子 |
+
+### 4. 打法标签（不进分数，只做风格指纹）
+
+| 维度 | 阈值 → 标签 |
+|---|---|
+| 点内参与 | ≥38% 点内绞肉机 / ≥28% 以点为主 / ≥18% 点内外兼顾 / 场均杀 ≥60 点外收割 / 否则 点内参与少 |
+| 攻守倾向（点内击杀 >150 才判） | 防守 > 进攻×1.5 守点型 / 进攻 > 防守×2 攻点型 / 否则 攻守均衡 |
+| 反甲 | 载具占战功 ≥20% 反甲主力 / ≥10% 会打装甲 / ≥4% 顺手炸车 / 否则 纯步兵位 |
+| 近战 | 近战占比 ≥1.2% 贴脸狂 |
+| 手雷 | 手雷占比 ≥2.4%：场均载具 ≥0.3 时"炸药包反甲"，否则"手雷党" |
+| 手枪 | 手枪占比 ≥0.8% 手枪侠 |
+| 一血 | 场均 ≥0.22 开团先锋 / ≤0.06 不打第一枪 |
+| 工程 | 场均工事 ≥4 修碉堡的 / 场均工程 ≥6 工兵 |
+| 生存 | 死亡/分 ≥2.8 拿命换头 / ≤2.05 惜命 |
+| 产出 | 得分/分 ≥450 高产出 / ≤300 磨洋工 |
+| 小队 | 场均被打光 ≥7 小队常被打光 / ≤4 那一路挺稳 |
+| 助攻 | 助攻率 ≥12% 爱补刀 / ≥8% 会配合 |
+| 枪法 | 爆头率 ≥13% 枪法硬 / <8% 乱扫 |
+
+### 4.5 玩家分级（12 级 / 6 大档 × 2 小档）
+
+**判定口径**：**总分 100 分 = 枪法分 + 六项额外加分**，不是六维加权；标准1的总分就是 100 分。
+**标尺是一条写死的基准战绩**：代号 `标准1`（UID 2341138，2026-11-08 取样 100 场，生涯 428 场）。
+- **枪法分 = 枪法比 × 100**。**枪法比 = 场均击杀 ÷ 标准1 的 120.7**（只看击杀数，K/D 不进枪法分）。
+  标准1枪法比 = 1.0 → **枪法分 100（满分）= 总分 100 分 = 6.2 的及格线**（它是刻度，不是天花板）。
+- **额外加分**（比例 4 : 2 : 1 : 1 : 1 : 1，只算**超出标准1的部分**，标准1本人恒 0）：
+  修造复活点（工程设施/场，标准1 4.61）4 份、反击载具（**击毁台数/场，一台算一台，不折算战功**，标准1 1.52）2 份、
+  占领点（占旗/场，标准1 1.81）1 份、点内击杀占比（标准1 25.7%）1 份、K/D（标准1 3.75）1 份、场均击杀（标准1 120.7）1 份。
+  每份 **0.6 分**，加分封顶 **+6**。
+- **比标准1强 → 6.2+**：总分越过 **100** 只记「**6.2+ 超出刻度**」，这是真人能打出来的上限，**不许写成开挂**。
+- **超出 15% → 数据有疑问**：总分越过 **115**（即比标准1高出一成半以上）记「**6.2+ 数据有疑问（疑似开挂）**」。
+  这种号正文要写"比标准1还高一成半以上，这个幅度不像真人打出来的"，但不许人身攻击，
+  给一句"样本可能有问题（人机局/代打/车队刷）"或"建议自查"就够。
+- **逃跑不扣分**：全 0 记录（0 杀 0 死 0 分）与早退只是不进统计，不再额外扣分。
+分带：`<10 1.1`、`<23 1.2`、`<32 2.1`、`<39 2.2`、`<46 3.1`、`<53 3.2`、`<61 4.1`、`<69 4.2`、
+`<78 5.1`、`<87 5.2`、`<100 6.1`、`100 分 6.2`、`>100 记 6.2+`、`>115（+15%）记 6.2+ 数据有疑问`。
+不再按生涯场次封顶（生涯数据不参与评价）。
+
+**标定基准**：下面那组「建标画像」只用来写各档的定性描述（这一档该是什么样、该练什么），
+不再反推分带；真正的锚点是标准1的枪法数值。要换标尺，改页面里 `BENCH` 的数值即可。
+换完记得回填 `BASE_SCORE`（标准1的判分，默认 100），并重跑一遍 `生成三个版本.py`。
+胜率 35/43/47/50/53/58/63/68/73/80/86/92（%），K/D 0.6/0.9/1.2/1.4/1.6/1.9/2.2/2.6/3.0/3.8/4.4/5.6，
+场均击杀 12/28/38/46/55/65/75/88/100/120/135/150，生涯场次 80/400/900/1200/2000/3000/4000/5000/6000/7000/9000/12000。
+
+| 等级 | 画像（这一档该有的样子） | 对战换算 |
+|---|---|---|
+| 1.1 纯萌新 | 不知道占点、不建复活点、不看标记，见人先开枪再瞄准，经常被 AI 反杀 | 跟谁比都不占优 |
+| 1.2 入门萌新 | 知道要占点、跟队，偶尔敲弹药箱；路线直、枪法随缘，击杀靠对面失误 | 打一个合格兵要 2 个以上还要有人带 |
+| 2.1 基础新手 | 懂基本机制，会敲弹药箱和复活点，知道占点；位置感差，经常死在半路 | 打老兵要 3 个以上 |
+| 2.2 进阶新手 | 会看标记、跟队、补位，枪法有感觉，能辅助队友，偶尔打出像样击杀 | 打老兵 2–3 个；打路人王 3 个起 |
+| 3.1 合格兵 | 会修点、占点、换弹找掩体，1v1 看运气，能完成基本任务 | 打老兵 2–3 个；打路人王 3–4 个 |
+| 3.2 熟练普通 | 懂常见路线，枪法凑合，偶尔小连杀，但遇到老登一碰就碎 | 打老兵 2 个；打路人王 3 个 |
+| 4.1 老兵 | 理解更深，会绕侧、拆复活点、反载具；单兵逊老登，但能制造麻烦 | 打路人王 2 个；打老登 3 个 |
+| 4.2 精锐老兵 | 稳定给老登压力，关键点能拖能守，偶尔反杀，知道何时送、撤、绕 | 打路人王 1–2 个（2 个稳）；打老登 2–3 个（3 个稳） |
+| 5.1 路人王 | 单排常居前列，能左右局部战局，关键点能打开，能带一小片节奏 | 1v1 打老登约三七开；2 个无配合能胜 1 个老登；3 个基本碾压 |
+| 5.2 顶级路人王 | 能左右整局，杀关键人、建关键点、开载具/反载具，逆风也能找机会 | 1v1 对老登五五开；2 个基本稳赢 1 个老登 |
+| 6.1 老登 | 综合成型，枪法、意识、工程、载具多项强，知道怎么赢，稳定压制 | 对下位稳定压制 |
+| 6.2 老老登 | 全维度压制：单兵、战术、载具、车队、心理战都强 | 遇到先想办法别让他在关键点站住 |
+
+**每一档都要有这三段**：① 这一档的标准画像 + 他哪几项撑着、哪几项拖着；② 对战换算（这一档打老兵/路人王要几个）；
+③ 距下一档差多少分、差哪一项、具体怎么练。**不许把所有人写成同一套话**：1.x 讲习惯，2.x 讲稳定，
+3.x 讲局面，4.x 讲战术，5.x 讲 carry，6.x 讲压制。
+
+
+
+### 5. 正文结构（规则版 12 段左右，AI 版 8~12 段）
+
+| # | 段落 | 必须回答的问题 |
+|---|---|---|
+| 0 | 分级 | 几级几档、判定分、这一档的画像，一句话定性 |
+| 1 | 结论 | 什么档位、判定分、取了哪些场、几胜几负 |
+| 2 | 枪法与反甲 | 场均杀/死/助、爆头率、击毁载具台数与折算战功、载具占比意味着什么 |
+| 3 | 打法诊断 | **核心判据是点内击杀占比，不是占点次数**；攻点型还是守点型；占点次数只作辅助并说明二者不同 |
+| 4 | 武器构成 | 近战/手雷/手枪比例说明交战距离偏好；高载具时雷要解读成炸药包 |
+| 5 | 支援与效率 | 工程、工事、助攻、得分效率、死亡频率、小队被打光 |
+| 6 | 稳定性 | 四段胜率走势（看极差，不只看首尾） |
+| 7 | 逃跑 | 必须单列：几场全 0、几场早退、是否连续逃、名义胜率与实战胜率的落差 |
+| 8 | 四国偏向 | 主玩哪国、集中度多少、偏向类型；最能打的是不是主玩国；最弱是哪国、该少碰哪个 |
+| 9 | 对局环境 | 按 N 场统计：每场双方几个活人、我方/对面真人各几个、这数据有多少水分；有没有固定车队、同队几场（人机占比只在有回放子样本时提） |
+| 10 | 氪金 | 氪金队共几支（其中高级 X 支）、是否重氪、分布在哪国（超级小队不统计、不许提） |
+| 11 | 作息 | 最活跃时段、日均场次、凌晨党/早场党/晚场党 |
+| 12 | 分级对标 | 这一档的画像、他哪几项撑着/哪几项拖着、这一档的对战换算 |
+| 13 | 升级路径 | 距下一档差多少分、差哪一项、具体练什么 |
+| 14 | 总结 | 一句定性，不许重复开头原话 |
+
+### 6. 写作纪律（模型必须遵守）
+
+1. **只用给定数字**。数据里没有的（地图、武器型号、具体某场战例）一律不许编。
+2. **每个数字都要跟判断**。不许原样罗列，要说这说明他什么、强在哪、弱在哪。
+3. **必须指出至少一个真实短板**，并说明这个短板在实战里会造成什么后果。只夸不批不合格。
+4. **数据为空就跳过**。逃跑、氪金、作息这三块若没数据，不提，不许编。
+5. **语气像贴吧老哥**：直白、有点损、有火气，但不人身攻击，不用脏话，不用 emoji，
+   不说"作为一个AI""根据数据分析"，不用书面报告腔。
+6. **篇幅 1000~1500 字，分 8~12 段**，段落长短要交错。小标题最多 2 个（如 `## 先说结论`），爱用不用。
+7. **结尾单独一段给总评**，不许重复开头原话，短、有态度。
+8. 可以用**加粗**强调关键数字，但一段里不超过两处。
+9. **禁用套话**：首先、其次、再次、最后、综上所述、总的来说、值得注意的是、不难看出、从数据来看、
+   整体表现、综合来看、具有一定的、表现出色、有待提高、作为一名玩家、可以说、换言之。
+10. **每段不许同一个模板开头**（比如每段都以「XX 方面」起）。不同档位的评价重心也要不一样：
+    1.x 讲习惯，2.x 讲稳定，3.x 讲局面，4.x 讲战术，5.x 讲 carry，6.x 讲压制。
+11. **第一句直接下判断**：他是几级几档、强在哪、弱在哪。禁止任何铺垫式开场。
+12. **必须写清分级对标**：这一档的画像、他哪几项撑着哪几项拖着、这一档打老兵/路人王要几个，
+    以及距下一档差哪一项。泛泛地说「还需努力」不合格。
+13. **必须单列四国偏向**：主玩国 + 集中度 + 偏向类型；爱玩的国不是最强的国就要点出来；
+    结尾给一句"多玩哪个、少碰哪个"的具体建议。
+14. **必须单列对局环境**：按 N 场统计的真人规模（每场双方几个活人、我方/对面各几个）、
+    有固定车队要写出队友和同队场次，并点明「这不是纯单排数据」。
+    人机占比只有回放子样本里有，有就带一句，没有就不要编。
+    **人机局被降权时，禁止把胜率和场均击杀当纯个人实力吹**，必须提一句"人机局已扣水分"。
+15. **人机降权与分级结论要一致**：折合有效场次明显小于名义场次时，正文必须提到，
+    不许一边降权一边照着降权前的数字夸。
+
+### 7. 六个必须避开的判断陷阱
+
+1. **别用占点次数判"数据刷子"** —— 应该看点内击杀占比。在点里清人、让队友站上去，旗子不算他的，但活是他干的。
+2. **走势别只看首尾差** —— 首尾接近但中间挖了 20 多个点的坑，属于"过山车"，要用四段极差判。
+3. **逃跑别混进胜率** —— 全 0 记录会同时拉低胜率、击杀、得分，必须先剔除再算，然后单独评价。
+4. **载具别反向解读** —— 这是击毁敌方载具，越高越是反甲战果，不是"靠铁疙瘩吃饭"。
+5. **手雷别一口咬定清点** —— 场均载具 ≥0.3 台时，雷里有相当比例是炸坦克的炸药包。
+6. **人机局别当硬实力** —— 人机只存在于回放阵容（`userid` 为空的席位），战绩名单里全是真人。
+   活人很少（每场双方合计不到 8 个）或人机占比过半时，胜率和场均击杀都要打折看，
+   不许拿人机局的 90% 胜率说这人能打。反过来，满编真人局里同样的数据含金量更高，这点要讲出来。
+
+---
+
+<<AI-CORE-END>>
+## 第二部分：可移植提示词（直接复制给任何模型）
+
+### SYSTEM
+
+```
+你是《从军》(Enlisted) 国服的老玩家，在贴吧混了很多年，最擅长看战绩给人下判断。
+
+用户会给你一份**已经由程序算好的数据**，包含：最近取样战绩的聚合值、
+评分构成、打法标签、分段走势、他的小队、作息。你的任务不是分析数据，而是用老哥的
+口吻把已经算好的结论讲成一段有观点、有火气、能站住的评价。
+
+【数据口径，必须遵守，不许自行改写】
+1. tankKills / aircraftKills / apcKills 是「击毁的敌方载具数」（坦克/飞机/运兵车），
+   代表反甲能力，不是「坐在载具上杀的人」，不许解读成靠装备刷人头。
+2. 载具已按 坦克5、飞机3、运兵车3 折算成「战功」，战功 = 击杀 + 折算值。
+   炸车时乘员死亡本身已计入击杀，存在少量重叠，这是刻意的口径，不许当作问题指出。
+3. grenadeKills 是手雷与炸药包合计。若数据里场均载具 ≥0.3 台，说明雷里有相当比例
+   是往坦克上扔的炸药包，属于反甲；不许一口咬定「只会扔雷清点」。
+4. pointsCaptured 是实际占下旗子的次数。它低不代表不参与争夺——在点里把人清掉、
+   让队友站上去，旗子不算他的。判断争夺参与度要用「点内击杀占比」，不是占点数。
+5. 「全 0 记录」（时长 0、得分 0）是逃跑，已从有效战绩里剔除。逃跑比例单独给出，
+   必须单独成段评价，不许混进胜率里糊过去。名义胜率与剔除后的实战胜率要分开说。
+6. **超级小队这一档不统计**（页面里显示 NaN）。接口 type 字段两个方向都会错标、按名字认也不
+   值得再费口舌，所以这块整体作废：评价里**不许出现「超级小队」相关的任何说法**，
+   既不报支数、也不点名字，连「顶级氪金」这类暗示都别写。只说高级队 / 非氪金的规模。
+7. 胜率 / K/D / 场均击杀 / 单场最高 / 全场第一 这五项，只能用「最近 N 场」的取样值。
+   生涯（overview）的对应数字不参与评价，数据串里也不给，不许自己编，也不许说「生涯更高」。
+8. 四国偏向按 country 聚合（德/苏/美/日），给出每国场次、占比、胜率、K/D、场均杀。
+   主玩国（场次最多）和最强国（胜率最高）不一定是同一个；不重合时必须点出来，别混成一句话。
+   偏向类型：单国死忠 / 单国专精（主国 ≥70%）/ 主副搭配（50~70%）/ 多国轮换（35~50%）/ 四国通吃。
+9. 对局环境里，**人机 = 回放阵容中 UID 为 0 的席位**，不是打得菜的人；
+   真人规模按这次取的 N 场逐场统计（battleDetail 名单里全是真人，不含人机），写的时候带样本场次。
+   组队 = 同一个真人反复出现在他这边、且同队场次达到门槛：门槛 ≈ 样本场次 ÷ 30
+   （300 场要 ≥10 场、150 场 ≥5 场、100 场 ≥3 场、20 场 ≥2 场），够不上门槛的不算固定队友。
+   人机占比只在有回放子样本时才有；人机占比高时，胜率与场均击杀要打折看，不许当纯个人实力吹。
+
+【写作要求】
+1. 只使用给定数据里的数字和事实。绝对不许自己编数字、编战例、编地图或武器型号。
+   数据里没有的，就不提。
+2. 不要原样罗列数据。每个数字都要跟一句判断：这说明他什么、强在哪、弱在哪、可不可信。
+3. 评价要有层次：先给分级结论，再讲枪法与反甲，再讲打法（点内还是点外、攻还是守），
+   然后武器构成、支援效率、稳定性与走势、逃跑、四国偏向、对局环境（人机/组队）、氪金、作息，
+   然后分级对标、升级路径，最后一句总评。
+4. 必须指出至少一个真实短板，并说明这个短板在实战里会造成什么后果。
+   只夸不批的评价不合格。
+5. 逃跑、氪金、作息这三块如果数据里为空，就跳过，不要编。
+6. 语气：贴吧老哥。直白、有点损、有火气，但不人身攻击，不用脏话，不用 emoji，
+   不说「作为一个AI」「根据数据分析」这类话，不用书面报告的腔调。
+7. 篇幅 1000~1500 字，分 8~12 段，段落长短交错；小标题最多 2 个，爱用不用。
+8. 第一句直接下判断（几级几档、强在哪、弱在哪），禁止铺垫式开场。
+9. 结尾单独一段给一句总评，短、有态度，不许重复开头的话。
+10. 允许使用加粗强调关键数字，但一段里不要超过两处。
+11. 禁用这些词：首先、其次、再次、最后、综上所述、总的来说、值得注意的是、不难看出、从数据来看、
+    整体表现、综合来看、具有一定的、表现出色、有待提高、作为一名玩家、可以说、换言之。
+12. 每段不许用同一个模板开头；不同档位的重心必须不同：1.x 讲习惯，2.x 讲稳定，3.x 讲局面，
+    4.x 讲战术，5.x 讲 carry，6.x 讲压制。
+13. 必须照抄分级数据里的「画像 / 对战换算 / 升级建议」这三项结论，不许自己改数字或另编一套说法。
+14. 必须单列四国偏向：主玩国、集中度、偏向类型；最能打的国不是主玩国就要说出来；
+    最后给一句「多玩哪个、少碰哪个」的具体建议。
+15. 必须单列对局环境：回放样本场次（说明是抽样）、人机占比、对面真人平均几个；
+    有固定车队要写队友和同队场次，并点明「这不是纯单排数据」。
+16. 若数据里给了「人机局降权」，正文必须提到折合场次，不许装作满编局。
+```
+
+### USER（把尖括号内容换成实际数值）
+
+```
+这是 <昵称> 的数据：
+
+- 对象：<昵称>（UID <数字>）
+- 生涯场次（仅资历，不参与评价）：累计 <X> 场
+- 四国偏向：德国 <X> 场（<X>%）/ 胜率 <X>% / K/D <X>；苏联 <X> 场（<X>%）/ 胜率 <X>% / K/D <X>；
+  美国 …；日本 …。主玩国 <国>（偏向类型 <类型>，集中度 <X>%），最能打 <国> <X>%，
+  <若与主玩国不同：与主玩国差 <X> 个百分点>
+- 对局环境：按战绩 <X> 场统计，每场双方合计平均 <X> 个真人（我方 <X> / 对面 <X>），
+  最少 <X> 个、最多 <X> 个；真人名单里不含人机
+  · 若有回放子样本：回放 <X> 场里人机 <X>/<X> 个（<X>%），对面真人平均 <X> 个
+- 组队：固定队友 <名字>（同队 <X> 场）、…；门槛 同队 ≥<X> 场（≈样本/30）；<X>/<X> 场有队友，最多一局 <X> 个　（无则写「全是单排」）
+- 人机局降权：人机局（双方真人 <7）<X> 场，折合有效场次 <X> 场（没有就写「无」）
+- 取样：最近 <X> 场（其中全 0 逃跑 <X> 场、早退 <X> 场，占 <X>%；剔除后有效 <X> 场）
+- 有效战绩：<X> 胜 <X> 负，胜率 <X>%，K/D <X>，场均 <X> 杀 / <X> 死 / <X> 助，
+  场均得分 <X>，单场最高 <X>，全场第一 <X>/<X>（全部为取样口径）
+- 总战斗时长：<X> 小时 <X> 分（得分效率 <X> 分/分，死亡 <X> 次/分）
+- 枪法：爆头率 <X>%
+- 战功 / 载具：击杀 <X>，击毁敌方载具 <X> 台（坦克 <X> / 飞机 <X> / 运兵车 <X>），
+  按坦克5、飞机3、运兵车3折算战功 +<X>，战功合计 <X>（场均 <X>），载具占战功 <X>%
+- 争夺：点内击杀 <X>（进攻 <X> / 防守 <X>），占 <X>%；占领点 <X> 次（场均 <X>）
+- 武器：近战 <X>%、手雷/炸药包 <X>%、手枪 <X>%
+- 支援：一血 <X> 次（场均 <X>），助攻 <X>（占击杀 <X>%），工程设施 <X> 次、工事 <X> 次，
+  小队被打光 <X> 次（场均 <X>）
+- 判分构成：总分 100 = 枪法分（枪法比 <X>% × 100 = <X> 分）+ 额外加分 +<X>（4:2:1:1:1:1）
+- 分级：<几级几档，如 4.1 老兵>（<大档>档），总分 <X>/100（6.2 及格线 = 标准1 = 100 分）；
+  总分越过 100 → 记「6.2+ 超出刻度」（真人上限，不许写成开挂）；
+  超过 115（比标准1高 15% 以上）→ 记「6.2+ 数据有疑问」（疑似开挂，只写"幅度不像真人"，不人身攻击）
+  该档画像：<画像原文>；该档定性：<定性原文>；对战换算：<换算原文>
+  分级依据：超过标准1的加分项 <项（标准1 <X>，本人 <X>，+<X>）>；距下一档 <等级> 差 <X> 分
+  （一项都没超就写「六项加分项都没超过标准1，差距全在枪法」）
+  升级建议：<具体练什么>
+- 加分/扣分项：<项 +X（依据）；项 +X（依据）；…>
+- 打法标签：<标签1、标签2、…>
+- 分段走势（左旧右新）：胜率 <X>%（场均 <X> 杀） → … → 胜率 <X>%（场均 <X> 杀）
+- 他的小队：共 <X> 支，氪金队 <X> 支（其中高级 <X> 支），是否重氪，分布 <国家> <X>｜<国家> <X>
+  （超级小队不统计，一个字都不要提）
+- 作息：最活跃 <X>点(<X>) / <X>点(<X>)，凌晨场 <X> 场
+
+请按上面的要求写一段评价。
+```
+
+---
+
+## 第三部分：换成别的模型怎么改
+
+网页版的评价逻辑内置在 `成分分析.html` 里，**换模型不用改任何代码**，改页面顶部那块配置就行：
+
+```js
+const AI_CFG = {
+  url:   "https://api.deepseek.com/v1",   // 换成别家的 OpenAI 兼容地址
+  key:   (function(a){ ... })([63, 59]),  // 混淆体，不是明文，不要手改
+  model: "deepseek-chat"                  // 模型名，必须和那家模型列表一致
+};
+```
+
+`url` 和 `model` 可以直接改，保存后按 `Ctrl+F5` 刷新，点右上「测试 AI 连通性」确认通即可。
+
+**`key` 那一行不能手改。** 它存的是「逐个字符码异或 0x5A 后倒序」的数组，
+只有在网页运行时才还原成真 KEY，临时存在于内存，不落盘、不显示。
+所以文件里搜不到 `sk-` 开头的完整串，转发或截图也不至于把额度送人。
+
+换 KEY 就双击同目录的 `设置DS配置.bat`，按提示粘贴新 KEY（输入不显示，也不写进 bat），
+它会重新算好混淆体写回网页，并留一份 `.bak`。
+
+前提是那家提供 **OpenAI 兼容接口**（`/v1/chat/completions` + SSE 流式），
+DeepSeek、通义、智谱、Kimi 都兼容；不兼容的只能手工用：把【第二部分】提示词
+和【第三部分】数据模板贴进网页版对话框，一样能用，只是没有自动填入。
+
+两个可能踩的小坑：
+- 前端写死了 `temperature: 0.9`、`max_tokens: 4000`。个别模型不接受这个上限或要求范围更小，
+  会报参数错误；页面已做兜底，遇到参数类 400/422 会自动去掉这两个字段重发一次。
+- 有些厂商不允许浏览器跨域直连。页面是本地 `file://` 打开的，只有明确放行 `null` 源的接口能直连
+  （DeepSeek 官方接口放行，实测可用）。
+
+### 如果你想让模型自己从原始记录里找规律
+
+不建议在正式流程里这么做，原因有三个：
+- 100 场 × 28 字段约 3~5 万 token，成本和延迟跳一档；
+- 同一份数据两次评价可能给出不同结论，显得不可靠；
+- 模型算平均、算比例、算比值经常出错，尤其百分比与小数。
+
+要试可以，但必须把算好的聚合值一起给它，并且明确要求"以给定聚合值为准，你只做解读"。
+
+---
+
+## 附：字段清单（原始战绩接口，全部参与评价）
+
+| 字段 | 用途 |
+|---|---|
+| kills / deaths / assists | 基础击杀、生存、助攻率 |
+| battleScore | 场均得分、得分效率 |
+| battleTime | 总时长、每分钟死亡、逃跑判定 |
+| victories | 胜率 |
+| teamScoreTop1 | 全场第一率 |
+| headshots | 爆头率 |
+| pointsCaptured | 占点（仅辅助） |
+| killsWhileAttackingPoint | 进攻点内击杀 |
+| killsWhileDefendingPoint | 防守点内击杀 |
+| tankKills / aircraftKills / apcKills | 反甲、战功折算 |
+| grenadeKills / meleeKills / pistolKills | 武器构成、交战距离 |
+| firstBlood | 开团能力 |
+| engineerBuildingUsage | 工程支援 |
+| fortificationBuilt | 工事修建 |
+| squadDeaths | 小队生存状况 |
+| earlyQuits | 纪律（早退） |
+| country | 阵营分布 |
+| commitTime | 作息、走势、连续逃跑检测 |</script>
+
+<!-- 书签源码（type=text/plain 不执行）。运行时由 tkBmCode() 换掉 __API__ / __UID__ 并压成一行。 -->
+<script type="text/plain" id="tkBmSrc">
+javascript:(async()=>{
+const A='__API__', U='__UID__', P='CJTOKEN:';
+const R=[];
+const add=x=>{
+  if(!x) return;
+  const m=String(x).match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g);
+  if(m) for(let i=0;i<m.length;i++) if(R.indexOf(m[i])<0) R.push(m[i]);
+};
+const scan=st=>{ try{ for(let i=0;i<st.length;i++){ const k=st.key(i); add(k); add(st.getItem(k)); } }catch(e){} };
+scan(localStorage); scan(sessionStorage); add(document.cookie);
+const box=(txt,msg)=>{
+  const w=document.createElement('div');
+  w.style.cssText='position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(10,11,12,.66);z-index:2147483647;display:flex;align-items:center;justify-content:center';
+  const d=document.createElement('div');
+  d.style.cssText='width:560px;max-width:92vw;background:rgb(30,33,35);color:rgb(226,231,227);border:1px solid rgb(52,58,60);border-radius:12px;padding:18px 20px;font:14px/1.75 system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)';
+  const h=document.createElement('div');
+  h.style.cssText='font-weight:700;margin-bottom:8px;line-height:1.7';
+  h.textContent=msg;
+  d.appendChild(h);
+  /* 弹窗里只写一句话，任何情况下都不把 token 印出来（原来这里有个 textarea 回显，已删） */
+  const b=document.createElement('button');
+  b.textContent='关闭';
+  b.style.cssText='margin-top:12px;padding:7px 16px;border-radius:8px;border:1px solid rgb(52,58,60);background:rgb(38,42,44);color:rgb(226,231,227);cursor:pointer;font:14px system-ui';
+  b.onclick=()=>w.remove();
+  d.appendChild(b); w.appendChild(d); document.body.appendChild(w);
+};
+/* 只提示结果，不把 token 印在弹窗里 */
+const copy=async t=>{
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t; ta.style.cssText='position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand('copy'); ta.remove(); return !!ok;
+  }catch(e){ return false; }
+};
+const done=tk=>{
+  copy(P+tk).then(ok=>box('', ok
+    ? '✓ 提取成功，请按 Ctrl+V'
+    : '✓ 提取成功，但浏览器没让写剪贴板。点一下页面空白处让页面拿到焦点，再点一次这个书签；还不行就把书签代码粘到 F12 控制台回车。'));
+};
+/* 点错页面是最常见的"没找到 token"原因：token 存在 act.zhanhuo.com 这个源下，
+   在别的站（包括本分析页、预览面板、别的 zhanhuo 子域）点书签，读的是那个源自己的存储，自然是空的 */
+const H=(location.hostname||'');
+if(H.toLowerCase()!=='act.zhanhuo.com'){
+  box('','这个书签只能在 act.zhanhuo.com（已登录、右上角能看到账号）的页面上点。你现在在「'+(H||'本地文件页面')+'」，这个源的存储里没有从军的登录信息，所以什么也扫不到。');
+  return;
+}
+if(!R.length){ box('','这个页面里没找到 token。先确认已经登录战火（右上角能看到账号），刷新一次页面再点这个书签。'); return; }
+let found=false;
+for(let i=0;i<R.length;i++){
+  try{
+    const r=await fetch(A+'/cj-record-rankings/combat/hisBattles?uid='+U+'&pageSize=1&pageNum=1',{headers:{accept:'application/json',authorization:'Bearer '+R[i]}});
+    const j=await r.json();
+    if(j&&j.code===0){ done(R[i]); found=true; break; }
+  }catch(e){}
+}
+if(!found) box('','扫到 '+R.length+' 串候选，但接口都回了 500100。多半是战火登录已经过期，重新登录再点一次。');
+})()
+</script>
+
+<script>
+"use strict";
+const API = "https://cjapi.zhanhuo.com";
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* 预览面板识别：WorkBuddy 内置浏览器用 127.0.0.1:xxxx 打开本页时会下发
+   Content-Security-Policy，connect-src 里没有 cjapi.zhanhuo.com，
+   于是每一次 fetch 都以 "Failed to fetch" 失败 —— 这跟 TOKEN 一点关系都没有。
+   这里提前认出来，把话说明白，别让人以为是 TOKEN 又过期了。 */
+const PREVIEW_ENV = /^https?:$/.test(location.protocol) && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+const PREVIEW_MSG = "现在是在预览面板里打开的，它拦掉了对 cjapi 的连接（跟 TOKEN 无关）。双击「成分分析.html」用 Chrome / Edge 打开就好";
+function fetchHint(msg){
+  if (PREVIEW_ENV && /Failed to fetch|NetworkError|Load failed|Network request failed/i.test(msg || "")) return PREVIEW_MSG;
+  return msg;
+}
+
+const CN = {ger:"德国", ussr:"苏联", usa:"美国", jap:"日本"};
+const CN1 = {ger:"德", ussr:"苏", usa:"美", jap:"日",
+             "D国":"德","S国":"苏","M国":"美","R国":"日", "D":"德","S":"苏","M":"美","R":"日"};
+
+/* ---------------- 基础请求 ---------------- */
+/* 内置 TOKEN（2026-11-08 13:46 更新）。
+   页面右上角手动保存的 TOKEN 优先级更高，会覆盖这里；这里失效了就重新粘一个到面板里。
+   要长时间换内置值：改这一行，再跑 生成三个版本.py 重新派生另外两版。 */
+const DEF_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE3OTQxMTY1NTEsImxvZ2luX3VzZXJfa2V5IjoiYjIwMTA3N2UtZjA4Yy00YWY1LWEyZjEtMDhlYTFkYTBjMDM2In0.6mCFTKDsAVtJsDUNXZWDH8S0A6YG-9SaK1udxDLjyjv1qlBri7uKotLcseO50_QrR8q6HERVPMoxex13ajmPkg";
+function token(){ return localStorage.getItem("cj_token") || DEF_TOKEN; }
+
+/* TOKEN 健康状态：接口回 500100 时置 true，右上角按钮和数据卡会切到「已失效 · 点此换」 */
+let TK_BAD = false;
+
+/* 取消控制：每次查询给一个 abort 句柄，取消时立刻中断在途请求 */
+const RUN = { abort: null, cancelled: false };
+function cancelled(){ return RUN.cancelled; }
+function guard(){
+  if (RUN.cancelled) throw new Error("已取消");
+}
+
+async function api(path, params, tries = 5){
+  const qs = new URLSearchParams();
+  for (const k in params) qs.set(k, params[k]);
+  const url = API + path + "?" + qs.toString();
+  let last = "";
+  for (let i = 0; i < tries; i++){
+    guard();
+    try{
+      const r = await fetch(url, {
+        headers: { "accept": "application/json", "authorization": "Bearer " + token() },
+        signal: RUN.abort ? RUN.abort.signal : undefined
+      });
+      const j = await r.json();
+      if (j.code === 0 && j.data != null){ TK_BAD = false; return j.data; }
+      if (j.code === 500100 || j.code === 500){
+        /* 500100 基本就是这份限时 TOKEN 过期了。原来按「抖动」重试 5 次，白等十来秒，
+           界面还说不清原因；现在只陪一次，第二次仍 500100 就当场判死，好让界面直接给换 TOKEN 的入口。 */
+        if (i >= 1){
+          TK_BAD = true;
+          const err = new Error("TOKEN 已失效（500100）");
+          err.fatal = true;
+          throw err;
+        }
+        last = "TOKEN 已失效（500100）";
+        await sleep(600);
+        continue;
+      }
+      throw new Error("code=" + j.code + " " + (j.msg || ""));
+    }catch(e){
+      if (e && (e.name === "AbortError" || RUN.cancelled)) throw new Error("已取消");
+      if (e && e.fatal) throw e;
+      last = e.message || String(e);
+      if (i === tries - 1) throw new Error(fetchHint(last));
+      await sleep(700 + i * 500);
+    }
+  }
+  throw new Error(fetchHint(last) || "多次重试仍失败");
+}
+
+/* ---------------- 步骤提示 ----------------
+   这排绿勾只出现在「查询中」弹窗里，页面上不再铺一份（用户 2026-11-08 要求）。
+   做法：所有行都先挂在游离容器 ST_BOX 上（不在文档里，看不见），
+   弹窗开着时再克隆一份进 #ovlList；stSet / stDone / stSkip 靠 _mirror 同步两边。 */
+const ST_BOX = document.createElement("div");
+function st(){ return ST_BOX; }
+function stReset(){
+  ST_BOX.innerHTML = "";
+  const s = $("#status");
+  if (s){ s.innerHTML = ""; s.classList.remove("show"); }   // 旧版本在页面上留的行一起清掉
+}
+function stLine(text, cls, sub){
+  const d = makeLine(text, cls);
+  if (sub) d.classList.add("st-sub");
+  ST_BOX.appendChild(d);
+  if (OVL.on){
+    const c = d.cloneNode(true);
+    $("#ovlList").appendChild(c);
+    d._mirror = c;
+    $("#ovlList").scrollTop = $("#ovlList").scrollHeight;
+  }
+  return d;
+}
+function makeLine(text, cls){
+  const d = document.createElement("div");
+  d.className = "st-line " + (cls || "");
+  d.innerHTML = (cls === "ok" ? '<span class="ic">✓</span>'
+              : cls === "err" ? '<span class="ic">✕</span>'
+              : '<span class="spin"></span>') + "<span>" + text + "</span>";
+  return d;
+}
+/* 原地改文案（用于“扫描 3/10”这类滚动进度，不新增行） */
+function stSet(el, text){
+  if (!el) return;
+  const t = el.querySelector("span:last-child");
+  if (t) t.innerHTML = text;
+  if (el._mirror) stSet(el._mirror, text);
+}
+function stDone(el, text){
+  if (!el) return;
+  el.className = "st-line ok" + (el.classList.contains("st-sub") ? " st-sub" : "");
+  el.innerHTML = '<span class="ic">✓</span><span>' + text + "</span>";
+  if (el._mirror){
+    el._mirror.className = el.className;
+    el._mirror.innerHTML = el.innerHTML;
+    el._mirror._mirror = null;
+  }
+}
+function stFail(el, text){
+  if (!el) return;
+  el.className = "st-line err" + (el.classList.contains("st-sub") ? " st-sub" : "");
+  el.innerHTML = '<span class="ic">✕</span><span>' + text + "</span>";
+  if (el._mirror){
+    el._mirror.className = el.className;
+    el._mirror.innerHTML = el.innerHTML;
+    el._mirror._mirror = null;
+  }
+}
+
+/* 中性跳过（既不是成功也不是报错） */
+function stSkip(el, text){
+  if (!el) return;
+  el.className = "st-line skip" + (el.classList.contains("st-sub") ? " st-sub" : "");
+  el.innerHTML = '<span class="ic">–</span><span>' + text + "</span>";
+  if (el._mirror){
+    el._mirror.className = el.className;
+    el._mirror.innerHTML = el.innerHTML;
+    el._mirror._mirror = null;
+  }
+}
+
+/* ---------------- 查询中弹窗 ---------------- */
+const OVL = { on: false, t0: 0, timer: null, step: 0, total: 5, tick: 6 };
+function ovlOpen(title, sub){
+  OVL.on = true; OVL.step = 0; OVL.t0 = Date.now();
+  $("#ovlTitle").textContent = title || "正在查询";
+  $("#ovlSub").textContent = sub || "连接 cjapi.zhanhuo.com";
+  $("#ovlTop").className = "ovl-top";
+  $("#ovlList").innerHTML = "";
+  $("#ovlBar").style.width = "6%";
+  bindCancel();
+  $("#ovl").classList.add("show");
+  clearInterval(OVL.timer);
+  OVL.timer = setInterval(() => {
+    const s = (Date.now() - OVL.t0) / 1000;
+    $("#ovlTime").textContent = "已用 " + s.toFixed(1) + " 秒";
+    if (s > 6 && OVL.on && !RUN.cancelled){
+      const base = "接口有延迟，正在等待服务端返回…";
+      const cur = $("#ovlSub").textContent;
+      if (cur.indexOf("接口有延迟") !== 0) $("#ovlSub").textContent = base;
+    }
+  }, 100);
+}
+function ovlSub(text){ $("#ovlSub").textContent = text; }
+/* 只往加载框的进度列表里追加一行（不重复写到页面上的 #status）
+   用于「解析身份」这种内部搜索过程：框里逐条看得见，页面上只留一条总结 */
+function ovlLine(text){
+  const L = $("#ovlList");
+  if (!L) return null;
+  const d = makeLine(text, "");
+  d._txt = text;
+  L.appendChild(d);
+  L.scrollTop = L.scrollHeight;
+  return d;
+}
+function ovlProgress(p){
+  const v = Math.max(5, Math.min(100, p));
+  $("#ovlBar").style.width = v + "%";
+}
+function ovlStage(){ OVL.step = Math.min(OVL.total, OVL.step + 1); ovlProgress(OVL.step / OVL.total * 100); }
+/* 解析身份阶段没有明确的百分比，用缓慢爬升表示还活着 */
+function ovlTick(){
+  if (OVL.step > 0) return;
+  OVL.tick = Math.min(18, (OVL.tick || 6) + 1.4);
+  ovlProgress(OVL.tick);
+}
+function ovlClose(){
+  OVL.on = false;
+  clearInterval(OVL.timer);
+  $("#ovl").classList.remove("show");
+}
+function ovlSettle(kind){ /* kind: done | fail */
+  $("#ovlTop").className = "ovl-top " + kind;
+  ovlProgress(100);
+  clearInterval(OVL.timer);
+}
+/* 取消按钮：失败后会被临时改成「关闭」，每次开弹窗都要恢复成取消 */
+function bindCancel(){
+  const b = $("#ovlCancel");
+  b.disabled = false;
+  b.textContent = "取消查询";
+  b.onclick = () => {
+    if (!OVL.on) return;
+    RUN.cancelled = true;
+    if (RUN.abort) RUN.abort.abort();
+    b.disabled = true;
+    b.textContent = "正在中断…";
+    $("#ovlTitle").textContent = "已取消";
+    $("#ovlSub").textContent = "查询已中断，未完成的请求不再等待";
+    ovlSettle("fail");
+    setTimeout(ovlClose, 600);
+  };
+}
+bindCancel();
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && OVL.on && !RUN.cancelled) $("#ovlCancel").click();
+});
+
+/* ---------------- 工具 ---------------- */
+const num = n => (n == null ? "-" : Number(n).toLocaleString("en-US"));
+const pct = (a, b) => (b ? (a / b * 100) : 0);
+const f1 = v => (Math.round(v * 10) / 10);
+const f2 = v => (Math.round(v * 100) / 100);
+const cn1 = c => CN1[c] || CN[c] || c || "-";
+function ts(t){
+  if (!t) return "-";
+  const d = new Date(t * 1000);
+  const p = n => String(n).padStart(2, "0");
+  return (d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function dur(s){
+  s = Math.max(0, Math.round(s || 0));
+  const m = Math.floor(s / 60);
+  return m + "分" + String(s % 60).padStart(2, "0") + "秒";
+}
+function durLong(s){
+  s = Math.max(0, Math.round(s || 0));
+  const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60);
+  return h ? (h + " 小时 " + m + " 分") : (m + " 分");
+}
+const isFlee  = r => (r.battleTime || 0) <= 0 && (r.battleScore || 0) === 0;
+const isQuick = r => !isFlee(r) && (r.battleTime || 0) < 60 && (r.battleScore || 0) === 0;
+const isWin   = r => (r.victories || 0) >= 1;
+
+/* ---------------- 昵称 -> UID ---------------- */
+async function replayIds(name){
+  const d = await api("/cj-replays/replaysDetail", { name: name, mission: "", from: 1, size: 20 });
+  return (d.replayDataList || []).map(r => r.id);
+}
+async function rosterOf(id){
+  const d = await api("/cj-replays/replaysData", { id: id });
+  const out = [];
+  for (const t of ["redTeam", "blueTeam"]){
+    for (const p of (d[t] || [])){
+      if (p.userid && p.name) out.push({ uid: p.userid, name: String(p.name).trim(), detail: d });
+    }
+  }
+  return out;
+}
+/* ---------------- 排行榜兜底：昵称 -> UID ----------------
+   实测（2026-11-08）：/cj-record-rankings/battleRanks 有 11 个 type × 3 个 period，
+   每榜 total ≤ 2000 人，pageSize 上限 1000（1000 条 ≈ 180KB、0.3 秒）。
+   全扫一遍 36 个请求、约 3 万行、5000+ 个不同昵称，能捞到隐身号、改名号、回放过期的人。
+   命中的榜单一并记下来，写进身份来源里。 */
+const RANK_TYPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const RANK_PERIODS = [0, 1, 2];
+let RANK_IDX = null;                  // nick -> { uid, t, p, rank, data }
+const RANK_DONE = new Set();          // 已经完整扫过的榜（t_p），二次查询直接跳过
+
+async function rankLookup(target, log){
+  /* 硬约束：纯数字说明调用方已经给了 UID，绝不去翻榜（翻一遍要 30+ 请求） */
+  if (/^\s*\d+\s*$/.test(String(target || ""))) return null;
+  if (!RANK_IDX) RANK_IDX = new Map();
+  if (RANK_IDX.has(target)) return RANK_IDX.get(target);
+
+  const order = [];
+  for (const p of RANK_PERIODS) for (const t of RANK_TYPES) order.push([t, p]);
+  const todo = order.filter(([t, p]) => !RANK_DONE.has(t + "_" + p));
+
+  /* 3 路并发：全扫 36 个请求从 15 秒压到 5 秒上下，命中一个榜就停 */
+  let done = 0;
+  for (let i = 0; i < todo.length; i += 3){
+    const batch = todo.slice(i, i + 3);
+    await Promise.all(batch.map(([t, p]) => scanRankBoard(t, p, target)));
+    done += batch.length;
+    log && log("翻排行榜 " + Math.min(done, todo.length) + "/" + todo.length + "：" + rankName(batch[batch.length - 1][0], batch[batch.length - 1][1]));
+    if (RANK_IDX.has(target)) break;
+    guard();
+  }
+  return RANK_IDX.get(target) || null;
+}
+
+async function scanRankBoard(t, p, target){
+  const key = t + "_" + p;
+  if (RANK_DONE.has(key)) return;
+  RANK_DONE.add(key);
+  let total = 0, got = 0, pg = 1;
+  while (pg <= 4){
+    guard();
+    let d;
+    try{
+      d = await api("/cj-record-rankings/battleRanks",
+                    { pageSize: 1000, pageNum: pg, rankType: 0, type: t, period: p }, 3);
+    }catch(e){
+      if (RUN.cancelled) throw e;
+      break;
+    }
+    const rows = d.data || [];
+    total = d.total || 0;
+    if (!rows.length) break;
+    for (let k = 0; k < rows.length; k++){
+      const x = rows[k];
+      if (!x || !x.nickName) continue;
+      if (!RANK_IDX.has(x.nickName)){
+        RANK_IDX.set(x.nickName, {
+          uid: x.userId, t: t, p: p,
+          rank: (pg - 1) * 1000 + k + 1, data: x.rankData
+        });
+      }
+    }
+    got += rows.length;
+    if (RANK_IDX.has(target)) break;
+    if (got >= total) break;
+    pg++;
+  }
+}
+function rankName(t, p){
+  const per = p === 0 ? "总榜" : p === 1 ? "周期1" : "周期2";
+  return per + "·榜" + t;
+}
+
+async function resolveUid(target, log){
+  /* 给了 UID 就直接查：不走录像、不翻排行榜（用户 2026-11-08 明确要求） */
+  if (/^\d+$/.test(target)){
+    log && log("输入的是 UID，直接查，跳过录像和排行榜");
+    return { uid: Number(target), name: null, src: "直接输入 UID（未走录像/排行榜）" };
+  }
+
+  /* 昵称：先走录像阵容（最快最准，但隐身号 / 改名 / 回放过期都会落空） */
+  let rep = null, why = "";
+  try{
+    rep = await resolveUidByReplay(target, log);
+  }catch(e){
+    if (RUN.cancelled) throw e;
+    why = e.message || String(e);
+  }
+  if (rep) return rep;
+
+  /* 录像查不到这个人才翻官方排行榜（用户 2026-11-08 要求） */
+  log && log("录像里没有，改翻排行榜");
+  let hit = null;
+  try{
+    hit = await rankLookup(target, log);
+  }catch(e){
+    if (RUN.cancelled) throw e;
+  }
+  if (hit){
+    return {
+      uid: hit.uid, name: target, weak: true,
+      weakNote: "弱证据：昵称取自官方排行榜，没在录像阵容里核对过",
+      src: "排行榜命中 · 榜" + hit.t + (hit.p ? "·周期" + hit.p : "·总榜") + " 第 " + hit.rank + " 名"
+           + (hit.data != null ? "（" + num(hit.data) + "）" : "")
+    };
+  }
+
+  throw new Error("无法搜索该用户：「" + target + "」在录像和排行榜里都查不到"
+    + (why ? "（录像：" + why + "）" : "") + "，请把这个昵称反馈给作者");
+}
+
+async function resolveUidByReplay(target, log){
+  if (/^\d+$/.test(target)) return { uid: Number(target), name: null, src: "直接输入 UID（未走录像/排行榜）" };
+
+  let ids = [];
+  try{
+    log && log("按昵称查录像列表：" + target);
+    ids = await replayIds(target);
+  }catch(e){
+    ids = [];
+  }
+  guard();
+  /* 不再扫「全服最近 10 场回放」兜底（用户 2026-11-08 要求删掉）：
+     这条路上限只有 10 场、200 来个人，命中率极低却要多发 10+ 个请求，
+     昵称查不到自己的录像时直接交给后面的排行榜。 */
+  if (!ids.length)
+    throw new Error("该昵称查不到录像（隐身 ID / 改名 / 回放过期）");
+
+  log && log("命中 " + ids.length + " 场录像，读取阵容");
+  let j = 0;
+  for (const id of ids){
+    guard();
+    j++;
+    if (ids.length > 1) log && log("读取录像阵容 " + j + "/" + ids.length + " …");
+    const rs = await rosterOf(id);
+    const hit = rs.find(x => x.name === target);
+    if (hit) return { uid: hit.uid, name: hit.name, src: "该昵称的录像阵容",
+                      when: hit.detail.startTime, map: hit.detail.missionNameTranslated };
+  }
+  // 录像列表有但阵容里没精确匹配，尝试忽略大小写
+  for (const id of ids){
+    guard();
+    const rs = await rosterOf(id);
+    const near = rs.find(x => x.name.toLowerCase() === target.toLowerCase());
+    if (near) return { uid: near.uid, name: near.name, src: "录像阵容（忽略大小写）",
+                       when: near.detail.startTime, map: near.detail.missionNameTranslated };
+  }
+  throw new Error("有 " + ids.length + " 场录像，但阵容里没找到这个昵称（注意大小写）");
+}
+
+/* ---------------- 扫对局环境（人机 / 组队） ----------------
+   回放接口只保留最近 10 场，所以这是「回放窗口内」的样本，不是全部近 N 场。
+   按昵称取他自己的录像；查不到就跳过（不扫全服）。只有只给 UID 时才扫全服列表。 */
+async function scanEnv(uid, name, log){
+  let ids = [], fromName = false;
+  if (name){
+    try{
+      log && log("按昵称取对局录像：" + name);
+      ids = await replayIds(name);
+      fromName = ids.length > 0;
+    }catch(e){ ids = []; }
+  }
+  guard();
+  if (!ids.length){
+    /* 有昵称却查不到他自己的录像 -> 直接跳过环境扫描（不再去扫全服最近 10 场碰运气）。
+       只有「只给了 UID、没有昵称」时才扫一次全服列表，那是给隐身号取样本的唯一途径。 */
+    if (name){
+      log && log("该昵称取不到录像，跳过对局环境扫描");
+      return null;
+    }
+    log && log("没有昵称（只有 UID），扫全服最近回放里找他");
+    try{ ids = await replayIds(""); }catch(e){ return null; }
+  }
+  if (!ids.length) return null;
+
+  const recs = [];
+  for (let i = 0; i < ids.length; i++){
+    guard();
+    log && log("读取对局阵容 " + (i + 1) + "/" + ids.length + " …");
+    let d;
+    try{ d = await api("/cj-replays/replaysData", { id: ids[i] }, 3); }catch(e){ continue; }
+    const red = d.redTeam || [], blue = d.blueTeam || [];
+    const side = red.some(p => p.userid === uid) ? "redTeam"
+      : blue.some(p => p.userid === uid) ? "blueTeam" : null;
+    if (!side) continue;
+    const my = side === "redTeam" ? red : blue;
+    const op = side === "redTeam" ? blue : red;
+    const isBot = p => !p.userid;
+    const me = my.find(p => p.userid === uid);
+    recs.push({
+      id: ids[i], t: d.startTime, map: d.missionNameTranslated || "",
+      myName: me ? String(me.name || "").trim() : "",
+      myN: my.length, myBot: my.filter(isBot).length,
+      opN: op.length, opBot: op.filter(isBot).length,
+      mates: my.filter(p => p.userid && p.userid !== uid)
+        .map(p => ({ uid: p.userid, name: String(p.name || "").trim() || ("UID " + p.userid) }))
+    });
+  }
+  if (!recs.length) return null;
+  const st = envStats(recs);
+  st.fromName = fromName;
+  /* 只给 UID 时（隐身号）从这里把「回放里现用的昵称」捞回来，最新的排在最前 */
+  st.myName = (recs.find(r => r.myName) || {}).myName || "";
+  return st;
+}
+
+/* ---------------- 对局环境：按战绩 N 场统计真人规模 ----------------
+   接口事实（2026-11-08 实测，别再来回试了）：
+   · battleDetail?uid=&sessionId= 返回的是「这一场有战绩记录的真人」，按得分降序，
+     每场 3~13 条不等；人机不进来（人机没有 userid、也没有战绩行），所以这份名单里没有 AI。
+   · 人机只存在于回放入口（replaysData 里 userid 为空的席位），而回放库每个昵称最多留 10 场
+     （total 恒 10，from=11 直接 500100），回放 id 是 19 位数字、和战绩的 sessionId 无法互转。
+   结论：人机占比只能按回放那 10 场算，真人规模 / 固定队友可以按查询的 N 场算。 */
+async function scanBattleEnv(rows, uid, log){
+  const list = (rows || []).slice();
+  if (!list.length) return null;
+  const recs = [];
+  const CONC = 6;
+  for (let i = 0; i < list.length; i += CONC){
+    guard();
+    const batch = list.slice(i, i + CONC);
+    const got = await Promise.all(batch.map(r =>
+      api("/cj-record-rankings/combat/battleDetail", { uid: uid, sessionId: r.sessionId }, 3)
+        .catch(() => null)));
+    batch.forEach((r, k) => {
+      const d = got[k];
+      if (!d || !d.length) return;
+      const me = d.filter(x => x.userId === uid)[0];
+      const c = me ? me.country : null;
+      if (!c) return;
+      const my = d.filter(x => x.country === c);
+      const op = d.filter(x => x.country !== c);
+      recs.push({
+        sid: r.sessionId, t: r.commitTime, c: c,
+        n: d.length, myN: my.length, opN: op.length,
+        mates: my.filter(x => x.userId !== uid)
+          .map(x => ({ uid: x.userId, name: String(x.nickName || "").trim() || ("UID " + x.userId) }))
+      });
+    });
+    log && log("按战绩读取对局阵容 " + Math.min(list.length, i + CONC) + "/" + list.length + " …");
+  }
+  if (!recs.length) return null;
+  return battleEnvStats(recs);
+}
+function battleEnvStats(recs){
+  const n = recs.length || 1;
+  const sum = f => recs.reduce((a, x) => a + (x[f] || 0), 0);
+  const mc = {};
+  recs.forEach(x => (x.mates || []).forEach(m => {
+    if (!mc[m.uid]) mc[m.uid] = { uid: m.uid, name: m.name, n: 0 };
+    mc[m.uid].n++;
+  }));
+  const mates = Object.keys(mc).map(k => mc[k]).sort((a, b) => b.n - a.n);
+  /* 固定队友门槛：按样本量缩放，约 n/30 —— 300 场 → 10 场、150 场 → 5 场、100 场 → 3 场、20 场 → 2 场。
+     样本越大，同队两三场越可能只是巧合同场，门槛必须跟着抬高，否则人人都是"固定队友" */
+  const fixMin = Math.max(2, Math.round(recs.length / 30));
+  const hum = recs.map(x => x.n).sort((a, b) => a - b);
+  const botGames = recs.filter(x => x.n < 7).length;          // 双方真人 <7 = 人机局
+  const wSum = recs.reduce((a, x) => a + wOfHumans(x.n), 0);  // 加权后的有效场次
+  return {
+    n: recs.length, botGames: botGames, wSum: wSum,
+    avgHumans: sum("n") / n, myHumans: sum("myN") / n, opHumans: sum("opN") / n,
+    minHumans: hum[0], maxHumans: hum[hum.length - 1],
+    medHumans: hum[Math.floor(hum.length / 2)],
+    teamGames: recs.filter(x => (x.mates || []).length > 0).length,
+    squadMax: recs.reduce((m, x) => Math.max(m, (x.mates || []).length), 0),
+    mates: mates, fixMin: fixMin, fixed: mates.filter(x => x.n >= fixMin), recs: recs
+  };
+}
+
+/* ---------------- 统计 ---------------- */
+/* 载具战功权重
+   字段口径（重要）：tankKills / aircraftKills / apcKills = 击毁的敌方载具数
+   （坦克 / 飞机 / 运兵车），不是「坐在载具上杀的人」。所以越高越是反甲战果，不是靠装备吃饭。
+   权重：打掉一台载具 ≈ 多少个人头的战场价值 —— 坦克 5（满编车组 + 一台铁疙瘩）、飞机 3、运兵车 3
+   注：炸车时乘员死亡本身已计入 kills，所以这是「战功口径」，与乘员人头有少量重叠。
+   想完全不重叠，把 VEH_OVERLAP 填 3（按台扣掉乘员人头）。 */
+const VEH_W = { tk: 5, ak: 3, apc: 3 };
+const VEH_OVERLAP = 0;
+
+/* 统计（支持单场权重）
+   每行可以带 __w（人机局降权后的权重，见 wOfHumans）；所有场均、比率都按加权算，
+   只有「场次」和「最高分」这类原始计数不加权。没有 __w 时权重为 1，行为与旧版一致。 */
+function summarize(rows){
+  const n = rows.length || 1;
+  const Wt = r => (r.__w == null ? 1 : r.__w);
+  /* 计数类都是「场次 × 权重」累加，二进制浮点会抖出 21.799999999999997 这种尾巴。
+     统一在源头截到 1 位小数，下游（卡片、aiFacts、结论文案）就不用各修一次。 */
+  const r1 = v => Math.round((+v || 0) * 10) / 10;
+  const wN = rows.reduce((a, r) => a + Wt(r), 0) || 1;
+  const sum = f => rows.reduce((a, r) => a + Wt(r) * (r[f] || 0), 0);
+  const raw = f => rows.reduce((a, r) => a + (r[f] || 0), 0);
+  const k = sum("kills"), d = sum("deaths"), a = sum("assists"), hs = sum("headshots");
+  const cap = sum("pointsCaptured");
+  const tk = sum("tankKills"), ak = sum("aircraftKills"), apc = sum("apcKills");
+  const pinA = sum("killsWhileAttackingPoint"), pinD = sum("killsWhileDefendingPoint");
+  const melee = sum("meleeKills"), pistol = sum("pistolKills"), nade = sum("grenadeKills");
+  const fb = sum("firstBlood"), eng = sum("engineerBuildingUsage"), fort = sum("fortificationBuilt");
+  const sqd = sum("squadDeaths");
+  const sc = rows.map(r => r.battleScore || 0);
+  const tm = sum("battleTime");            // 加权总时长（效率按这个算）
+  const tmRaw = raw("battleTime");         // 原始总时长（展示「一共打了多久」）
+  const wins = rows.filter(isWin).length;
+  const winsW = rows.filter(isWin).reduce((x, r) => x + Wt(r), 0);
+  const top1 = rows.filter(r => (r.teamScoreTop1 || 0) >= 1).length;
+  const top1W = rows.filter(r => (r.teamScoreTop1 || 0) >= 1).reduce((x, r) => x + Wt(r), 0);
+  const min = tm / 60 || 1;   // 加权总战斗分钟
+  const gk = k || 1;
+  // 载具折算：坦克 5 / 飞机 3 / 运兵车 3 人头
+  const veh = tk + ak + apc;
+  const vehVal = Math.max(0, tk * VEH_W.tk + ak * VEH_W.ak + apc * VEH_W.apc - veh * VEH_OVERLAP);
+  const wKills = k + vehVal;   // 战功值 = 人头 + 载具折算
+  return {
+    n: rows.length, wN: wN, wins, loss: rows.length - wins, winRate: winsW / wN * 100,
+    kills: r1(k), deaths: r1(d), assists: r1(a), kd: d ? k / d : k,
+    avgK: k / wN, avgD: d / wN, avgA: a / wN,
+    hs: r1(hs), hsRate: hs / gk * 100,
+    cap: r1(cap), capAvg: cap / wN,
+    tk: r1(tk), ak: r1(ak), apc: r1(apc), veh: r1(veh),
+    vehVal: r1(vehVal), wKills: r1(wKills), avgWK: wKills / wN, vehRate: vehVal / (wKills || 1) * 100,
+    vehPer: veh / wN, vehValPer: vehVal / wN,
+    // 争夺参与：点内击杀（进攻 + 防守）
+    pinA: r1(pinA), pinD: r1(pinD), pin: r1(pinA + pinD), pinRate: (pinA + pinD) / gk * 100,
+    pinAAvg: pinA / wN, pinDAvg: pinD / wN,
+    // 武器构成
+    melee: r1(melee), pistol: r1(pistol), nade: r1(nade), meleeRate: melee / gk * 100, pistolRate: pistol / gk * 100,
+    nadeRate: nade / gk * 100, closeRate: (melee + nade + pistol) / gk * 100,
+    // 一血 / 支援 / 牺牲
+    fb: r1(fb), fbPer: fb / wN, eng: r1(eng), fort: r1(fort), engPer: eng / wN, fortPer: fort / wN,
+    sqd: r1(sqd), sqdPer: sqd / wN,
+    // 效率（按分钟）
+    dpm: d / min, spm: (sum("battleScore")) / min,
+    asstRate: a / gk * 100,
+    // 纪律
+    eq: raw("earlyQuits"),
+    score: sum("battleScore") / wN,
+    scoreMax: sc.length ? Math.max.apply(null, sc) : 0,
+    time: tmRaw, avgTime: tmRaw / n, top1, top1Rate: top1W / wN * 100
+  };
+}
+
+/* ---------------- 四国偏向 ----------------
+   近 N 场按 country 聚合，并与生涯（overview 各国）对照。
+   「偏向」看两件事：玩得最多是哪国（意愿）、胜率最高是哪国（实绩）。
+   两者不重合 = 情怀党；重合 = 选对路了。 */
+const CN_KEYS = ["ger", "ussr", "usa", "jap"];
+function countryStats(rows, ov){
+  const tot = rows.length || 1;
+  const o = ov || {};
+  const list = CN_KEYS.map(c => {
+    const rs = rows.filter(r => r.country === c);
+    const n = rs.length;
+    const w = rs.filter(isWin).length;
+    const k = rs.reduce((a, r) => a + (r.kills || 0), 0);
+    const d = rs.reduce((a, r) => a + (r.deaths || 0), 0);
+    const sc = rs.reduce((a, r) => a + (r.battleScore || 0), 0);
+    const t = rs.reduce((a, r) => a + (r.battleTime || 0), 0);
+    const pin = rs.reduce((a, r) => a + (r.killsWhileAttackingPoint || 0) + (r.killsWhileDefendingPoint || 0), 0);
+    return {
+      c: c, n: n, share: n / tot * 100, wins: w,
+      w: n ? w / n * 100 : 0,
+      kd: d ? k / d : k,
+      avgK: n ? k / n : 0,
+      avgS: n ? sc / n : 0,
+      pinRate: k ? pin / k * 100 : 0,
+      avgMin: n ? t / n / 60 : 0,
+      cb: o[c + "Battles"] || 0,
+      cw: parseFloat(o[c + "WinRete"] || 0),
+      ckd: parseFloat(o[c + "Kda"] || 0),
+      ck: o[c + "Kills"] || 0
+    };
+  });
+  const played = list.filter(x => x.n > 0).slice().sort((a, b) => b.n - a.n);
+  const top = played[0] || null;
+  const rated = played.filter(x => x.n >= 3);
+  const best = (rated.slice().sort((a, b) => b.w - a.w)[0]) || top;
+  const worst = (rated.slice().sort((a, b) => a.w - b.w)[0]) || top;
+  const kind = !top ? "" : played.length === 1 ? "单国死忠"
+    : top.share >= 70 ? "单国专精"
+    : top.share >= 50 ? "主副搭配"
+    : top.share >= 35 ? "多国轮换" : "四国通吃";
+  const avgW = rows.filter(isWin).length / tot * 100;
+  return { list: list, played: played, top: top, best: best, worst: worst,
+           kind: kind, tot: rows.length, avgW: avgW };
+}
+
+/* ---------------- 对局环境：人机 / 组队 ----------------
+   数据只能从回放里取：按昵称拿到的最多 10 场，逐场 replaysData 读阵容。
+   人机 = 阵容里没有 userid 的席位（即 UID 0）。
+   组队 = 同队真人玩家在 ≥2 场里重复出现（回放没有小队字段，只能靠重复同队推断）。 */
+function envStats(recs){
+  if (!recs || !recs.length) return null;
+  let seats = 0, bots = 0, myBots = 0, oppBots = 0, realOpp = 0, mySeats = 0;
+  const mc = {};
+  recs.forEach(x => {
+    seats += x.myN + x.opN;
+    bots += x.myBot + x.opBot;
+    myBots += x.myBot;
+    oppBots += x.opBot;
+    mySeats += x.myN;
+    realOpp += (x.opN - x.opBot);
+    (x.mates || []).forEach(m => {
+      if (!mc[m.uid]) mc[m.uid] = { uid: m.uid, name: m.name, n: 0 };
+      mc[m.uid].n++;
+    });
+  });
+  const mates = Object.keys(mc).map(k => mc[k]).sort((a, b) => b.n - a.n);
+  const fixed = mates.filter(x => x.n >= 2);
+  const teamGames = recs.filter(x => (x.mates || []).length > 0).length;
+  return {
+    n: recs.length, seats: seats, bots: bots,
+    botRate: seats ? bots / seats * 100 : 0,
+    myBots: myBots, oppBots: oppBots, mySeats: mySeats,
+    realOpp: recs.length ? realOpp / recs.length : 0,
+    avgBot: recs.length ? bots / recs.length : 0,
+    teamGames: teamGames, soloGames: recs.length - teamGames,
+    squadMax: recs.reduce((m, x) => Math.max(m, (x.mates || []).length), 0),
+    mates: mates, fixed: fixed, recs: recs
+  };
+}
+
+/* 小队档位判定：接口 mySquad 的 type 字段在这一档上两个方向都会错标
+   —— 真·超级队常被标成「高级小队」，个别高级队又被标成「超级小队」。
+   所以改看名字：超级队的名字里一定带「超级」，有两种写法
+     ① 前缀式：超级小队：OP-43M 突击兵小队
+     ② 内联式：四川造冲锋枪 超级突击兵小队
+   名字带「超级」且不带「高级／活动」的 = 超级队；显示时把前缀去掉。 */
+function sqTier(x){
+  const nm = String((x && x.name) || "");
+  if (/^超级小队[:：]/.test(nm)) return "sup";
+  if (nm.indexOf("高级") >= 0) return "pre";
+  if (nm.indexOf("活动") >= 0) return "ev";
+  if (nm.indexOf("超级") >= 0) return "sup";
+  const t = String((x && x.type) || "");   // 名字里没写档位时才退回 type
+  if (t === "高级小队") return "pre";
+  if (t === "活动小队") return "ev";
+  if (t === "超级小队") return "sup";
+  return "nor";
+}
+function sqTierName(x){
+  return String((x && x.name) || "").replace(/^超级小队[:：]\s*/, "").trim();
+}
+function squadStats(sq){
+  let sup = 0, pre = 0, nor = 0, ev = 0;
+  const paidList = [];
+  sq.forEach((x, i) => {
+    const t = sqTier(x);
+    if (t === "sup") sup++;
+    else if (t === "pre") pre++;
+    else if (t === "ev") ev++;
+    else nor++;
+    if (t === "sup" || t === "pre"){
+      paidList.push({
+        name: sqTierName(x) || ("未命名小队 " + (i + 1)),
+        c: cn1(x.country), arm: x.arm || "", exp: x.battleExper || 0,
+        tier: t, raw: x.type || ""
+      });
+    }
+  });
+  // 超级排前面，同档按经验降序
+  paidList.sort((a, b) => (a.tier === b.tier ? b.exp - a.exp : (a.tier === "sup" ? -1 : 1)));
+  const by = {};
+  paidList.forEach(x => { by[x.c] = (by[x.c] || 0) + 1; });
+  return {
+    total: sq.length,
+    sup, pre, nor, ev,
+    paid: sup + pre, paidList,      // 氪金队 = 超级 + 高级
+    free: nor + ev, by,
+    supList: paidList.filter(x => x.tier === "sup").map(x => x.name)
+  };
+}
+/* ---------------- 评价口径 ----------------
+   一律只用这次取的 N 场（hisBattles 逐场聚合）。
+   overview 里的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数全部不参与评分，也不进结论，
+   只在「生涯概览」卡片里原样展示，作为背景。 */
+
+function segments(rows, k){
+  const size = Math.ceil(rows.length / k);
+  const out = [];
+  for (let i = 0; i < rows.length; i += size){
+    const seg = rows.slice(i, i + size);
+    if (!seg.length) break;
+    out.push({ rows: seg, s: summarize(seg), from: seg[seg.length - 1], to: seg[0] });
+  }
+  return out;
+}
+
+/* ---------------- 评价生成 ---------------- */
+function tier(v, table, def){
+  for (const t of table){ if (v >= t[0]) return t[1]; }
+  return def || table[table.length - 1][1];
+}
+/* 基础分：沿用原来五项加权（满分 100），保证老结论大体可比 */
+function scoreBase(o){
+  const a = Math.min(o.winRate / 95, 1) * 34;   // 胜率
+  const b = Math.min(o.avgWK / 150, 1) * 24;    // 场均击杀（载具已按战功折算，不再单列加分）
+  const c = Math.min(o.kd / 4, 1) * 18;         // K/D
+  const d = Math.min(o.capAvg / 2.5, 1) * 12;   // 场均占点
+  const e = Math.min(o.top1Rate / 60, 1) * 12;  // 全场第一率
+  return a + b + c + d + e;
+}
+
+/* 修正分：把战绩接口里剩下的字段全部折算成加减项 */
+function scoreAdjust(o, fleeRate){
+  const items = [];
+  const add = (k, v, note) => items.push({ k: k, v: v, note: note });
+
+  // 1 争夺参与：点内击杀占比（进攻 + 防守）
+  add("点内击杀", o.pinRate >= 35 ? 4 : o.pinRate >= 25 ? 2 : o.pinRate >= 15 ? 0 : -5, f1(o.pinRate) + "%");
+  // 2 生存：每战斗分钟死亡数
+  add("生存", o.dpm <= 2.0 ? 3 : o.dpm <= 2.4 ? 1.5 : o.dpm <= 2.8 ? 0 : -3, f2(o.dpm) + " 死/分");
+  // 3 纪律：逃跑 / 早退比例
+  add("纪律", fleeRate <= 0.5 ? 3 : fleeRate <= 2 ? 1 : fleeRate <= 5 ? -1 : -4, f1(fleeRate) + "% 逃跑");
+  // 4 开团：一血
+  add("开团", o.fbPer >= 0.25 ? 1.5 : o.fbPer >= 0.1 ? 0.5 : -0.5, f2(o.fbPer) + " 一血/场");
+  // 5 支援：工程设施使用 + 助攻率
+  add("支援", (o.engPer >= 6 || o.asstRate >= 10) ? 1.5 : (o.engPer >= 3 || o.asstRate >= 7) ? 0.5 : 0,
+      f1(o.engPer) + " 次工程/场 · 助攻 " + f1(o.asstRate) + "%");
+  // 6 反甲：打掉敌方载具按坦克5/飞机3/运兵车3折算，占战功比例越高越是真干活
+  add("反甲", o.vehRate >= 20 ? 3 : o.vehRate >= 10 ? 2 : o.vehRate >= 4 ? 1 : 0, f1(o.vehRate) + "% 战功");
+
+  return { items: items, total: items.reduce((s, x) => s + x.v, 0) };
+}
+
+function clamp100(v){ return Math.max(0, Math.min(100, v)); }
+
+function scoreDetail(o, fleeRate){
+  const base = scoreBase(o);
+  const adj = scoreAdjust(o, fleeRate || 0);
+  // 修正只做微调：上限 +6，避免强号直接顶到 100；下限 -12，逃跑多的真该扣
+  const capped = Math.max(-12, Math.min(6, adj.total));
+  const raw = base + capped;
+  return { base: base, adj: capped, adjRaw: adj.total, items: adj.items, raw: raw, total: clamp100(raw) };
+}
+
+function score100(o, fleeRate){
+  return scoreDetail(o, fleeRate).total;
+}
+
+/* 风格指纹：不适合进分数的字段，转成打法标签 */
+function styleProfile(s){
+  const vehR = s.vehRate;            // 载具折算战功占击杀比例
+  const want = [];
+  if (s.pinRate >= 38) want.push(["点内绞肉机", "hi"]);
+  else if (s.pinRate >= 28) want.push(["以点为主", "hi"]);
+  else if (s.pinRate >= 18) want.push(["点内外兼顾", ""]);
+  else if (s.avgK >= 60) want.push(["点外收割", "bad"]);
+  else want.push(["点内参与少", "bad"]);
+  if (s.pin > 150){
+    if (s.pinD > s.pinA * 1.5) want.push(["守点型", ""]);
+    else if (s.pinA > s.pinD * 2) want.push(["攻点型", "hi"]);
+    else want.push(["攻守均衡", ""]);
+  }
+  if (vehR >= 20) want.push(["反甲主力", "hi"]);
+  else if (vehR >= 10) want.push(["会打装甲", "hi"]);
+  else if (vehR >= 4) want.push(["顺手炸车", ""]);
+  else want.push(["纯步兵位", ""]);
+  if (s.meleeRate >= 1.2) want.push(["贴脸狂", "hi"]);
+  if (s.nadeRate >= 2.4) want.push(s.vehPer >= 0.3 ? ["炸药包反甲", "hi"] : ["手雷党", ""]);
+  if (s.pistolRate >= 0.8) want.push(["手枪侠", ""]);
+  if (s.fbPer >= 0.22) want.push(["开团先锋", "hi"]);
+  else if (s.fbPer <= 0.06) want.push(["不打第一枪", ""]);
+  if (s.fortPer >= 4) want.push(["修碉堡的", ""]);
+  else if (s.engPer >= 6) want.push(["工兵", ""]);
+  if (s.dpm >= 2.8) want.push(["拿命换头", "bad"]);
+  else if (s.dpm <= 2.05) want.push(["惜命", "hi"]);
+  if (s.spm >= 450) want.push(["高产出", "hi"]);
+  else if (s.spm <= 300) want.push(["磨洋工", "bad"]);
+  if (s.sqdPer >= 7) want.push(["小队常被打光", "bad"]);
+  else if (s.sqdPer <= 4) want.push(["那一路挺稳", "hi"]);
+  if (s.asstRate >= 12) want.push(["爱补刀", "hi"]);
+  else if (s.asstRate >= 8) want.push(["会配合", ""]);
+  if (s.hsRate >= 13) want.push(["枪法硬", "hi"]);
+  else if (s.hsRate < 8) want.push(["乱扫", "bad"]);
+  return want.map(x => ({ t: x[0], tone: x[1] }));
+}
+
+/* ---------------- 玩家分级（12 级，6 大档 × 2 小档） ----------------
+   判定不是单纯拿总分卡线：六个维度各自归一化后加权，再看纪律扣分。
+   维度：枪法(场均击杀+K/D)、胜率、意识(点内击杀占比)、支援(工程+助攻)、反甲(载具战功占比)、经验(生涯场次) */
+const GRADES = [
+  { no:"1.1", name:"纯萌新", band:"萌新",
+    trait:"占点、建复活点、看标记这些还不做，见人先开枪再瞄准，经常被 AI 反杀。",
+    ev:"还没入门。动作没成型，枪口比眼睛快，死了也不知道自己死在谁手上。",
+    vs:"跟谁比都不占优，先别谈换算。",
+    need:"三件事：会敲复活点、会敲弹药箱、跟着人往点上走。" },
+  { no:"1.2", name:"入门萌新", band:"萌新",
+    trait:"知道要占点、会跟队，偶尔敲个弹药箱；路线走得直，枪法随缘，击杀靠对面失误。",
+    ev:"入门了，但只有概念没有执行。知道该干嘛，一到开打就全忘。",
+    vs:"打一个合格兵要两个以上，还得有人带着。",
+    need:"把路线走歪一点，别每次都从正门进；枪口先稳住，再谈爆头。" },
+  { no:"2.1", name:"基础新手", band:"新手",
+    trait:"机制懂了，弹药箱和复活点会敲，点也知道占；位置感差，经常死在半路上。",
+    ev:"会做事，但站的地方不对。死在路上的次数，比死在点里的多。",
+    vs:"打老兵要 3 个以上，打路人王基本没戏。",
+    need:"先学会「不白给」：进点前找掩体、别横穿大马路、别一个人摸侧翼。" },
+  { no:"2.2", name:"进阶新手", band:"新手",
+    trait:"会看标记、跟队补位，枪法开始有感觉，能辅助队友，偶尔打出像样的击杀。",
+    ev:"该会的都会了，缺的是稳定。偶尔像个人，多数时候还是跟不上节奏。",
+    vs:"打老兵要 2–3 个；打路人王 3 个起。",
+    need:"把「偶尔」变成「每场」：固定两三条进攻路线，练熟一套枪。" },
+  { no:"3.1", name:"合格兵", band:"普通水平",
+    trait:"会修点、占点、换弹找掩体，1v1 看运气，能完成基本任务。",
+    ev:"对局中坚，稳定执行任务。单兵上限不高，遇到老兵基本被压。",
+    vs:"打老兵要 2–3 个；打路人王要 3–4 个。",
+    need:"补单兵上限：1v1 别慌、关键点敢站、先学会「换掉一个再死」。" },
+  { no:"3.2", name:"熟练普通", band:"普通水平",
+    trait:"懂常见路线，枪法凑合，偶尔小连杀，但遇到老登一碰就碎。",
+    ev:"基本功扎实，只差经验和细节。比合格兵强，但仍不能单独改变战局。",
+    vs:"打老兵要 2 个；打路人王要 3 个。",
+    need:"从「完成任务」往「打开局面」走：学会读局势、主动开团、抓对面复活点。" },
+  { no:"4.1", name:"老兵", band:"老兵",
+    trait:"理解更深，会绕侧、拆复活点、反载具；单兵仍逊老登，但能制造麻烦。",
+    ev:"经验丰富，战术意识在线，能打开局面。单挑老登吃亏，但能让老登难受。",
+    vs:"打路人王要 2 个；打老登要 3 个。",
+    need:"把「能制造麻烦」变成「能决定结果」：稳定 carry 一小片战场。" },
+  { no:"4.2", name:"精锐老兵", band:"老兵",
+    trait:"能稳定给老登压力，关键点能拖能守，偶尔反杀，知道何时送、何时撤、何时绕。",
+    ev:"攻守兼备，节奏感强，普通玩家里面的标杆。距路人王只差稳定 carry 和全局影响力。",
+    vs:"打路人王 1–2 个，2 个稳；打老登 2–3 个，3 个稳。",
+    need:"差的是全局：别只盯着自己那条线，学会看全图节奏和小队调度。" },
+  { no:"5.1", name:"路人王", band:"路人王",
+    trait:"单排常居前列，能左右局部战局，关键点能打开，能带起一小片节奏。",
+    ev:"单排大腿，局部战场的定心丸。队友跟着有底气，但未必能一人逆转整局。",
+    vs:"1v1 打老登大概三七开，单挑明显吃亏；2 个路人王无配合也能胜 1 个老登——老登再强也只能同时盯一个方向。3 个基本碾压，但没必要。",
+    need:"补逆风能力：局面崩了之后，还能不能找出第二条路。" },
+  { no:"5.2", name:"顶级路人王", band:"路人王",
+    trait:"能左右整局，杀关键人、建关键点、开载具/反载具，逆风也能找机会。",
+    ev:"关键先生，胜负手级别。逆风能带队找希望，但面对车队老登仍可能被体系压制。",
+    vs:"1v1 对老登已经五五开，单挑不虚；2 个顶级路人王基本稳赢 1 个老登；1 个打老登看状态、装备和地图，不算稳，但有机会。",
+    need:"到这一步已经不是单兵问题了，缺的是能配合你的第二个、第三个人。" },
+  { no:"6.1", name:"老登", band:"老登",
+    trait:"综合成型，枪法、意识、工程、载具至少多项强，知道怎么赢，稳定压制。",
+    ev:"六边形战士，战场定海神针。不一定杀最多，但最知道怎么让对手赢不了。",
+    vs:"打同档基本看谁的队友先崩；对下位基本是稳定压制。",
+    need:"没什么可补的，保持就行——真要挑，就是别被版本和装备惯坏。" },
+  { no:"6.2", name:"老老登", band:"老登",
+    trait:"全维度压制：单兵、战术、载具、车队、心理战都强，能让你输得不明不白。",
+    ev:"天花板级别的传奇。技术、意识与心态俱佳，是无数玩家追赶的目标，也是噩梦。",
+    vs:"遇到这种号，别想着单挑，先想办法别让他在关键点站住。",
+    need:"已经不是「练」能追上的层次，遇到就当上课。" }
+];
+/* 分级带：索引 i 的等级覆盖 [BANDS[i-1], BANDS[i])，最后一档为满分。
+   标定依据：用 12 组建档基准画像（每档各一组典型数值）反推，保证一档一组、不扎堆 */
+const GRADE_BANDS = [10, 23, 32, 39, 46, 53, 61, 69, 78, 87, 100];
+
+/* 每一档两套开场/收尾，按玩家名做确定性抽签：同一个人每次看都一样，不同人读起来不一样 */
+const GRADE_OPEN = [
+  ["还在打基础的阶段，先别急着上强度。", "这号现在最缺的不是技术，是习惯。"],
+  ["知道该干嘛了，但一到开打就全忘。", "入门是入门了，执行还差得远。"],
+  ["会做事，但站的地方不对。", "机制明白了，脑子还没跟上手。"],
+  ["该会的都会，缺的是稳定。", "手感有了，稳定性没跟上。"],
+  ["能干活，但改变不了战局。", "任务能完成，上限看得见。"],
+  ["基本功扎实，只差那口气。", "比合格兵强一档，但还不能单独改命。"],
+  ["经验在线，能打开局面。", "会绕、会拆、会反载具，是老练的那种。"],
+  ["攻守兼备，节奏感是这号最大的本钱。", "普通玩家里的标杆，就差全局那一步。"],
+  ["自己那一片，基本是他的地盘。", "队友看到这号会踏实一点。"],
+  ["基本上是一个人扛半边天。", "逆风局里，他就是那个还愿意找机会的人。"],
+  ["不用介绍，这号在局里就是压制力。", "六边形成型，赢法比杀法多。"],
+  ["这种号遇到就当上课。", "全维度压制，输得不明不白是常态。"]
+];
+const GRADE_FINAL = [
+  ["现在最该练的不是枪，是别一个人往点里冲。", "先把复活点和弹药箱练成条件反射，其他都是后话。"],
+  ["路线别再走直线了，绕一次就少死一次。", "把「知道该干嘛」变成「不用想就干了」，就能往上走一档。"],
+  ["死得少一点，比杀得多一点更容易升级。", "位置感是这号唯一的短板，补上就是另一档的人。"],
+  ["稳定下来就是合格兵，稳定不了就永远停在「偶尔像个人」。", "把一条路线、一把枪练到闭眼都会，比什么都管用。"],
+  ["单兵上限不补，永远只能当对局中坚。", "想往上走，先学会 1v1 不慌、关键点敢站。"],
+  ["差的是「打开局面」这四个字，练不出来就卡在这。", "会完成任务不算本事，能改结果才算。"],
+  ["能制造麻烦的人很多，能决定结果的少，往后者走。", "把局部优势变成全图优势，就是下一档。"],
+  ["再稳一点，你就不是「普通玩家标杆」，是他那一队的核心。", "全局观是最后一道坎。"],
+  ["一个人强不叫赢，找到第二个人才叫。", "逆风能不能翻，是这一档和上一档的分水岭。"],
+  ["单兵到顶了，接下来拼的是队伍。", "别老想着 1v1，能带人赢才是真的。"],
+  ["没什么好挑的，别被版本惯坏。", "保持就好，别为了数据把自己打散。"],
+  ["遇到这号，先想办法别让他在关键点站住。", "没什么可建议的，练到这份上已经是别人的目标。"]
+];
+
+const c01 = v => Math.max(0, Math.min(1, isFinite(v) ? v : 0));
+
+/* ================= 评分标尺（写死的基准战绩 = 标准1） =================
+   「标准1」= 6.2 的刻度线：他这 100 场样本的枪法就是 1.0，折 100 分。
+   别人的总分 = 枪法比 × 100 + 额外加分（4:2:1:1:1:1，只算超出他的部分），满 100 分即标准1。
+   越过 100 分 = 比标准1还强 → 记「6.2+」（不是天花板，刻度外还有一格）。
+   越过 15%（>115 分）→ 数据有疑问（疑似开挂）。
+   数据来源：hisBattles 取样 100 场（2026-11-08 抓取，写死在页面里，不查接口也显示、也参与算分）。
+   以后要换标尺：改这个对象 + BASE_SCORE，枪法函数和分带都不用动。 */
+const BENCH = {
+  uid: 2341138, name: "标准1", sample: 100, battles: 428, takenAt: "2026-11-08",
+  winRate: 93.0, kd: 3.753, avgK: 120.74, avgD: 32.17, kills: 12074, deaths: 3217,
+  pinRate: 25.73, engPer: 4.61, asstRate: 6.97, vehRate: 5.39, vehPer: 1.52,
+  score: 6525, scoreMax: 14343, top1Rate: 72, hsRate: 13.79,
+  fbPer: 0.25, dpm: 2.58, spm: 523, sqdPer: 4.86, capAvg: 1.81,
+  grade: "6.2 老老登", base: 100
+};
+const BASE_SCORE = BENCH.base;   // 标准1 = 100 分（满分基准）= 6.2 的及格线
+
+/* 单场权重：双方真人总数 < 7 的人机局按比例降权，避免刷人机把数据抬上去
+   ≥7 人 = 满权；4~6 人 = 0.4；≤3 人 = 0.2；没取到阵容的场次按 1.0（不猜） */
+const W_FULL = 1.0, W_MID = 0.4, W_LOW = 0.2;
+function wOfHumans(h){
+  if (h == null) return W_FULL;
+  if (h >= 7) return W_FULL;
+  if (h >= 4) return W_MID;
+  return W_LOW;
+}
+
+/* 额外加分项：比例 4:2:1:1:1:1，只对「超出的部分」给分，所以标准1本人恒 0 加分
+   每份 0.6 分 → 封顶 +6 分 */
+const BONUS_PER = 0.6, BONUS_CAP = 6;
+const BONUS_ITEMS = [
+  { k: "修造复活点", w: 4, get: s => s.engPer, ref: BENCH.engPer, unit: "次/场", d: 1 },
+  { k: "反击载具", w: 2, get: s => s.vehPer, ref: BENCH.vehPer, unit: "台/场", d: 2 },
+  { k: "占领点", w: 1, get: s => s.capAvg, ref: BENCH.capAvg, unit: "次/场", d: 2 },
+  { k: "点内击杀", w: 1, get: s => s.pinRate, ref: BENCH.pinRate, unit: "%", d: 1 },
+  { k: "K/D", w: 1, get: s => s.kd, ref: BENCH.kd, unit: "", d: 2 },
+  { k: "击杀数量", w: 1, get: s => s.avgK, ref: BENCH.avgK, unit: "杀/场", d: 1 }
+];
+function bonusOf(s){
+  let total = 0;
+  const list = BONUS_ITEMS.map(b => {
+    const v = b.get(s) || 0;
+    const over = b.ref > 0 ? Math.max(0, v / b.ref - 1) : 0;
+    const pts = over * b.w * BONUS_PER;
+    total += pts;
+    return { k: b.k, v: v, ref: b.ref, over: over, w: b.w, pts: pts, unit: b.unit, d: b.d };
+  });
+  return { total: Math.min(BONUS_CAP, total), list: list };
+}
+
+/* 判级刻度（比标准1强不再直接算挂，分两层）：
+   raw > 100        → 6.2+（比标准1强，刻度外第一格，真人能打出来）
+   raw > 115（+15%）→ 数据有疑问（超出一成半，采样噪声解释不了） */
+const OVER_SCORE = BASE_SCORE;                    // 100 分：标准1 本人
+const SUSPECT_RATE = 1.15;                        // 超出 15% 就上「数据有疑问」
+const SUSPECT_SCORE = BASE_SCORE * SUSPECT_RATE;  // 115 分
+
+const OVER_G = {
+  no: "6.2+", name: "超出刻度", band: "超出刻度",
+  trait: "各项都顶在标准1之上，尤其是枪法这一截——真人有这个上限。",
+  ev: "越过标准1的号：不是挂，是标准1已经不够量他了。",
+  vs: "已经比标尺还高，往上没有可比的人，只能看他跟标准1差多少。",
+  need: "这种号不用练什么了，缺的是对手——别被版本和车队惯坏就行。"
+};
+const SUSPECT_G = {
+  no: "6.2+", name: "数据有疑问", band: "数据有疑问",
+  trait: "总分比标准1高出 15% 以上，这个幅度不是采样噪声能解释的。",
+  ev: "越过标准1一成半：要么样本有问题（人机局/代打/车队刷），要么数据不干净。",
+  vs: "标尺已经压不住了，只能存疑：先别当实力看。",
+  need: "没什么可建议的，先自查数据来源；正常打的话换个取样区间再看一次。"
+};
+
+/* 基准卡：把写死的这份数据摊在首页，不查任何接口也看得到 */
+function renderBench(){
+  const el = document.getElementById("bench");
+  if (!el) return;
+  const b = BENCH;
+  const cells = [
+    [f1(b.winRate) + "%", "胜率"],
+    [f1(b.avgK), "场均击杀"],
+    [f2(b.kd), "K/D"],
+    [f1(b.engPer), "修造复活点/场"],
+    [f2(b.vehPer), "反击载具/场"],
+    [f1(b.pinRate) + "%", "点内击杀占比"]
+  ];
+  const all = [
+    ["取样场次", num(b.sample) + " 场"], ["生涯场次", num(b.battles) + " 场"],
+    ["总击杀", num(b.kills)], ["总死亡", num(b.deaths)],
+    ["场均死亡", f1(b.avgD)], ["场均得分", num(b.score)],
+    ["工程器械/场", f1(b.engPer)], ["助攻率", f1(b.asstRate) + "%"],
+    ["载具战功占比", f1(b.vehRate) + "%"], ["爆头率", f1(b.hsRate) + "%"],
+    ["一血/场", f2(b.fbPer)], ["伤害/分钟", f2(b.dpm)],
+    ["得分/分钟", num(b.spm)], ["小队使用/场", f2(b.sqdPer)],
+    ["占旗/场", f2(b.capAvg)]
+  ];
+  el.innerHTML = '<div class="bench-h"><b>评分标尺 · ' + esc(b.name) + "</b>"
+    + '<span class="sub">UID ' + b.uid + " · 取样 " + b.sample + " 场 · 生涯 " + num(b.battles) + " 场 · " + b.takenAt + " 写死</span>"
+    + '<span class="gr">判级 ' + esc(b.grade) + " · " + f1(b.base) + " 分</span></div>"
+    + '<div class="bench-g">' + cells.map(c =>
+        '<div><span class="n">' + c[0] + '</span><span class="l">' + c[1] + "</span></div>").join("") + "</div>"
+    + '<div class="bench-f">总分 <b>100 分</b> = 枪法分（满分 ' + f1(BASE_SCORE) + '，场均击杀 ÷ 标准1 的 ' + f1(b.avgK) + '，KD 不进枪法）'
+    + " + 额外加分（修造复活点 4 : 反击载具 2 : 占领点 1 : 点内击杀 1 : K/D 1 : 击杀数量 1，"
+    + "只算超出的部分，载具按台数一台算一台，每份 " + BONUS_PER + " 分，封顶 +" + BONUS_CAP + " 分）"
+    + "。标准1 <b>" + f1(BASE_SCORE) + " 分 = 6.2 的及格线</b>；总分越过 100 记 <b>6.2+</b>，"
+    + "越过 +" + Math.round((SUSPECT_RATE - 1) * 100) + "%（" + f1(SUSPECT_SCORE) + " 分以上）记「数据有疑问」。"
+    + "人机局（双方真人 &lt;7）逐场降权：4~6 人按四成、≤3 人按两成计。这份数据写在页面里，不查接口也显示，也参与算分。</div>"
+    + '<button class="bench-more" id="benchMore">展开全部 ' + (all.length + cells.length) + " 项数据 ▾</button>"
+    + '<div class="bench-all" id="benchAll">'
+    + all.map(x => '<div><span class="k">' + x[0] + '</span><span class="v">' + x[1] + "</span></div>").join("")
+    + "</div>";
+  const mb = document.getElementById("benchMore"), ba = document.getElementById("benchAll");
+  if (mb && ba) mb.onclick = () => {
+    const on = ba.classList.toggle("on");
+    mb.textContent = (on ? "收起 ▴" : "展开全部 " + (all.length + cells.length) + " 项数据 ▾");
+  };
+}
+
+/* 基础分只有一个维度：枪法 = 场均击杀 ÷ 标准1 的 120.74（K/D 不进基础分，挪到加分项里单算）
+   枪法比 1.0 = 标准1 = 100 分（满分基准）= 6.2 的及格线（标准1是刻度，不是天花板）
+   总分 = 枪法分（0~100）+ 额外加分（封顶 +6）
+   >100 → 6.2+；>115（超出 15%）→ 数据有疑问 */
+function gunOf(s, B){
+  return (B.avgK || 0) / BENCH.avgK;
+}
+function gradeOf(s, B, ovBattles, fleeRate, env, who){
+  const gun = gunOf(s, B);
+  const bn = bonusOf(s);
+  /* 标准1 本人 = 标尺本身：取样一变枪法会抖，抖到 100 以下就掉 6.1 了，所以直接钉死 */
+  const selfBench = !!who && (String(who.uid) === String(BENCH.uid) || who.name === BENCH.name);
+  const raw = selfBench ? BASE_SCORE : Math.max(0, gun * BASE_SCORE + bn.total);
+  const over = !selfBench && raw > OVER_SCORE + 0.0001;              // 比标准1强 → 6.2+
+  const suspect = !selfBench && raw > SUSPECT_SCORE + 1e-9;          // 超出 15% → 数据有疑问
+  const v = Math.max(0, Math.min(100, raw));
+  let idx = GRADE_BANDS.findIndex(b => v < b);
+  if (idx < 0) idx = GRADES.length - 1;
+  const g = suspect ? SUSPECT_G : over ? OVER_G : GRADES[idx];
+  const nextBand = idx < GRADE_BANDS.length ? GRADE_BANDS[idx] : null;
+  return {
+    v: v, raw: raw, gun: gun, bonus: bn.list, bonusSum: bn.total,
+    idx: idx, g: g, selfBench: selfBench, over: over, suspect: suspect,
+    gap: nextBand ? Math.max(0, nextBand - v) : 0
+  };
+}
+
+/* 同一个玩家刷新多少次都说一样的话；不同玩家措辞不同 */
+function picker(seed){
+  let t = 2166136261;
+  for (let i = 0; i < String(seed).length; i++){ t ^= String(seed).charCodeAt(i); t = Math.imul(t, 16777619); }
+  t >>>= 0;
+  return arr => {
+    t = (t + 0x6D2B79F5) >>> 0;
+    let x = Math.imul(t ^ (t >>> 15), 1 | t);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return arr[((x ^ (x >>> 14)) >>> 0) % arr.length];
+  };
+}
+
+function buildVerdict(D){
+  const { uid, name, ov, rows, clean, flee, quick, sq, segs } = D;
+  const s = summarize(clean);
+  const rawN = rows.length;
+  const rawWins = rows.filter(isWin).length;
+  const fleeRate = rawN ? (flee.length + quick.length) / rawN * 100 : 0;
+  const SD = scoreDetail(s, fleeRate);
+  const sc = SD.total;
+  const ovBattles = (ov && ov.sumBattles) || 0;
+  /* 评价只用这次取的 N 场；生涯的胜率 / K/D / 场均 / 最高分 / MVP 一律不参与判定 */
+  const BTopRate = s.top1Rate, BTopN = s.n;
+  const tags = styleProfile(s);
+
+  // 分级：六维加权 + 纪律扣分
+  const GB = { winRate: s.winRate, kd: s.kd, avgK: s.avgK };
+  const cs = D.country || countryStats(clean, ov);
+  const env = D.env || null;
+  const G = gradeOf(s, GB, ovBattles, fleeRate, env, { uid: uid, name: name });
+  const gNext = GRADES[G.idx + 1] || null;
+  const rnd = picker(String(uid) + "|" + name);
+  const gi = Math.max(0, Math.min(GRADES.length - 1, G.idx));
+  const title = G.g.name;
+  const titleCls = G.idx <= 3 ? "bad" : "";
+
+  const P = [];
+
+  // 1 结论
+  P.push({
+    lead: true,
+    html: '<em class="' + titleCls + '">' + esc(name) + '</em> 这号，判级 <em class="' + titleCls + '">' + G.g.no + " " + G.g.name + "</em>"
+      + (G.g.band !== G.g.name && !G.selfBench && !G.over && !G.suspect ? "（" + G.g.band + "档）" : "") + "。"
+      + (G.suspect ? "数据比标准1高出 15% 以上，这个幅度先存疑。"
+          : G.over ? "已经越过标准1，给 6.2+。"
+          : rnd(GRADE_OPEN[Math.min(GRADES.length - 1, G.idx)])) + "<br>"
+      + "最近取的 <b>" + s.n + "</b> 场" + (s.wN < s.n - 0.05 ? "（人机局降权后折合 " + f1(s.wN) + " 场）" : "")
+      + "有效战绩：<b>" + s.wins + "胜" + s.loss + "负</b>，加权胜率 <b>"
+      + f1(s.winRate) + "%</b>，K/D <b>" + f2(s.kd) + "</b>，场均 <b>" + f1(s.avgK) + "</b> 杀"
+      + (G.selfBench
+          ? "。这个号就是标准1本身（页面里写死的 " + num(BENCH.sample) + " 场样本），固定 <b>" + f1(BASE_SCORE) + "/100</b>"
+          : "。枪法是标准1的 <b>" + f1(G.gun * 100) + "%</b>，折 <b>" + f1(G.gun * BASE_SCORE) + "</b> 分"
+            + (G.bonusSum > 0.005 ? "，加分项再补 <b>+" + f1(G.bonusSum) + "</b>" : "")
+            + "，总分 <b>" + f1(G.raw) + "/100</b>")
+      + (G.suspect ? "，<b>超出 15% → 数据有疑问</b>。" : G.over ? "，<b>比标准1强 → 6.2+</b>。" : "")
+      + (G.over ? "" : (gNext ? "，离 <b>" + gNext.no + " " + gNext.name + "</b>还差 " + f1(G.gap) + " 分" : "，已经在分级表顶端") + "。")
+  });
+
+  // 2 战绩细节
+  let p2 = rnd(["先说硬的，枪口和反甲：", "第一层永远是枪法：", "从最能打的地方说起："])
+    + "场均 <b>" + f1(s.avgK) + " 杀 / " + f1(s.avgD) + " 死 / " + f1(s.avgA) + " 助</b>，场均 <b>"
+    + num(Math.round(s.score)) + "</b> 分，单场最高 <b>" + num(s.scoreMax) + "</b> 分。";
+  if (s.hsRate >= 13) p2 += "爆头率 <span class=\"hl\">" + f1(s.hsRate) + "%</span>，枪口抬得稳，不是乱扫。";
+  else if (s.hsRate >= 9) p2 += "爆头率 <b>" + f1(s.hsRate) + "%</b>，中规中矩。";
+  else p2 += "爆头率 <span class=\"hla\">" + f1(s.hsRate) + "%</span>，这准星基本是往身上糊。";
+  if (s.veh === 0){
+    p2 += "载具击杀 <span class=\"hla\">0</span> 台，一炮没开过，全程步兵硬碰硬。";
+  } else {
+    p2 += "反甲这块打掉 <b>" + num(s.veh) + "</b> 台（坦" + num(s.tk) + " / 机" + num(s.ak) + " / 运" + num(s.apc)
+      + "），按坦克 5、飞机/运兵车 3 个人头折算，等于多出 <b>" + num(s.vehVal) + "</b> 个战功，占他战功总量的 <b>"
+      + f1(s.vehRate) + "%</b>。";
+    if (s.vehRate >= 20) p2 += "<span class=\"hl\">这个比例很高，反甲是他吃饭的本事</span>——对面一上车他就去炸，"
+      + "坦克在他眼里不是铁疙瘩，是 <b>5 个人头</b>。";
+    else if (s.vehRate >= 10) p2 += "反甲有实打实的产出，<b>不是那种只会往人堆里扔雷的</b>。";
+    else if (s.vehRate >= 4) p2 += "顺手会炸个车，主要精力还是放在人身上。";
+    else p2 += "基本不干反甲的活，<b>对面坦克在他面前可以放心开</b>。";
+  }
+  P.push({ html: p2 });
+
+  // 3 打法诊断（核心判据：点内击杀占比，而不是占领次数）
+  let p3 = rnd(["人往哪儿跑，比杀多少更能说明问题。", "打法这事不能看占领次数，得看点内击杀：", "先看位置——他到底在不在点里打架？"])
+    + "他一共击杀 <b>" + num(s.kills) + "</b>，其中 <b>"
+    + num(s.pin) + "</b> 是在争夺点里拿的，占 <span class=\"" + (s.pinRate >= 30 ? "hl" : s.pinRate >= 18 ? "" : "hlr") + "\">"
+    + f1(s.pinRate) + "%</span>（进攻点内 <b>" + num(s.pinA) + "</b> / 防守点内 <b>" + num(s.pinD) + "</b>）。";
+  if (s.pinRate >= 38){
+    p3 += "这个比例说明他<b>整局就泡在点里</b>，人头是在旗子底下换来的，不是在外围收的。";
+  } else if (s.pinRate >= 28){
+    p3 += "比例不低，<b>打点是他主要的话事方式</b>，但也留了一部分力气在外围游走。";
+  } else if (s.pinRate >= 18){
+    p3 += "这个比例偏中等，<b>打点更像是顺路</b>，主业还是在外围找人。";
+  } else {
+    p3 += "<span class=\"hlr\">这是典型的点外打法</span>——人杀得不少，但基本不在争夺点里发生，<b>旗子靠队友去顶</b>。";
+  }
+  // 进攻 / 防守倾向
+  if (s.pinD > s.pinA * 1.5 && s.pinD > 80){
+    p3 += "而且防守点内击杀（" + num(s.pinD) + "）远多于进攻（" + num(s.pinA) + "），<b>是守成型选手</b>，喜欢等对面来送。";
+  } else if (s.pinA > s.pinD * 2 && s.pinA > 80){
+    p3 += "进攻点内击杀（" + num(s.pinA) + "）压过防守（" + num(s.pinD) + "）一大截，<b>是推着打的那种</b>，敢往旗子下面冲。";
+  }
+  // 占领次数只作辅助，且明确说明它和点内击杀不是一回事
+  if (s.capAvg >= 1.5){
+    p3 += "而且他实际<b>占下旗子 " + num(s.cap) + " 次</b>（场均 " + f2(s.capAvg) + "），<b>既清人也真站上去过</b>，不是只打不占。";
+  } else {
+    p3 += "他实际<b>占下旗子 " + num(s.cap) + " 次</b>（场均 " + f2(s.capAvg) + "），这个数低不代表不参与争夺——"
+      + "在点里把人清掉、让队友站上去，旗子照样不算他的。";
+  }
+  if (BTopRate >= 60) p3 += "全场第一 <span class=\"hl\">" + num(s.top1) + "/" + num(BTopN) + "（" + f1(BTopRate) + "%）</span>，这不是大腿，这是<b>整条腿</b>。";
+  else if (BTopRate >= 30) p3 += "全场第一 <b>" + num(s.top1) + " 次（" + f1(BTopRate) + "%）</b>，<b>一半场次左右都是队内头名</b>。";
+  else if (BTopRate < 12) p3 += "全场第一只有 <span class=\"hla\">" + num(s.top1) + " 次</span>，混在队里基本不起眼。";
+  P.push({ html: p3 });
+
+  // 3.5 武器指纹（近战 / 手雷 / 手枪 / 一血）
+  let pw = rnd(["武器选择是最诚实的指纹：", "看他用什么家伙杀人，比看他说什么有用：", "武器构成这块没什么好藏的："])
+    + "近战 <b>" + num(s.melee) + "</b>（" + f1(s.meleeRate) + "%）、手雷 <b>" + num(s.nade)
+    + "</b>（" + f1(s.nadeRate) + "%）、手枪 <b>" + num(s.pistol) + "</b>（" + f1(s.pistolRate) + "%）。";
+  if (s.meleeRate >= 1.2){
+    pw += "近战击杀占到 <span class=\"hl\">" + f1(s.meleeRate) + "%</span>，<b>是真敢贴到脸上捅的</b>，"
+      + "不是那种隔着两百米对枪的人——这种人要么特别猛，要么送得特别快。";
+  } else if (s.closeRate >= 2.4){
+    pw += "近战系合计 <b>" + f1(s.closeRate) + "%</b>，但其中近战本身只有 " + f1(s.meleeRate) + "%，"
+      + "主要靠<b>手雷和手枪补伤害</b>，属于隔着掩体清人的打法，不是肉搏型。";
+  } else if (s.closeRate >= 1.2){
+    pw += "近战系合计 <b>" + f1(s.closeRate) + "%</b>，属于正常范围，偶尔被逼到近身也敢开火。";
+  } else {
+    pw += "近战系（近战+手枪+手雷）加起来才 <span class=\"hla\">" + f1(s.closeRate) + "%</span>，<b>全程保持距离打</b>，"
+      + "贴脸的机会基本都躲开了。";
+  }
+  if (s.nadeRate >= 2.4){
+    if (s.vehPer >= 0.3) pw += "至于那 <b>" + f1(s.nadeRate) + "%</b> 的雷，先别急着扣「扔雷不心疼」的帽子——他场均打掉 <b>" + f1(s.vehPer)
+      + "</b> 台载具，这些雷里有相当一部分是往坦克上扔的<b>炸药包</b>，一台坦克按 <b>5 个人头</b>算，这是反甲，不是清点。";
+    else pw += "那 <b>" + f1(s.nadeRate) + "%</b> 的雷偏攻楼清点型，基本都往人堆和窗户里扔。";
+  }
+  if (s.fbPer >= 0.22) pw += "一血 <b>" + num(s.fb) + "</b> 次（场均 " + f2(s.fbPer) + "），<span class=\"hl\">开局第一枪常常是他开的</span>。";
+  else if (s.fbPer <= 0.06) pw += "一血只有 <b>" + num(s.fb) + "</b> 次（场均 " + f2(s.fbPer) + "），<b>从不打第一枪</b>，习惯等对面先动。";
+  P.push({ html: pw });
+
+  // 3.6 支援与效率（工程 / 助攻 / 团灭 / 得分效率）
+  let pe = rnd(["支援这块最容易露馅：", "再能杀，也得有人给他铺路：", "工程和助攻，是这号最不会撒谎的数据："])
+    + "工程设施使用 <b>" + num(s.eng) + "</b> 次（场均 " + f1(s.engPer) + "）、自己建工事 <b>"
+    + num(s.fort) + "</b> 次（场均 " + f1(s.fortPer) + "），助攻 <b>" + num(s.assists) + "</b>（占击杀 "
+    + f1(s.asstRate) + "%）。";
+  if (s.engPer >= 6 || s.fortPer >= 4){
+    pe += "这数据说明他<b>会去补弹药箱、架工事</b>，不是纯打手，懂给队友铺路。";
+  } else if (s.engPer >= 3){
+    pe += "用得不算少，<b>基本的支援意识是有的</b>。";
+  } else {
+    pe += "<span class=\"hla\">基本不碰工程这套</span>，弹药箱对他是纯摆设。";
+  }
+  pe += "得分效率 <b>" + num(Math.round(s.spm)) + " 分/分钟</b>，每战斗分钟死亡 <b>" + f2(s.dpm) + "</b> 次；"
+    + "小队被打光 <b>" + num(s.sqd) + "</b> 次（场均 " + f1(s.sqdPer) + "）。";
+  if (s.dpm >= 2.8) pe += "<span class=\"hlr\">死得比谁都勤</span>，纯拿人头换时间。";
+  else if (s.dpm <= 2.05) pe += "<span class=\"hl\">惜命</span>，会算复活点，懂得什么时候该退。";
+  else pe += "死亡频率<b>属于常规水平</b>，不算莽也不算苟。";
+  if (s.sqdPer >= 7) pe += "小队常被打光，说明<b>他那一路顶不住</b>，队友跟着一起遭殃。";
+  else if (s.sqdPer <= 4) pe += "小队被打光的次数不多，<b>他所在的那一路相对稳</b>。";
+  P.push({ html: pe });
+
+  // 4 稳定性 / 走势
+  let p4 = "";
+  if (segs.length >= 3){
+    const rates = segs.map(x => x.s.winRate);
+    const first = rates[0], last = rates[rates.length - 1];
+    const mx = Math.max.apply(null, rates), mn = Math.min.apply(null, rates);
+    const diff = first - last, spread = mx - mn;
+    const path = rates.slice().reverse().map(v => f1(v) + "%").join(" → ");
+    if (diff >= 20) p4 += "走势更有意思：最近一段 <span class=\"hl\">" + f1(first) + "%</span>，最早那段只有 <b>" + f1(last) + "%</b>，"
+      + "<b>状态在往上爬</b>，这种人现在是危险期。";
+    else if (diff <= -20) p4 += "走势不太妙：最早那段 <b>" + f1(last) + "%</b>，最近掉到 <span class=\"hlr\">" + f1(first) + "%</span>，"
+      + "<b>越打越回去</b>，不是被针对就是自己麻了。";
+    else if (spread >= 30) p4 += "四段走势 " + path + "，最高 <b>" + f1(mx) + "%</b> 最低 <span class=\"hlr\">"
+      + f1(mn) + "%</span>，<b>纯过山车</b>——状态全看当天心情，指望他稳定输出是想多了。";
+    else p4 += "四段走势 " + path + "，稳得像条直线，没什么可挑的。";
+    if (mn < 30 && spread >= 30) p4 += "最低那段只剩 <span class=\"hlr\">" + f1(mn) + "%</span>，那阵子基本是被按在地上反复教育。";
+  }
+  if (p4) P.push({ html: p4 });
+
+  // 5 逃跑
+  if (flee.length + quick.length === 0){
+    P.push({ html: "<b>一场没跑。</b>" + s.n + " 场里没有任何全 0 记录、没有早退，被碾压也把局打完，"
+      + "<span class=\"hl\">这点在国服算稀缺品质</span>。" });
+  } else {
+    let p5 = (fleeRate >= 3 ? "<b>逃跑这块得点名：</b>" : "逃跑记录：") + "原始 " + rawN + " 场里 <span class=\"hlr\">" + (flee.length + quick.length)
+      + " 场</span>是空记录或早退（占 " + f1(fleeRate) + "%），其中全 0 的 <b>" + flee.length + "</b> 场、"
+      + "不到 1 分钟就没了 <b>" + quick.length + "</b> 场。";
+    if (fleeRate >= 5) p5 += "这个比例已经不是掉线能解释的了，<b>是打不过就跑</b>。";
+    else if (fleeRate >= 2) p5 += "不算特别离谱，但已经能看出「输势不对就撤」的习惯。";
+    else p5 += "比例不高，偶发。";
+    // 连续逃跑检测
+    const ft = flee.map(r => r.commitTime).sort((a, b) => a - b);
+    let chain = 0;
+    for (let i = 1; i < ft.length; i++) if (ft[i] - ft[i - 1] <= 600) chain++;
+    if (chain) p5 += "更扎眼的是有 <span class=\"hlr\">" + chain + " 次</span>是连着逃的（相邻不超过 10 分钟），"
+      + "掉线不会两分钟进一次局再退一次，<b>这就是纯摆</b>。";
+    p5 += "名义胜率 <b>" + f1(pct(rawWins, rawN)) + "%</b>，剔掉逃跑后 <b>" + f1(s.winRate) + "%</b>。";
+    if (fleeRate >= 3) p5 += "这中间的落差不是数字游戏，<b>是自己挑出来的一块遮羞布</b>。";
+    else p5 += "差距不大，账可以忽略，但记录留着。";
+    P.push({ html: p5 });
+  }
+
+  // 6 四国偏向
+  if (cs.played.length){
+    let p6 = rnd(["四国这块，他把时间花在哪儿一目了然：", "阵营偏向得看两件事：爱玩哪国、哪国真能打：", "先看他把场次堆在哪个国家："])
+      + cs.played.map(x => "<b>" + CN[x.c] + " " + x.n + "</b> 场（" + f1(x.share) + "%，胜率 " + f1(x.w) + "%）").join("｜")
+      + "。";
+    if (cs.kind === "单国死忠"){
+      p6 += "等于<b>只认一个国家</b>，别的碰都不碰——要么是情怀，要么号上就只有这一套像样的兵。";
+    } else if (cs.kind === "单国专精"){
+      p6 += "<b>" + CN[cs.top.c] + "占了大头（" + f1(cs.top.share) + "%）</b>，其余各国纯属客串，"
+        + "标准的单国专精，好处是手感统一，坏处是<b>换个阵营就得重新学走路</b>。";
+    } else if (cs.kind === "主副搭配"){
+      const sub = cs.played[1];
+      p6 += "主玩 <b>" + CN[cs.top.c] + "（" + f1(cs.top.share) + "%）</b>，"
+        + (sub ? "副手是 <b>" + CN[sub.c] + "（" + f1(sub.share) + "%）</b>，" : "")
+        + "这种「一主一副」是最实用的配置，<b>不至于被版本一改就废掉</b>。";
+    } else {
+      p6 += "四个国家都在打，<b>没有明显的主国</b>——要么是随缘排队，要么是哪个国家强就上哪个。";
+    }
+    // 爱玩 vs 能打
+    if (cs.best && cs.top && cs.best.c !== cs.top.c){
+      p6 += "但最能打的反而是 <b>" + CN[cs.best.c] + "系 " + f1(cs.best.w) + "%</b>（" + cs.best.n + " 场），"
+        + "比主玩国强了 <b>" + f1(cs.best.w - cs.top.w) + "</b> 个百分点——"
+        + "<span class=\"hla\">爱玩的不是最顺手的</span>，这就叫情怀压过效率。";
+    } else if (cs.best){
+      p6 += "最顺手的也正是他玩得最多的 <b>" + CN[cs.best.c] + "（" + f1(cs.best.w) + "%）</b>，"
+        + "<b>选择和实力是一致的</b>，这种人通常是对某一国的枪械、载具、地形都摸透了。";
+    }
+    if (cs.worst && cs.worst.c !== cs.top.c && cs.worst.w < cs.avgW - 5){
+      p6 += "唯一拖后腿的是 <b>" + CN[cs.worst.c] + " " + f1(cs.worst.w) + "%</b>，比赛样低 " + f1(cs.avgW - cs.worst.w) + " 分，建议少碰。";
+    }
+    const cw = cs.list.filter(x => x.cb > 0);
+    if (cw.length){
+      p6 += " 生涯那边的分布："
+        + cw.slice().sort((a, b) => b.cb - a.cb).map(x => CN[x.c] + " " + num(x.cb) + " 场 / " + f1(x.cw) + "%").join("｜") + "。";
+    }
+    P.push({ html: p6 });
+  }
+
+  // 6.5 对局环境（真人规模 / 组队）
+  if (env){
+    const rf = env.replay || null;
+    let pe = rnd(["光看个人战绩是不够的，得看他打的都是什么局：", "数据得放在环境里看，局里有多少活人很关键：", "先别急着信那些数字，看看他打的局里有多少活人："]);
+    if (env.avgHumans != null){
+      pe += "按战绩翻了他 <b>" + env.n + "</b> 场，每场双方加起来平均 <b>" + f1(env.avgHumans) + "</b> 个真人"
+        + "（我方 " + f1(env.myHumans) + "、对面 " + f1(env.opHumans) + "），"
+        + "最少的一场只有 <b>" + env.minHumans + "</b> 个活人，最多 <b>" + env.maxHumans + "</b> 个。";
+      if (env.avgHumans < 8){
+        pe += "<span class=\"hlr\"><b>大半时间是人机在陪跑</b></span>——这种局里刷出来的胜率和场均击杀，含金量得砍一大截。";
+      } else if (env.avgHumans < 14){
+        pe += "活人不多，人机掺了不少，<b>数据得打个折看</b>。";
+      } else if (env.avgHumans < 18){
+        pe += "真人对抗是主菜，人机只算补位，<b>数据基本可信</b>。";
+      } else {
+        pe += "<span class=\"hl\">基本是满编真人局</span>——这种环境下能打出这个数据，含金量比数字本身更高。";
+      }
+      if (rf){
+        pe += " 其中能对上回放的那 " + rf.n + " 场里，人机占了 <b>" + f1(rf.botRate) + "%</b>"
+          + "（人机只在回放阵容里看得见，回放每人只留 10 场）。";
+      }
+    } else if (rf){
+      pe += "回放能查到的 <b>" + rf.n + "</b> 场里，双方一共 <b>" + rf.seats + "</b> 个席位，其中 <b>" + rf.bots
+        + "</b> 个是人机，占 <span class=\"" + (rf.botRate >= 50 ? "hlr" : rf.botRate >= 30 ? "hla" : "hl") + "\">"
+        + f1(rf.botRate) + "%</span>（我方 " + rf.myBots + " / 对面 " + rf.oppBots + "），平均每场 <b>"
+        + f1(rf.avgBot) + "</b> 个人机，对面真人平均 " + f1(rf.realOpp) + " 个。";
+      if (rf.botRate >= 50) pe += "<span class=\"hlr\"><b>这已经是人机局为主了</b></span>，杀得多、胜率高都是正常的，<b>不能按实战场次算含金量</b>。";
+      else if (rf.botRate >= 30) pe += "人机占了快一半，<b>数据确实有点水分</b>。";
+      else pe += "<span class=\"hl\">人机很少，基本都是真人对枪</span>。";
+    }
+    if (env.fixed.length){
+      pe += " 组队方面：<b>" + env.teamGames + "/" + env.n + "</b> 场是跟人一起打的，其中 "
+        + env.fixed.slice(0, 3).map(x => "<b>" + esc(x.name) + "</b>（同队 " + x.n + " 场）").join("、")
+        + (env.fixed.length > 3 ? " 等 " + env.fixed.length + " 人" : "")
+        + " 反复出现在他这边——<b>这不是单排数据</b>，有车队托底，胜率和个人数据都会好看一截。";
+      if (env.squadMax >= 3) pe += "最多一局里带了 <b>" + env.squadMax + "</b> 个队友（含他 <b>" + (env.squadMax + 1) + "</b> 人），这是成建制开黑，不是散排。";
+    } else if (env.teamGames){
+      pe += " 组队方面：<b>" + env.teamGames + "/" + env.n + "</b> 场有队友，但没有重复出现的固定搭档，"
+        + "属于<b>路人拼车</b>，谈不上车队加成。";
+    } else {
+      pe += " 组队方面：<b>全是单排</b>，一个熟脸都没有，这数据是自己一个人挣的。";
+    }
+    P.push({ html: pe });
+  }
+
+  // 7 氪金（超级按名字认，type 字段不可信）
+  if (sq && sq.total){
+    let p7 = "氪金成分：<b>" + sq.total + "</b> 支小队里，<span class=\"hla\">氪金队 " + sq.paid + " 支</span>"
+      + "（高级队 " + sq.pre + " 支）";
+    p7 += "。" + (sq.paid >= 40 ? "<b>重氪</b>，装备直接把人喂饱了。"
+      : sq.paid >= 15 ? "<b>中重氪</b>，钱花在刀刃上。"
+      : sq.paid >= 6 ? "<b>点氪</b>，只买最值的那几支。"
+      : "<b>基本白嫖</b>，靠肝不靠钱。");
+    const byArr = Object.keys(sq.by).sort((a, b) => sq.by[b] - sq.by[a]);
+    if (byArr.length) p7 += " 氪金分布：" + byArr.map(k => k + " " + sq.by[k]).join("｜") + "。";
+    P.push({ html: p7 });
+  }
+
+  // 8 作息
+  if (clean.length >= 20){
+    const hr = {};
+    clean.forEach(r => { const h = new Date((r.commitTime || 0) * 1000).getHours(); hr[h] = (hr[h] || 0) + 1; });
+    const sorted = Object.keys(hr).map(Number).sort((a, b) => hr[b] - hr[a]);
+    const h0 = sorted[0], c0 = hr[h0];
+    const night = [0,1,2,3,4,5].reduce((s, h) => s + (hr[h] || 0), 0);
+    const morning = [6,7,8,9,10,11].reduce((s, h) => s + (hr[h] || 0), 0);
+    const evening = [19,20,21,22,23].reduce((s, h) => s + (hr[h] || 0), 0);
+    let p8 = "出勤：最活跃是 <b>" + String(h0).padStart(2, "0") + " 点</b>（" + c0 + " 场）";
+    const span = ((clean[0].commitTime || 0) - (clean[clean.length - 1].commitTime || 0)) / 86400;
+    if (span > 0) p8 += "，" + f1(span) + " 天打了 <b>" + clean.length + "</b> 场，日均 <b>" + f1(clean.length / span) + "</b> 场，"
+      + "总战斗 <b>" + durLong(s.time) + "</b>";
+    p8 += "。";
+    if (night > clean.length * 0.25) p8 += "<b>凌晨党</b>（" + night + " 场），作息这块已经属于「明天的事明天再说」。";
+    else if (morning > clean.length * 0.3) p8 += "<b>早场党</b>（" + morning + " 场），要么上班前抢两把，要么压根不用上班。";
+    else if (evening > clean.length * 0.6) p8 += "<b>标准晚场选手</b>（" + evening + " 场），下班就上线，生活规律得让人嫉妒。";
+    P.push({ html: p8 });
+  }
+
+  // 9 分级对标（把等级标准摊开对照，这一档的人和另一档的人读起来不该一样）
+  const bnum = x => (x.d === 2 ? f2(x.v) : f1(x.v)) + x.unit;
+  const plus = G.bonus.filter(x => x.pts > 0.05).sort((a, b) => b.pts - a.pts);
+  let pg = rnd(["摊开分级表对照：", "拿分级表量一下：", "对照标准画像看："])
+    + "<b>" + G.g.no + " " + G.g.name + "</b> 的画像应该是「" + G.g.trait + "」。";
+  if (G.selfBench){
+    pg += "这个号就是标准1本身：枪法、修点、反载具全都顶在刻度上——画像里那句「" + G.g.trait + "」就是照着它写的。";
+  } else if (G.suspect){
+    pg += "枪法已经到标准1的 <b>" + f1(G.gun * 100) + "%</b>"
+      + (plus.length ? "，" + plus.slice(0, 3).map(x => x.k + " " + bnum(x)).join("、") + " 也越过标准1" : "")
+      + "——超出刻度一成半以上，这个幅度不按实力算，按「数据有疑问」算。";
+  } else if (G.over){
+    pg += "枪法到了标准1的 <b>" + f1(G.gun * 100) + "%</b>"
+      + (plus.length ? "，" + plus.slice(0, 3).map(x => x.k + " " + bnum(x)).join("、") + " 也在标准1之上" : "")
+      + "——刻度外面还有一格，就是 6.2+，不判挂。";
+  } else {
+    pg += "枪法是标准1的 <b>" + f1(G.gun * 100) + "%</b>（场均 " + f1(s.avgK) + " 杀，标准1 "
+      + f1(BENCH.avgK) + " 杀）"
+      + (plus.length
+          ? "；加分项里有 " + plus.map(x => "<b>" + x.k + "</b>（" + bnum(x) + "，标准1 " + (x.d === 2 ? f2(x.ref) : f1(x.ref)) + x.unit + "）").join("、") + " 超了"
+          : "；4:2:1:1:1:1 那六项一项都没超过标准1，加分是 0");
+    pg += "。";
+  }
+  pg += "换算关系按体系口径：<span class=\"hl\">" + G.g.vs + "</span>";
+  P.push({ html: pg });
+
+  // 10 往上怎么走
+  const nxt = gNext;
+  let pn;
+  if (G.selfBench){
+    pn = "表顶就是 <b>" + G.g.no + " " + G.g.name + "</b>，上面没有下一档了——"
+      + "要守的不是分，是别被版本和车队惯坏。<b>" + G.g.need + "</b>";
+  } else if (G.suspect){
+    pn = "上面没有档了，只有「数据有疑问」这一格。数据是真的，那就是下一个标准；不是真的，换号吧。";
+  } else if (G.over){
+    pn = "已经在 6.2+ 这一格：标准1之上只剩「超出 15% → 数据有疑问」那条线，"
+      + "离它还差 <b>" + f1(Math.max(0, SUSPECT_SCORE - G.raw)) + "</b> 分。"
+      + "<b>" + G.g.need + "</b>";
+  } else {
+    pn = rnd(["要往上一档走，卡的就是", "往上爬的坎在", "下一档的门槛卡在"]) + " <b>枪法</b> 这一截。";
+    if (nxt){
+      pn += "下一档是 <b>" + nxt.no + " " + nxt.name + "</b>，总分还差 <b>" + f1(G.gap) + "</b> 分，"
+        + "那一档的门槛是「" + nxt.trait + "」。";
+    } else {
+      pn += "已经在表顶了，接下来不是练的问题，是别掉下来。";
+    }
+    pn += "落到具体动作上：<b>" + G.g.need + "</b>";
+    if (nxt && G.gap > 0) pn += "现在场均 " + f1(s.avgK) + " 杀、K/D " + f2(s.kd) + "，"
+      + "要把总分抬 " + f1(G.gap) + " 分，等于场均再多 " + f1(G.gap / BASE_SCORE * BENCH.avgK)
+      + " 个击杀（现 " + f1(s.avgK) + " → " + f1(s.avgK + G.gap / BASE_SCORE * BENCH.avgK)
+      + "）——比起靠修点、占旗那点加分，这条路直接得多。";
+  }
+  P.push({ html: pn });
+
+  // 11 总结
+  const fin = rnd(GRADE_FINAL[gi])
+    + (tags.length ? " 标签上，他是" + tags.slice(0, 3).map(t => "「" + t.t + "」").join("") + "这一挂的。" : "");
+  P.push({ final: fin });
+
+  return { blocks: P, sc: sc, title: title, titleCls: titleCls, tags: tags, detail: SD, grade: G,
+           s: s, cs: cs, env: env };
+}
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+/* ---------------- 渲染 ---------------- */
+function renderIdentity(D){
+  const init = (D.name || String(D.uid)).slice(0, 2);
+  const when = D.srcWhen ? (D.srcWhen + " " + (D.srcMap || "")) : "";
+  return '<div class="card"><div class="id-card">'
+    + '<div class="avatar">' + esc(init) + "</div>"
+    + '<div class="id-main"><h3>' + esc(D.name || ("UID " + D.uid)) + "</h3>"
+    + '<div class="sub">UID ' + D.uid + "</div></div>"
+    + '<div class="id-src">UID 来源：<b>' + esc(D.src) + "</b>"
+    + (when ? "<br>" + esc(when) : "")
+    + (D.weak ? '<br><span style="color:var(--amber)">' + esc(D.weakNote || "弱证据：仅凭一场录像阵容确认") + '</span>' : "")
+    + "</div></div></div>";
+}
+
+function renderOverview(ov, name){
+  if (!ov || !(ov.sumBattles)) return "";
+  const tot = ov.sumBattles;
+  const kills = ov.sumKills || 0;
+  const win = parseFloat(ov.sumVict || 0);
+  const kd = parseFloat(ov.kda || 0);
+  const glory = (ov.glory || []).find(g => g.country === "sum") || {};
+  const mvp = glory.mvp || 0, svp = glory.svp || 0;
+  const winCls = win >= 70 ? "hi" : win >= 55 ? "" : win >= 48 ? "warn" : "bad";
+
+  let h = '<div class="card"><div class="card-h"><h2>生涯概览</h2><span class="ln"></span>'
+    + '<span class="tag">overview · ' + num(tot) + " 场</span></div>"
+    + '<div style="font-size:13px;color:var(--dim2);line-height:1.7;margin:-4px 0 14px">'
+    + "仅作背景展示：这里的胜率、K/D、场均、最高分都是生涯全量口径，<b>不参与评分和判级</b>，"
+    + "评价只看下面「近 N 场」那一套数。</div>";
+  h += '<div class="metrics">'
+    + m("总场次", num(tot))
+    + m("总击杀", num(kills))
+    + m("场均击杀", Math.round(kills / tot))
+    + m("胜率", f1(win), "%", winCls)
+    + m("KDA", f2(kd))
+    + m("MVP / SVP", num(mvp) + " / " + num(svp), "", mvp > svp * 2 ? "hi" : "")
+    + "</div>";
+
+  // 阵营表
+  const arr = ["ger","ussr","usa","jap"].map(c => ({
+    c, b: ov[c + "Battles"] || 0, k: ov[c + "Kills"] || 0,
+    w: parseFloat(ov[c + "WinRete"] || 0), kd: parseFloat(ov[c + "Kda"] || 0)
+  })).filter(x => x.b > 0);
+  const mb = ov.mainstream_battleBattles || 0;
+  if (mb) arr.push({ c: "mainstream", b: mb, k: ov.mainstream_battleKills || 0,
+                     w: parseFloat(ov.mainstream_battleWinRete || 0), kd: parseFloat(ov.mainstream_battleKda || 0) });
+  const maxB = Math.max.apply(null, arr.map(x => x.b).concat([1]));
+  const ovPie = arr.map(x => ({
+    label: x.c === "mainstream" ? "主流" : CN[x.c], v: x.b, c: CTY_COLOR[x.c]
+  }));
+  h += '<div class="ov-split">'
+    + '<div class="donut">'
+    +   donutSVG(ovPie, { size: 176, thick: 26, center: num(tot), centerSub: "生涯场次" })
+    +   legendHTML(ovPie, arr.reduce((a, x) => a + x.b, 0))
+    + "</div>"
+    + '<div class="tbl-wrap"><table><thead><tr><th>阵营</th><th>场次</th><th style="width:110px">占比</th>'
+    + "<th>击杀</th><th>胜率</th><th>KDA</th></tr></thead><tbody>";
+  arr.forEach(x => {
+    const nm = x.c === "mainstream" ? "主流" : CN[x.c];
+    h += "<tr><td><i style=\"display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;background:"
+      + CTY_COLOR[x.c] + '"></i>' + nm + "</td><td>" + num(x.b) + "</td>"
+      + '<td class="bar-cell"><div class="bar"><i style="width:' + (x.b / maxB * 100) + '%"></i></div></td>'
+      + "<td>" + num(x.k) + "</td><td class='" + (x.w >= 70 ? "win" : x.w < 50 ? "lose" : "") + "'>" + f1(x.w) + "%</td>"
+      + "<td>" + f2(x.kd) + "</td></tr>";
+  });
+  h += "</tbody></table></div></div>";
+
+  // 单国最高分
+  const best = (ov.bestScore || []).filter(b => CN[b.country]);
+  if (best.length){
+    h += '<div style="margin-top:16px;font-size:13px;color:var(--dim);display:flex;gap:16px;flex-wrap:wrap">'
+      + best.map(b => "<span>" + CN[b.country] + " <b style=\"color:var(--txt);font-family:var(--mono)\">"
+        + num(b.battleScore) + "</b> 分（" + num(b.kills) + "杀）</span>").join("")
+      + "</div>";
+  }
+  h += "</div>";
+  return h;
+}
+function m(k, v, u, cls){
+  return '<div class="metric ' + (cls || "") + '"><div class="k">' + k + '</div><div class="v">'
+    + v + (u ? "<span class=\"u\">" + u + "</span>" : "") + "</div></div>";
+}
+
+/* ---------- 阵营场次饼图（纯 SVG，无依赖） ---------- */
+const CTY_COLOR = { ger: "#d9b463", ussr: "#e08b8b", usa: "#82b3e6", jap: "#b39cdf", mainstream: "#6b7a70" };
+function donutSVG(items, o){
+  o = o || {};
+  const size = o.size || 168, th = o.thick || 22;
+  const cx = size / 2, cy = size / 2, r = cx - th / 2 - 1, C = 2 * Math.PI * r;
+  const tot = items.reduce((a, x) => a + (x.v || 0), 0) || 1;
+  let off = 0, seg = "";
+  items.forEach(x => {
+    const len = (x.v || 0) / tot * C;
+    if (len <= 0) return;
+    const gap = items.length > 1 ? Math.min(2.4, len * 0.15) : 0;
+    const dash = Math.max(len - gap, 0.8);
+    seg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + x.c + '"'
+      + ' stroke-width="' + th + '" stroke-dasharray="' + f2(dash) + " " + f2(C - dash) + '"'
+      + ' stroke-dashoffset="' + f2(-off) + '" transform="rotate(-90 ' + cx + " " + cy + ')">'
+      + "<title>" + esc(x.label) + "：" + num(x.v) + " 场（" + f1((x.v || 0) / tot * 100) + "%）</title></circle>";
+    off += len;
+  });
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '"'
+    + ' role="img" aria-label="阵营场次饼图">'
+    + '<circle class="ring" cx="' + cx + '" cy="' + cy + '" r="' + r + '" stroke-width="' + th + '"/>'
+    + seg
+    + '<text class="t1" x="' + cx + '" y="' + (cy - 1) + '" text-anchor="middle" font-size="' + Math.round(size * 0.155) + '">'
+    + (o.center || "") + "</text>"
+    + '<text class="t2" x="' + cx + '" y="' + (cy + Math.round(size * 0.115)) + '" text-anchor="middle" font-size="' + Math.round(size * 0.068) + '">'
+    + (o.centerSub || "") + "</text></svg>";
+}
+function legendHTML(items, tot){
+  const T = tot || items.reduce((a, x) => a + (x.v || 0), 0) || 1;
+  return '<div class="lg">' + items.map(x => '<div class="r"><i class="dot" style="background:' + x.c + '"></i>'
+    + esc(x.label) + " <b>" + num(x.v || 0) + "</b>"
+    + ' <span class="p">' + f1((x.v || 0) / T * 100) + "%</span></div>").join("") + "</div>";
+}
+
+function renderBattles(D){
+  const { rows, clean, flee, quick, segs } = D;
+  if (!clean.length) return '<div class="card"><div class="empty"><p>这 ' + rows.length + " 场全是逃跑记录，没有可统计的有效数据。</p></div></div>";
+  const s = summarize(clean);
+  const rawWins = rows.filter(isWin).length;
+  const span = ((clean[0].commitTime || 0) - (clean[clean.length - 1].commitTime || 0)) / 86400;
+  /* 一律取样口径：这张卡片和评分、结论同源，不掺生涯值 */
+  const BTopRate = s.top1Rate;
+
+  let h = '<div class="card"><div class="card-h"><h2>近 ' + clean.length + ' 场战绩</h2><span class="ln"></span>'
+    + '<span class="tag">hisBattles · ' + durLong(s.time) + "</span></div>";
+
+  h += '<div class="metrics">'
+    + m("战绩", s.wins + "胜" + s.loss + "负")
+    + m("胜率", f1(s.winRate), "%", s.winRate >= 70 ? "hi" : s.winRate >= 50 ? "" : "bad")
+    + m("K/D", f2(s.kd), "", s.kd >= 2.5 ? "hi" : "")
+    + m("场均击杀", f1(s.avgK), "", s.avgK >= 100 ? "hi" : "")
+    + m("战功场均", f1(s.avgWK), "", s.avgWK >= 110 ? "hi" : "")
+    + m("场均得分", num(Math.round(s.score)))
+    + m("最高分", num(s.scoreMax))
+    + "</div>";
+
+  h += '<div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:10px 22px;font-size:13.5px;color:var(--dim)">'
+    + kv("场均死亡", f1(s.avgD)) + kv("场均助攻", f1(s.avgA))
+    + kv("爆头率", f1(s.hsRate) + "%")
+    + kv("点内击杀占比", f1(s.pinRate) + "%")
+    + kv("点内 攻 / 守", num(s.pinA) + " / " + num(s.pinD))
+    + kv("占领点场均", f2(s.capAvg))
+    + kv("近战/雷/手枪", f1(s.meleeRate) + "% / " + f1(s.nadeRate) + "% / " + f1(s.pistolRate) + "%")
+    + kv("一血", num(s.fb) + " 次（" + f2(s.fbPer) + "/场）")
+    + kv("载具击杀", num(s.veh) + " 台（坦" + num(s.tk) + "/机" + num(s.ak) + "/运" + num(s.apc) + "）")
+    + kv("载具折算", "+" + num(s.vehVal) + " 战功（×5/×3）")
+    + kv("工程设施 / 工事", num(s.eng) + " / " + num(s.fort) + " 次")
+    + kv("工程 每场", f1(s.engPer) + " / " + f1(s.fortPer) + " 次")
+    + kv("小队被打光", num(s.sqd) + " 次（" + f1(s.sqdPer) + "/场）")
+    + kv("得分效率", num(Math.round(s.spm)) + " 分/分")
+    + kv("死亡效率", f2(s.dpm) + " 死/分")
+    + kv("全场第一", num(s.top1) + " 次（" + f1(BTopRate) + "%）")
+    + kv("区间", ts(clean[clean.length - 1].commitTime).split(" ")[0] + " ~ " + ts(clean[0].commitTime).split(" ")[0])
+    + kv("跨度", f1(span) + " 天 · " + f1(clean.length / Math.max(span, .1)) + " 场/天")
+    + "</div>";
+
+  // 分段
+  if (segs.length >= 2){
+    h += '<div style="margin-top:22px"><div style="font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:10px">分段走势（左旧右新）</div>'
+      + '<div class="segs">';
+    const asc = segs.slice().reverse();
+    asc.forEach(x => {
+      const w = x.s.winRate;
+      const cls = w >= 60 ? "" : w >= 45 ? "mid" : "low";
+      const hgt = Math.max(6, Math.min(100, w));
+      h += '<div class="seg"><div class="t">' + ts(x.from.commitTime).split(" ")[0] + " ~ " + ts(x.to.commitTime).split(" ")[0] + "</div>"
+        + '<div class="chart"><div class="col ' + cls + '" style="height:' + hgt + '%"></div></div>'
+        + '<div class="pct">' + f1(w) + "%</div>"
+        + '<div class="m">' + x.s.wins + "胜" + x.s.loss + "负 · 场均" + Math.round(x.s.avgK) + "杀</div></div>";
+    });
+    h += "</div></div>";
+  }
+
+  // 逃跑
+  if (flee.length + quick.length > 0){
+    h += '<div style="margin-top:22px"><div style="font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:10px">'
+      + "逃跑 / 早退 · " + (flee.length + quick.length) + " 场（" + f1(pct(flee.length + quick.length, rows.length)) + "%）"
+      + "｜含逃跑 " + rawWins + "胜" + (rows.length - rawWins) + "负（" + f1(pct(rawWins, rows.length)) + "%）"
+      + "｜剔除后 " + s.wins + "胜" + s.loss + "负（" + f1(s.winRate) + "%）</div>";
+    const list = flee.map(r => ({ r, k: "逃跑" })).concat(quick.map(r => ({ r, k: "早退" })));
+    list.sort((a, b) => (a.r.commitTime || 0) - (b.r.commitTime || 0));
+    let prev = null;
+    list.forEach(o => {
+      const r = o.r;
+      const chain = prev != null && (r.commitTime - prev) <= 600 && o.k === "逃跑";
+      h += '<div class="flee-item"><span class="badge ' + (o.k === "早退" ? "q" : "") + '">' + o.k + "</span>"
+        + '<span class="tm">' + ts(r.commitTime) + "</span>"
+        + '<span class="cn">' + cn1(r.country) + "</span>"
+        + '<span class="cn">' + (isWin(r) ? "胜" : "负") + "</span>"
+        + '<span class="sp"></span>'
+        + '<span class="tm">' + r.kills + "杀 " + r.deaths + "死 · " + dur(r.battleTime) + "</span>"
+        + (chain ? '<span class="chain">连续逃跑</span>' : "")
+        + "</div>";
+      if (o.k === "逃跑") prev = r.commitTime;
+    });
+    h += "</div>";
+  }
+
+  // 最近 10 场
+  h += '<div style="margin-top:22px"><div style="font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:8px">最近 10 场</div>'
+    + "<table><thead><tr><th>时间</th><th>阵营</th><th>结果</th><th>击杀</th><th>死亡</th><th>助攻</th>"
+    + "<th>占领</th><th>点内</th><th>爆头</th><th>得分</th><th>时长</th></tr></thead><tbody>";
+  clean.slice(0, 10).forEach(r => {
+    h += "<tr><td>" + ts(r.commitTime) + "</td><td>" + cn1(r.country) + "</td>"
+      + '<td class="' + (isWin(r) ? "win" : "lose") + '">' + (isWin(r) ? "胜" : "负") + "</td>"
+      + "<td>" + (r.kills || 0) + "</td><td>" + (r.deaths || 0) + "</td><td>" + (r.assists || 0) + "</td>"
+      + "<td>" + (r.pointsCaptured || 0) + "</td>"
+      + "<td>" + ((r.killsWhileAttackingPoint || 0) + (r.killsWhileDefendingPoint || 0)) + "</td>"
+      + "<td>" + (r.headshots || 0) + "</td>"
+      + "<td>" + num(r.battleScore || 0) + "</td><td>" + dur(r.battleTime) + "</td></tr>";
+  });
+  h += "</tbody></table></div>";
+
+  h += "</div>";
+  return h;
+}
+function kv(k, v){
+  return "<div style=\"display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed rgba(49,55,51,.6);padding-bottom:5px\">"
+    + "<span style=\"white-space:nowrap\">" + k + "</span>"
+    + "<b style=\"color:var(--txt);font-family:var(--mono);white-space:nowrap\">" + v + "</b></div>";
+}
+
+let SQ_LAST = null;   // 当前展示的小队统计，供弹窗读取
+
+/* 四国偏向卡片：近 N 场实际 + 生涯对照 */
+function renderCountry(D){
+  const cs = D.country;
+  if (!cs || !cs.played.length) return "";
+  const maxN = Math.max.apply(null, cs.list.map(x => x.n).concat([1]));
+  // 各国胜率都差不多时，硬挑一个「最拉胯」没有意义
+  const noWorst = !cs.worst || !cs.top || cs.worst.c === cs.top.c || cs.worst.w >= cs.avgW - 3;
+  let h = '<div class="card"><div class="card-h"><h2>四国偏向</h2><span class="ln"></span>'
+    + '<span class="tag">近 ' + cs.tot + " 场 · " + esc(cs.kind) + "</span></div>";
+
+  h += '<div class="metrics">'
+    + m("主玩国", cs.top ? CN[cs.top.c] : "-")
+    + m("集中度", f1(cs.top ? cs.top.share : 0), "%", (cs.top && cs.top.share >= 70) ? "hi" : "")
+    + m("最能打", cs.best ? CN[cs.best.c] : "-")
+    + (noWorst ? m("短板国", "无明显短板") : m("相对最弱", CN[cs.worst.c], "", cs.worst.w < 50 ? "bad" : ""))
+    + m("打过国家", cs.played.length + " / 4")
+    + "</div>";
+
+  h += '<table style="margin-top:16px"><thead><tr><th>国家</th><th>近 ' + cs.tot + ' 场</th>'
+    + '<th style="width:110px">占比</th><th>胜率</th><th>K/D</th><th>场均杀</th><th>场均分</th>'
+    + '<th>点内%</th><th>生涯场次</th><th>生涯胜率</th></tr></thead><tbody>';
+  cs.list.forEach(x => {
+    if (!x.n && !x.cb) return;
+    const dim = x.n ? "" : ' style="opacity:.45"';
+    h += "<tr" + dim + "><td>" + CN[x.c] + (cs.top && x.c === cs.top.c && x.n ? ' <span class="srcm">主</span>' : "") + "</td>"
+      + "<td>" + (x.n || "-") + "</td>"
+      + '<td class="bar-cell"><div class="bar"><i style="width:' + (x.n / maxN * 100) + '%"></i></div></td>'
+      + "<td class='" + (x.w >= 70 ? "win" : x.w && x.w < 45 ? "lose" : "") + "'>" + (x.n ? f1(x.w) + "%" : "-") + "</td>"
+      + "<td>" + (x.n ? f2(x.kd) : "-") + "</td>"
+      + "<td>" + (x.n ? f1(x.avgK) : "-") + "</td>"
+      + "<td>" + (x.n ? num(Math.round(x.avgS)) : "-") + "</td>"
+      + "<td>" + (x.n ? f1(x.pinRate) + "%" : "-") + "</td>"
+      + "<td>" + (x.cb ? num(x.cb) : "-") + "</td>"
+      + "<td>" + (x.cb ? f1(x.cw) + "%" : "-") + "</td></tr>";
+  });
+  h += "</tbody></table>";
+
+  // 近 N 场阵营场次饼图（取样口径，跟生涯那张分开画）
+  const ctyPie = cs.list.filter(x => x.n > 0).map(x => ({ label: CN[x.c], v: x.n, c: CTY_COLOR[x.c] }));
+  if (ctyPie.length > 1){
+    h += '<div class="donut" style="margin-top:18px">'
+      + donutSVG(ctyPie, { size: 132, thick: 20, center: String(cs.tot), centerSub: "近场次" })
+      + legendHTML(ctyPie, cs.tot) + "</div>";
+  }
+
+  const tip = [];
+  if (cs.top) tip.push("主玩 <b>" + CN[cs.top.c] + "</b>，占 " + f1(cs.top.share) + "%（" + cs.kind + "）");
+  if (cs.best && cs.top && cs.best.c !== cs.top.c)
+    tip.push("但最能打的是 <b>" + CN[cs.best.c] + " " + f1(cs.best.w) + "%</b>，比主玩国高 "
+      + f1(cs.best.w - cs.top.w) + " 分");
+  if (cs.worst && !noWorst)
+    tip.push("相对最弱 <b>" + CN[cs.worst.c] + " " + f1(cs.worst.w) + "%</b>");
+  if (tip.length){
+    h += '<div class="sq-note" style="margin-top:14px">' + tip.join("；") + "。生涯数据来自 overview，"
+      + "两边口径不同（近 N 场是取样、生涯是全量），只看分布别看绝对值。</div>";
+  }
+  h += "</div>";
+  return h;
+}
+
+/* 对局环境卡片：真人规模 + 组队（按查询的 N 场战绩统计）
+   人机只在回放阵容里可见，而回放每人最多 10 场 —— 有就作为子样本写在脚注里 */
+function renderEnv(D){
+  const e = D.env;
+  const rf = (e && e.replay) || null;
+  let h = '<div class="card"><div class="card-h"><h2>对局环境</h2><span class="ln"></span>'
+    + '<span class="tag">' + (e ? "battleDetail · " + e.n + " 场" : "取不到对局阵容") + "</span></div>";
+
+  if (!e){
+    h += '<div class="empty" style="padding:28px 10px"><div class="big">—</div>'
+      + "<p>没取到对局阵容，真人规模和组队这两块只能跳过。</p>"
+      + '<p style="margin-top:10px;font-size:13px;color:var(--dim2)">常见原因：这批战绩里有几场没打满就退了、'
+      + "或者那一批 battleDetail 请求全失败。<b>这些场次按满权计（拿不到阵容就不猜）</b>，人机多的号可能被高估。</p></div></div>";
+    return h;
+  }
+
+  /* ---- 指标格 ---- */
+  if (e.avgHumans != null){
+    const hCls = e.avgHumans >= 18 ? "hi" : e.avgHumans >= 8 ? "" : "bad";
+    h += '<div class="metrics">'
+      + m("样本场次", e.n + " 场")
+      + m("平均全场真人", f1(e.avgHumans), "人", hCls)
+      + m("我方真人", f1(e.myHumans), "/场")
+      + m("对面真人", f1(e.opHumans), "/场")
+      + m("人机局（&lt;7 人）", (e.botGames || 0) + " 场", "", (e.botGames ? "bad" : "hi"))
+      + m("折合有效场次", f1(e.wSum != null ? e.wSum : e.n), "场", (e.wSum < e.n - 0.05 ? "bad" : ""))
+      + m("固定队友", e.fixed.length ? e.fixed.length + " 人" : "无", "", e.fixed.length ? "" : "hi")
+      + "</div>";
+  } else {
+    /* 兜底：只拿到回放样本时，按原来的口径显示 */
+    const botCls = e.botRate >= 50 ? "bad" : e.botRate >= 30 ? "" : "hi";
+    const realSeats = e.seats - e.bots;
+    h += '<div class="metrics">'
+      + m("样本场次", e.n + " 场")
+      + m("人机占比", f1(e.botRate), "%", botCls)
+      + m("每场人机", f1(e.avgBot))
+      + m("对面真人", f1(e.realOpp), "/场")
+      + m("固定队友", e.fixed.length ? e.fixed.length + " 人" : "无", "", e.fixed.length ? "" : "hi")
+      + "</div>"
+      + '<div style="margin-top:16px;font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:8px">'
+      + "双方 " + e.seats + " 个席位 · 真人 " + realSeats + " / 人机 " + e.bots + "</div>"
+      + '<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;border:1px solid var(--line)">'
+      + '<i style="width:' + (realSeats / Math.max(e.seats, 1) * 100) + '%;background:linear-gradient(90deg,var(--green-d),var(--green))"></i>'
+      + '<i style="width:' + (e.bots / Math.max(e.seats, 1) * 100) + '%;background:repeating-linear-gradient(45deg,#454e48,#454e48 4px,#333935 4px,#333935 8px)"></i>'
+      + "</div>"
+      + '<div style="margin-top:7px;font-size:12.5px;color:var(--dim2)">绿＝真人，灰斜纹＝人机（UID 0）</div>';
+  }
+
+  /* ---- 组队 ---- */
+  h += '<div style="margin-top:18px">';
+  const fm = e.fixMin || 2;
+  if (e.fixed.length){
+    h += '<div style="font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:9px">'
+      + "固定队友（同队 ≥" + fm + " 场）· " + e.fixed.length + " 人</div>";
+    h += '<div class="sq-note ok">';
+    h += e.fixed.map(x => '<span style="display:inline-block;margin:0 10px 6px 0">'
+      + "<b>" + esc(x.name) + "</b> <span style=\"color:var(--dim2)\">×" + x.n + " 场</span></span>").join("");
+    h += "</div>";
+  } else {
+    h += '<div style="font-size:12.5px;color:var(--dim2);letter-spacing:1px;margin-bottom:9px">组队情况</div>';
+    h += '<div class="sq-note ok">'
+      + (e.teamGames ? "这 " + e.n + " 场里有 " + e.teamGames + " 场有队友，但没人达到「同队 ≥" + fm
+          + " 场」这个门槛——路人拼车，谈不上车队。"
+        : "这 " + e.n + " 场全是单排，一个熟脸都没有，数据是自己一个人挣的。")
+      + "</div>";
+  }
+  h += "</div>";
+
+  h += "</div>";
+  return h;
+}
+
+function renderSquads(sq){
+  if (!sq || !sq.total) return "";
+  SQ_LAST = sq;
+  let h = '<div class="card"><div class="card-h"><h2>他的小队</h2><span class="ln"></span>'
+    + '<span class="tag">mySquad · 共 ' + sq.total + " 支</span></div>";
+  h += '<div class="sq-grid">'
+    + '<div class="sq-box gold clk" id="sqPaidBox" role="button" tabindex="0" title="点击查看氪金队明细">'
+    +   '<div class="n">' + sq.paid + '</div><div class="l">氪金队合计（点开看明细）</div></div>'
+    + '<div class="sq-box sup"><div class="n">NaN</div><div class="l">超级小队（不统计）</div></div>'
+    + '<div class="sq-box hi"><div class="n">' + sq.pre + '</div><div class="l">高级小队（普通氪金）</div></div>'
+    + '<div class="sq-box"><div class="n">' + sq.free + '</div><div class="l">非氪金（普通' + sq.nor + ' + 活动' + sq.ev + '）</div></div>'
+    + "</div>";
+  const byArr = Object.keys(sq.by).sort((a, b) => sq.by[b] - sq.by[a]);
+  if (byArr.length){
+    const max = Math.max.apply(null, byArr.map(k => sq.by[k]));
+    h += '<table><thead><tr><th>国家</th><th>氪金队</th><th style="width:150px">占比</th></tr></thead><tbody>';
+    byArr.forEach(k => {
+      h += "<tr><td>" + esc(k) + "国</td><td>" + sq.by[k] + "</td>"
+        + '<td><div class="bar"><i style="width:' + (sq.by[k] / max * 100) + '%"></i></div></td></tr>';
+    });
+    h += "</tbody></table>";
+  }
+  h += "</div>";
+  h += "</div>";
+  return h;
+}
+
+/* ---------- 氪金队明细弹窗 ---------- */
+function sqDlgHTML(sq){
+  const groups = {};
+  (sq.paidList || []).forEach(x => { (groups[x.c] = groups[x.c] || []).push(x); });
+  const keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+  let h = '<div class="sqd" role="dialog" aria-modal="true" aria-labelledby="sqdTitle">'
+    + '<div class="sqd-h"><h3 id="sqdTitle">氪金队明细</h3>'
+    + '<span class="sub">共 ' + sq.paid + ' 支 · 高级 ' + sq.pre + '</span>'
+    + '<button class="sqd-x" id="sqdX" aria-label="关闭">×</button></div>'
+    + '<div class="sqd-b" id="sqdB">';
+  if (!keys.length){
+    h += '<div class="sqd-f" style="border:none;padding-top:18px">这个小队列表里没有氪金队。</div>';
+  }
+  keys.forEach(k => {
+    h += '<div class="sqd-g"><div class="sqd-gh"><span>' + esc(k) + ' 国</span><span>' + groups[k].length + ' 支</span></div>';
+    groups[k].forEach((x, i) => {
+      const isSup = x.tier === "sup";
+      h += '<div class="sqd-i"><span class="idx">' + (i + 1) + '</span>'
+        + '<span class="nm">' + esc(x.name) + "</span>"
+        + '<span class="arm">' + esc(x.arm || "-") + "</span>"
+        + '<span class="tag' + (isSup ? " sup" : "") + '">' + (isSup ? "超级" : "高级") + "</span></div>";
+    });
+    h += "</div>";
+  });
+  h += '<div class="sqd-f">小队总数 ' + sq.total + " 支｜氪金队 " + sq.paid + " 支｜高级 " + sq.pre
+    + " 支｜非氪金 " + sq.free + " 支（普通 " + sq.nor + " / 活动 " + sq.ev + "）</div>";
+  h += "</div></div>";
+  return h;
+}
+function openSqDlg(){
+  if (!SQ_LAST || !SQ_LAST.total) return;
+  let el = document.getElementById("sqDlg");
+  if (!el){
+    el = document.createElement("div");
+    el.id = "sqDlg";
+    document.body.appendChild(el);
+  }
+  el.innerHTML = sqDlgHTML(SQ_LAST);
+  el.classList.add("on");
+  document.body.style.overflow = "hidden";
+  const x = document.getElementById("sqdX");
+  if (x) x.focus();
+}
+function closeSqDlg(){
+  const el = document.getElementById("sqDlg");
+  if (!el || !el.classList.contains("on")) return;
+  el.classList.remove("on");
+  document.body.style.overflow = "";
+}
+document.addEventListener("click", e => {
+  const el = document.getElementById("sqDlg");
+  if (e.target.closest && e.target.closest("#sqPaidBox")){ openSqDlg(); return; }
+  if (el && el.classList.contains("on")){
+    if (e.target.closest("#sqdX") || e.target === el) closeSqDlg();
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeSqDlg();
+  const box = e.target.closest && e.target.closest("#sqPaidBox");
+  if (box && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openSqDlg(); }
+});
+
+/* 评价正文：规则引擎算出来的那一版（AI 没测通、或 AI 失败时兜底用） */
+function vdStatic(V){
+  let h = "";
+  ((V && V.blocks) || []).forEach(b => {
+    if (b.lead) h += '<div class="block"><div class="lead">' + b.html + "</div></div>";
+    else if (b.final) h += '<div class="final">' + b.final + "</div>";
+    else h += '<div class="block"><p>' + b.html + "</p></div>";
+  });
+  h += '<div class="motto">-- 以上为机器按数据生成，语气仅供参考，别当真 --</div>';
+  return h;
+}
+/* 评价正文：AI 正在写的时候占个位，不让规则文案先露出来再被整段换掉 */
+function vdSkeleton(){
+  return '<div class="vd-skel" aria-hidden="true">'
+    + '<div class="sk w92"></div><div class="sk w100"></div><div class="sk w86"></div>'
+    + '<div class="sk w95"></div><div class="sk w58"></div></div>'
+    + '<div class="vd-skel-note">正在按数据重写评价…</div>';
+}
+/* AI 这条线断了（没测通 / 没 key / 请求失败）就把规则文案填回去，别把页面停在骨架上 */
+function vdRestore(V){
+  const vd = document.getElementById("vdBody");
+  if (!vd) return;
+  if (vd.dataset.ai === "done") return;      // 已经是 AI 正文，不能覆盖
+  vd.dataset.ai = "";
+  vd.innerHTML = vdStatic(V || (typeof LAST !== "undefined" && LAST && LAST.V));
+}
+
+function renderVerdict(V){
+  const G = V.grade;
+  const nxt = G ? (G.over ? null : GRADES[G.idx + 1]) : null;
+  let h = '<div class="card" id="verdictCard"><div class="card-h"><h2>成分评价</h2><span class="ln"></span>'
+    + '<span class="tag">' + (G ? G.g.no + " " + G.g.name + " · 总分 " + f1(G.raw) : "机器分 " + Math.round(V.sc)) + "</span>"
+    + (AI_OFF ? "" : '<button class="ai-run" id="aiGo">AI 重写</button>') + "</div>";
+
+  // 分级条
+  if (G){
+    h += '<div class="gstrip">'
+      + '<span class="gno">' + esc(G.g.no) + '</span>'
+      + '<span class="gnm">' + esc(G.g.name) + '</span>'
+      + (G.g.band !== G.g.name ? '<span class="gbd">' + esc(G.g.band) + "</span>" : "")
+      + '<span class="gsc">总分 <b>' + f1(G.raw) + "</b>/100</span>"
+      + (nxt ? '<span class="gsc">距 ' + esc(nxt.no + " " + nxt.name) + " 差 <b>" + f1(G.gap) + "</b></span>"
+        : (G.over ? '<span class="gsc warn">已越过标准1</span>' : '<span class="gsc">已在分级表顶端</span>'))
+      + '<span class="gsw">枪法 <b>' + f1(G.gun * 100) + '%</b> · 加分 <b>+' + f1(G.bonusSum) + "</b></span>"
+      + (G.over ? '<span class="gsc' + (G.suspect ? " warn" : "") + '">比标准1高 <b>+' + f1(G.raw - BASE_SCORE) + "</b>"
+          + (G.suspect ? "（超 15%）→ 数据有疑问" : " → 6.2+") + "</span>" : "")
+      + "</div>";
+  }
+
+  // 风格标签
+  if (V.tags && V.tags.length){
+    h += '<div class="tagrow">' + V.tags.map(t => '<span class="chip ' + t.tone + '">' + esc(t.t) + "</span>").join("") + "</div>";
+  }
+  // 基础分：枪法
+  const s = V.s || {};
+  if (G){
+    const gb = x => (x.d === 2 ? f2(x.v) : f1(x.v)) + x.unit;
+    h += '<div class="scd"><span class="lb">枪法分（枪法比 × 100，标准1 = 满分 ' + f1(BASE_SCORE) + " = 6.2 及格线）</span>"
+      + '<span class="' + (G.gun >= 0.96 ? "up" : G.gun < 0.4 ? "dn" : "") + '" title="场均击杀 '
+        + f1(s.avgK || 0) + "，标准1 " + f1(BENCH.avgK) + '（K/D 不计入枪法，在下面单独加分）">'
+      + "枪法 " + f1(G.gun * 100) + '% <i>场均 ' + f1(s.avgK || 0) + " 杀</i></span>"
+      + '<span class="tt">= ' + f1(G.gun * BASE_SCORE) + "</span></div>";
+    // 额外加分：4:2:1:1:1:1
+    h += '<div class="scd"><span class="lb">额外加分（4:2:1:1:1:1，只算超出标准1的部分）</span>'
+      + G.bonus.map(x => '<span class="' + (x.pts > 0.05 ? "up" : "") + '" title="标准1 '
+          + (x.d === 2 ? f2(x.ref) : f1(x.ref)) + x.unit + '">'
+          + x.k + (x.pts > 0.05 ? " +" + f1(x.pts) : "") + " <i>" + gb(x) + "</i></span>").join("")
+      + '<span class="tt">+' + f1(G.bonusSum) + "</span></div>";
+  }
+  /* 正文单独包一层：AI 生成成功后直接把这层换成 AI 版，分数条 / 加分项这些数据不动。
+     AI 已测通时不先铺规则文案——否则用户先读一遍，几秒后整段被替换，很跳。 */
+  const useAI = !AI_OFF && typeof aiAuto === "function" && aiAuto();
+  h += '<div id="vdBody"' + (useAI ? ' data-ai="pending"' : "") + ">";
+  h += useAI ? vdSkeleton() : vdStatic(V);
+  h += "</div>";
+  h += "</div>";
+  return h;
+}
+
+/* =====================================================================
+   AI 配置｜写死在页面里，界面上不显示
+   直连 DeepSeek 官方接口（浏览器可直接跨域，不需要任何后端中转）。
+
+   KEY 不以明文存放：下面 key 字段是一段混淆体（字符码逐位异或后倒序），
+   运行时用一行匿名函数还原，文件里搜不到 sk- 开头的串，截图也贴不出可用的 KEY。
+
+   要换 KEY / 模型：双击同目录的「设置DS配置.bat」，按提示粘贴新 KEY、确认模型，
+   它会把混淆体重算一遍写回来，并留一份 .bak 备份。不要手工改 key 那一行。
+   ===================================================================== */
+/* 规则版开关：生成「成分分析_规则版.html」时这里会被改成 true，
+   页面会把所有 AI 入口摘掉、也不会发出任何 AI 请求。 */
+const AI_OFF = false;
+/*@@CFG@@*/
+const AI_CFG = {
+  url:   "https://api.deepseek.com/v1",  // DeepSeek 官方接口
+  /* KEY 混淆体：逐字符码 ^ 0x5A 后倒序写入，运行时还原成明文，只存在于内存里 */
+  key:   "",   // 线上版不内置 KEY：用一次 #k=sk-xxx 打开，存进浏览器后就不用再带
+  model: "deepseek-chat"                 // deepseek-chat（快）/ deepseek-v4-pro（更强）
+};
+
+/* ---------------- AI 点评（直连 api.deepseek.com，不需要启动任何服务） ---------------- */
+const AI_URL_DEF = AI_CFG.url || "https://api.deepseek.com/v1";
+let AI_RUN = { on: false, ctrl: null };
+
+/* 线上部署版（GitHub Pages）没有内置 KEY：用一次 #k=sk-xxx 打开，
+   就把 KEY 存进这台机器的浏览器，之后正常访问即可，不用再带。
+   KEY 放在 # 后面不会被服务器收到，也不进访问日志；存完顺手把地址栏抹掉。 */
+(function(){
+  try{
+    const m = /(?:^|[#&])k=([^&]+)/.exec(location.hash || "");
+    if (!m) return;
+    const k = decodeURIComponent(m[1]).trim();
+    if (!/^sk-[A-Za-z0-9]{16,}$/.test(k)) return;
+    localStorage.setItem("cj_ai_key", k);
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    setTimeout(function(){ toastLine("KEY 已存进本机浏览器，之后直接用就行", "var(--green)", 6000); }, 900);
+  }catch(e){}
+})();
+/* 没 KEY 时该去哪配：本地文件用 bat，线上用 #k= 链接（纯文本版，走 toast） */
+function keyHintText(){
+  if (location.protocol === "file:"){
+    return "还没填 KEY —— 双击 设置DS配置.bat，按提示粘贴 key 后运行一次";
+  }
+  return "还没配置 KEY —— 用 …/#k=sk-你的key 的地址打开一次，存进浏览器即可";
+}
+
+function aiUrl(){ return (AI_CFG.url || localStorage.getItem("cj_ai_url") || AI_URL_DEF).trim(); }
+/* AI 只在「测过连通性、并且测通了」之后才启用：
+   没测过 / 上次测试失败 → aiOk() 为 false，查完不建 AI 卡、也不发任何请求。
+   点顶部「测试 AI 连通性」成功后写 cj_ai_ok=1，之后的查询就自动走 AI。 */
+function aiOk(){ return localStorage.getItem("cj_ai_ok") === "1"; }
+function aiSetOk(v){ v ? localStorage.setItem("cj_ai_ok", "1") : localStorage.removeItem("cj_ai_ok"); }
+function aiAuto(){ return aiOk(); }
+/* 占位符（换 key 之前的样子）一律当成"没填"，否则状态行会误报已配置 */
+function aiKeyIsPlaceholder(k){ return /PASTE|YOUR_KEY|YOUR_DEEPSEEK_KEY|在这里|填这里/i.test(k || ""); }
+/* 写死的 key 优先；没写才回退到浏览器里存过的（兼容老配置） */
+function aiKey(){
+  const k = (AI_CFG.key || localStorage.getItem("cj_ai_key") || "").trim();
+  return aiKeyIsPlaceholder(k) ? "" : k;
+}
+/* 模型名同理：直连中转站必须填，否则请求体里没有 model 会被拒 */
+function aiModel(){ return (AI_CFG.model || localStorage.getItem("cj_ai_model") || "").trim(); }
+/* 只填到 /v1 的中转站地址，自动补成完整的 chat/completions */
+function aiEndpoint(){
+  const u = aiUrl();
+  return /\/v\d+$/.test(u) ? u + "/chat/completions" : u;
+}
+/* 是不是走本机中转（127.0.0.1 / localhost） */
+function aiIsLocal(){ return /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])/i.test(aiUrl()); }
+function aiModeText(){
+  const m = aiModel();
+  const mdl = m ? " · 模型 " + m : "";
+  if (aiIsLocal()) return "本机中转（已不推荐）" + mdl;
+  const k = aiKey();
+  if (k) return "直连模式 · KEY 尾号 " + k.slice(-4) + mdl + " · " + aiEndpoint().replace(/^https?:\/\//, "");
+  return keyHintText();
+}
+function refreshAiUI(){
+  const md = $("#aiMode");
+  if (md) md.textContent = aiModeText();
+}
+
+/* 连通性自检：发一条极小的请求，一次验证 地址 / KEY / 模型 / 跨域 四件事。
+   不查战绩、不消耗多少 token，配完点一下就知道通没通。 */
+/* 底部一次性提示条：原来 AI 状态写在面板里那行常驻文字上（已按用户要求删掉），
+   改成点「测试 AI 连通性」时临时浮一条，几秒后自己消失，不占版面。 */
+function toastLine(txt, color, ms){
+  let el = document.getElementById("toast");
+  if (!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = txt;
+  el.style.color = color || "var(--txt)";
+  el.classList.add("on");
+  clearTimeout(toastLine._t);
+  toastLine._t = setTimeout(() => el.classList.remove("on"), ms || 6000);
+}
+
+async function aiProbe(){
+  if (AI_OFF) return false;
+  const md = $("#aiMode"), btn = $("#aiTest"), dot = $("#aiDot"), top = $("#aiTestTop");
+  const t0 = Date.now();
+  if (btn) btn.disabled = true;
+  if (top) top.disabled = true;
+  if (dot) dot.className = "dot";
+
+  const done = (txt, color) => {
+    if (md){ md.style.color = color; md.textContent = txt; }
+    else toastLine(txt, color, color === "var(--green)" ? 4200 : 8000);
+    if (btn) btn.disabled = false;
+    if (top) top.disabled = false;
+    /* 只有绿（测通）才算启用 AI：查完才建卡、才自动生成；红则彻底不出现 AI 框 */
+    aiSetOk(color === "var(--green)");
+    /* 顶部小圆点：绿=通，红=报错，方便一眼看出状态 */
+    if (dot) dot.className = "dot " + (color === "var(--green)" ? "on" : "err");
+  };
+
+  /* 页面里写死的 key 没填时，直接告诉他改哪里，别去撞 401 */
+  if (!aiKey()){
+    done(keyHintText(), "var(--red)");
+    return false;
+  }
+
+  if (md){ md.style.color = "var(--dim)"; md.textContent = "正在测试 " + aiEndpoint().replace(/^https?:\/\//, "") + " …"; }
+  else toastLine("正在测试 " + aiEndpoint().replace(/^https?:\/\//, "") + " …", "var(--dim)", 20000);
+
+  const hdr = { "Content-Type": "application/json" };
+  const sk = aiKey();
+  if (sk) hdr["Authorization"] = "Bearer " + sk;
+  const b = { messages: [{ role: "user", content: "只回复 ok" }], stream: false };
+  if (aiModel()) b.model = aiModel();
+
+  try{
+    const res = await fetch(aiEndpoint(), { method: "POST", headers: hdr, body: JSON.stringify(b) });
+    const raw = await res.text();
+    let j = null, msg = "";
+    try{ j = JSON.parse(raw); }catch(e){}
+    if (j){
+      const e2 = j.error || j;
+      msg = typeof e2 === "string" ? e2 : (e2 && e2.message) || j.msg || "";
+    }
+    if (res.ok){
+      const ch = j && j.choices && j.choices[0] && j.choices[0].message || {};
+      const echo = String(ch.content || ch.reasoning_content || "").trim().slice(0, 16);
+      done("连接成功 · 模型 " + (aiModel() || (j && j.model) || "服务端默认")
+        + " · " + ((Date.now() - t0) / 1000).toFixed(1) + "s"
+        + (echo ? " · 回声「" + echo + "」" : "") + " · 已启用 AI 点评", "var(--green)");
+      return true;
+    }
+    let tip = "HTTP " + res.status + (msg ? " · " + msg : " " + raw.slice(0, 120));
+    if (res.status === 401 || res.status === 403) tip += " → KEY 无效、过期，或账户没余额";
+    else if (res.status === 404) tip += " → 地址路径不对；本机模式应为 " + AI_URL_DEF;
+    else if (res.status === 502) tip += " → 上游拒绝；把这段发我看";
+    else if (/model/i.test(msg)) tip += " → 模型名核对一下（当前 " + (aiModel() || "未填") + "）";
+    done(tip, "var(--red)");
+    return false;
+  }catch(e){
+    const m = String(e && e.message || e);
+    const net = /Failed to fetch|NetworkError|Load failed|fetch failed|Network request failed/i.test(m);
+    done(net
+      ? "连不上 api.deepseek.com → 检查网络 / 代理 / 防火墙；换个网络或关掉代理再点这里"
+      : "失败：" + m, "var(--red)");
+    return false;
+  }
+}
+
+/* 把算好的结论压成一份事实清单喂给模型：只让它换说法，不让它自己算 */
+function aiFacts(D, V){
+  const s = summarize(D.clean);
+  const ov = D.ov || {};
+  const L = [];
+  const add = (k, v) => L.push("- " + k + "：" + v);
+
+  add("对象", D.name + "（UID " + D.uid + "）");
+  if (ov.sumBattles){
+    /* 生涯只报总场次（资历），胜率/K-D/场均/MVP 一律不给，避免被当成评价依据 */
+    add("生涯场次（仅资历，禁止用于评价）", "累计 " + num(ov.sumBattles) + " 场");
+    const arr = ["ger","ussr","usa","jap"].map(c => ({ c: CN[c], b: ov[c + "Battles"] || 0 }))
+      .filter(x => x.b > 0).sort((a, b) => b.b - a.b);
+    if (arr.length) add("阵营场次分布（背景）", arr.slice(0, 3).map(x => x.c + " " + num(x.b) + " 场").join("；"));
+  }
+
+  const rawN = D.rows.length, rawW = D.rows.filter(isWin).length;
+  const fleeRate = rawN ? (D.flee.length + D.quick.length) / rawN * 100 : 0;
+  const BTopRate = s.top1Rate;
+  add("取样", "最近 " + rawN + " 场（其中全 0 逃跑 " + D.flee.length + " 场、早退 " + D.quick.length
+    + " 场，占 " + f1(fleeRate) + "%；剔除后有效 " + s.n + " 场）");
+  if (s.wN < s.n - 0.05){
+    add("人机局降权（必须提）", "其中人机局（双方真人 <7）已按比例降权，折合有效场次 " + f1(s.wN) + " 场。"
+      + "下面所有场均、胜率、K/D 都是降权后的口径，正文里要说明「已扣掉人机局的水分」");
+  }
+  add("有效战绩", s.wins + " 胜 " + s.loss + " 负（加权胜率 " + f1(s.winRate) + "%），K/D " + f2(s.kd)
+    + "，场均 " + f1(s.avgK) + " 杀 / " + f1(s.avgD) + " 死 / " + f1(s.avgA) + " 助，场均得分 " + Math.round(s.score)
+    + "，单场最高 " + num(s.scoreMax)
+    + "，全场第一 " + num(s.top1) + "/" + num(s.n) + "（" + f1(BTopRate) + "%）");
+  add("总战斗时长", durLong(s.time) + "（得分效率 " + Math.round(s.spm) + " 分/分，死亡 " + f2(s.dpm) + " 次/分）");
+  add("枪法", "爆头率 " + f1(s.hsRate) + "%");
+  add("战功 / 载具", "击杀 " + num(s.kills) + "，击毁敌方载具 " + num(s.veh) + " 台（坦克 " + num(s.tk)
+    + " / 飞机 " + num(s.ak) + " / 运兵车 " + num(s.apc) + "），按坦克5、飞机3、运兵车3折算战功 +" + num(s.vehVal)
+    + "，战功合计 " + num(s.wKills) + "（场均 " + f1(s.avgWK) + "），载具占战功 " + f1(s.vehRate) + "%");
+  add("争夺", "点内击杀 " + num(s.pin) + "（进攻 " + num(s.pinA) + " / 防守 " + num(s.pinD) + "），占 "
+    + f1(s.pinRate) + "%；占领点 " + num(s.cap) + " 次（场均 " + f2(s.capAvg) + "）");
+  add("武器", "近战 " + f1(s.meleeRate) + "%、手雷/炸药包 " + f1(s.nadeRate) + "%、手枪 " + f1(s.pistolRate) + "%");
+  add("支援", "一血 " + num(s.fb) + " 次（场均 " + f2(s.fbPer) + "），助攻 " + num(s.assists) + "（占击杀 "
+    + f1(s.asstRate) + "%），工程设施 " + num(s.eng) + " 次、工事 " + num(s.fort) + " 次，小队被打光 "
+    + num(s.sqd) + " 次（场均 " + f1(s.sqdPer) + "）");
+
+  const SD = V.detail;
+  const items = SD.items.filter(x => x.v !== 0).map(x => x.k + " " + (x.v > 0 ? "+" : "") + f1(x.v) + "（" + x.note + "）");
+  if (items.length){
+    add("打法修正（不计入总分）", items.join("；")
+      + "。这些只反映打法倾向和纪律（逃跑、开团、支援、载具依赖），不参与总分，正文里可以提倾向，但不要拿它算分");
+  }
+  if (V.grade){
+    const g = V.grade, nx = g.over ? null : GRADES[g.idx + 1];
+    add("分级（必须写进正文）", g.g.no + " " + g.g.name + (g.g.band !== g.g.name ? "（" + g.g.band + "档）" : "")
+      + "，总分 " + f1(g.raw) + "/100。"
+      + "该档画像：" + g.g.trait + " 该档定性：" + g.g.ev + " 对战换算：" + g.g.vs);
+    add("判分构成", "总分 100 = 枪法分（枪法比 × 100，枪法比 = 场均击杀 ÷ 标准1 的 " + f1(BENCH.avgK) + "，K/D 不进枪法分）+ 额外加分；枪法比 "
+      + f1(g.gun * 100) + "% → " + f1(g.gun * BASE_SCORE) + " 分；额外加分 4:2:1:1:1:1"
+      + "（修造复活点/反击载具/占领点/点内击杀/K/D/击杀数量，只算超出的部分，载具按台数一台算一台）合计 +"
+      + f1(g.bonusSum) + "；总分 " + f1(g.raw) + "；6.2 的及格线就是标准1（" + f1(BASE_SCORE) + " 分）"
+      + "；越过 100 记 6.2+，越过 " + f1(SUSPECT_SCORE) + "（+15%）记「数据有疑问」");
+    const plus = g.bonus.filter(x => x.pts > 0.05).sort((a, b) => b.pts - a.pts);
+    add("分级依据", plus.length
+        ? "超过标准1的项：" + plus.map(x => x.k + "（标准1 " + (x.d === 2 ? f2(x.ref) : f1(x.ref)) + x.unit
+            + "，本人 " + (x.d === 2 ? f2(x.v) : f1(x.v)) + x.unit + "，加分 +" + f1(x.pts) + "）").join("、")
+          + (nx ? "；距下一档 " + nx.no + " " + nx.name + " 还差 " + f1(g.gap) + " 分" : "；已在表顶")
+        : "六项加分项一项都没超过标准1（加分 0），差距全在枪法上"
+          + (nx ? "；距下一档 " + nx.no + " " + nx.name + " 还差 " + f1(g.gap) + " 分" : "；已在表顶"));
+    add("升级建议", g.g.need);
+    if (g.suspect){
+      add("数据存疑说明（必须写）", "总分 " + f1(g.raw) + " 比标准1（" + f1(BASE_SCORE) + " 分）高出 "
+        + f1((g.raw / BASE_SCORE - 1) * 100) + "%，超过 15% 的线，按规则记「数据有疑问」。"
+        + "正文里要写清「比标准1还高一成半以上，这个幅度不像真人打出来的」，但不要人身攻击，"
+        + "给一句「样本可能有问题（人机局/代打/车队刷）」或「建议自查」即可");
+    } else if (g.over){
+      add("6.2+ 说明（必须写）", "总分 " + f1(g.raw) + " 已经超过标准1（" + f1(BASE_SCORE) + " 分），但没到 +15% 那条线，"
+        + "按规则记「6.2+」，属于真人能打出来的上限，不许写成开挂，也不许说数据不干净");
+    }
+    if (g.selfBench){
+      add("标准1本人", "这个号就是页面里写死的标准1（取样 " + num(BENCH.sample) + " 场），总分固定 " + f1(BASE_SCORE)
+        + "，正文里要说明它就是刻度本身，不要拿它跟自己比");
+    }
+  }
+  if (V.cs && V.cs.played.length){
+    const cs = V.cs;
+    add("四国偏向", cs.tot + " 场里的分布：" + cs.played.map(x =>
+        CN[x.c] + " " + x.n + " 场（" + f1(x.share) + "%）/ 胜率 " + f1(x.w) + "% / K/D " + f2(x.kd)
+        + " / 场均 " + f1(x.avgK) + " 杀 / 点内 " + f1(x.pinRate) + "%").join("；")
+      + "。主玩国 " + CN[cs.top.c] + "，偏向类型「" + cs.kind + "」，集中度 " + f1(cs.top.share) + "%"
+      + (cs.best && cs.best.c !== cs.top.c
+          ? "；最能打的是 " + CN[cs.best.c] + "（" + f1(cs.best.w) + "%），与主玩国不一致"
+          : "；最能打的也是主玩国本身")
+      + (cs.worst && cs.worst.c !== cs.top.c ? "；最弱是 " + CN[cs.worst.c] + "（" + f1(cs.worst.w) + "%）" : "")
+      + "。生涯各国：" + cs.list.filter(x => x.cb > 0)
+        .map(x => CN[x.c] + " " + num(x.cb) + " 场 / 胜率 " + f1(x.cw) + "% / KDA " + f2(x.ckd)).join("｜"));
+  }
+  if (V.env){
+    const e = V.env, rf = e.replay || null;
+    if (e.avgHumans != null){
+      add("对局环境（真人规模）", "按战绩 " + e.n + " 场统计：每场双方合计平均 " + f1(e.avgHumans) + " 个真人（我方 "
+        + f1(e.myHumans) + " / 对面 " + f1(e.opHumans) + "），最少一场 " + e.minHumans + " 个、最多 "
+        + e.maxHumans + " 个，中位 " + e.medHumans + "；"
+        + (e.avgHumans < 8 ? "活人极少，人机陪跑为主" : e.avgHumans < 14 ? "活人偏少，人机掺得多" : e.avgHumans < 18 ? "真人对抗为主" : "基本满编真人局")
+        + "。口径：真人＝这一场战绩里查得到的玩家，人机没有战绩记录、不在这份名单里"
+        + (rf ? "；回放 " + rf.n + " 场子样本里人机占 " + f1(rf.botRate) + "%（" + rf.bots + "/" + rf.seats
+            + " 个席位），对面真人平均 " + f1(rf.realOpp) + " 个" : "；回放样本没取到，人机占比这项缺"));
+    } else {
+      add("对局环境（人机）", "回放样本 " + e.n + " 场（接口只保留最近 10 场，属于抽样，不是全量）：双方共 "
+        + e.seats + " 个席位，其中人机 " + e.bots + " 个，占 " + f1(e.botRate) + "%；我方人机 " + e.myBots
+        + "、对面人机 " + e.oppBots + "；平均每场 " + f1(e.avgBot) + " 个人机，对面真人平均 " + f1(e.realOpp) + " 个");
+    }
+    add("组队情况", e.fixed.length
+      ? "固定队友 " + e.fixed.map(x => x.name + "（同队 " + x.n + " 场）").join("、")
+        + "；" + e.teamGames + "/" + e.n + " 场有队友，最多一局带 " + e.squadMax + " 个"
+      : (e.teamGames
+          ? e.teamGames + "/" + e.n + " 场有队友，但没有固定搭档（路人拼车）"
+          : "全是单排，一个固定队友都没有"));
+  }
+  if (items.length) add("加分/扣分项", items.join("；"));
+  if (V.tags && V.tags.length) add("打法标签", V.tags.map(t => t.t).join("、"));
+
+  if (D.segs && D.segs.length >= 3){
+    const path = D.segs.slice().reverse().map(x => "胜率 " + f1(x.s.winRate) + "%（场均 " + Math.round(x.s.avgK) + " 杀）");
+    add("分段走势（左旧右新）", path.join(" → "));
+  }
+
+  if (D.sq && D.sq.total){
+    add("他的小队", "共 " + D.sq.total + " 支小队，氪金队 " + D.sq.paid + " 支（其中高级队 " + D.sq.pre + " 支）"
+      + (Object.keys(D.sq.by).length ? "；氪金分布 " + Object.keys(D.sq.by).map(k => k + " " + D.sq.by[k]).join("｜") : ""));
+  }
+
+  if (D.clean.length >= 20){
+    const hr = {};
+    D.clean.forEach(r => { const h = new Date((r.commitTime || 0) * 1000).getHours(); hr[h] = (hr[h] || 0) + 1; });
+    const top = Object.keys(hr).map(Number).sort((a, b) => hr[b] - hr[a]).slice(0, 3);
+    const night = [0,1,2,3,4,5].reduce((acc, h) => acc + (hr[h] || 0), 0);
+    add("作息", "最活跃 " + top.map(h => String(h).padStart(2, "0") + "点(" + hr[h] + ")").join(" / ")
+      + "，凌晨场 " + night + " 场");
+  }
+  return L.join("\n");
+}
+
+/* ---------------- 评价体系（内嵌文本，单一来源） ----------------
+   文档存在 id 为 rbDoc 的 text/plain 脚本块里，不参与 JS 解析，
+   所以体系正文里出现任何符号都不会破坏页面。
+   <<AI-CORE>> 与 <<AI-CORE-END>> 之间 = 喂给模型的体系正文。 */
+const RB_OPEN = "<<AI-CORE>>", RB_CLOSE = "<<AI-CORE-END>>";
+let RB_TAB = "core";
+
+function rbRaw(){
+  const el = document.getElementById("rbDoc");
+  return el ? (el.textContent || "") : "";
+}
+function rbCore(){
+  const t = rbRaw();
+  const a = t.indexOf(RB_OPEN), b = t.indexOf(RB_CLOSE);
+  if (a < 0 || b < 0) return "";
+  return t.slice(a + RB_OPEN.length, b).trim();
+}
+function rbFull(){
+  let t = rbRaw();
+  t = t.split(RB_OPEN).join("").split(RB_CLOSE).join("");
+  return t.trim();
+}
+
+/* 极简 markdown：标题 / 表格 / 列表 / 代码块 / 引用 / 分隔线 / 粗体 / 行内码 */
+function rmd(src){
+  const L = String(src).replace(/\r\n/g, "\n").split("\n");
+  const inl = t => esc(t)
+    .replace(/`([^`\n]+)`/g, (m, a) => "<code>" + a + "</code>")
+    .replace(/\*\*([^*\n]+)\*\*/g, (m, a) => "<strong>" + a + "</strong>");
+  const cells = row => row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
+  const out = [];
+  let i = 0, para = [];
+  const flush = () => { if (para.length){ out.push("<p>" + inl(para.join(" ")) + "</p>"); para = []; } };
+
+  while (i < L.length){
+    const t = L[i].trim();
+
+    if (!t){ flush(); i++; continue; }
+
+    if (t.indexOf("```") === 0){
+      flush();
+      const buf = []; i++;
+      while (i < L.length && L[i].trim().indexOf("```") !== 0){ buf.push(L[i]); i++; }
+      i++;
+      out.push("<pre><code>" + esc(buf.join("\n")) + "</code></pre>");
+      continue;
+    }
+    if (/^#{1,6}\s/.test(t)){
+      flush();
+      const lv = t.match(/^#+/)[0].length;
+      const txt = t.replace(/^#+\s*/, "");
+      out.push(lv <= 2 ? "<h2>" + inl(txt) + "</h2>" : "<h3>" + inl(txt) + "</h3>");
+      i++; continue;
+    }
+    if (/^(-{3,}|\*{3,})$/.test(t)){ flush(); out.push("<hr>"); i++; continue; }
+    if (t.indexOf("|") === 0 && i + 1 < L.length && /^\|[\s:|-]+\|$/.test(L[i + 1].trim())){
+      flush();
+      const head = cells(t); i += 2;
+      const rows = [];
+      while (i < L.length && L[i].trim().indexOf("|") === 0){ rows.push(cells(L[i])); i++; }
+      out.push("<table><thead><tr>" + head.map(c => "<th>" + inl(c) + "</th>").join("") + "</tr></thead><tbody>"
+        + rows.map(r => "<tr>" + r.map(c => "<td>" + inl(c) + "</td>").join("") + "</tr>").join("")
+        + "</tbody></table>");
+      continue;
+    }
+    if (t.indexOf("> ") === 0 || t === ">"){
+      flush();
+      const buf = [];
+      while (i < L.length && L[i].trim().indexOf(">") === 0){
+        buf.push(L[i].trim().replace(/^>\s?/, "")); i++;
+      }
+      out.push("<blockquote>" + inl(buf.join(" ")) + "</blockquote>");
+      continue;
+    }
+    if (/^([-*+]|\d+\.)\s/.test(t)){
+      flush();
+      const ord = /^\d+\./.test(t);
+      const buf = [];
+      while (i < L.length && /^([-*+]|\d+\.)\s/.test(L[i].trim())){
+        buf.push(L[i].trim().replace(/^([-*+]|\d+\.)\s+/, "")); i++;
+      }
+      const tag = ord ? "ol" : "ul";
+      out.push("<" + tag + ">" + buf.map(x => "<li>" + inl(x) + "</li>").join("") + "</" + tag + ">");
+      continue;
+    }
+    para.push(t); i++;
+  }
+  flush();
+  return out.join("\n");
+}
+
+function rbRender(){
+  const body = document.getElementById("rbBody");
+  if (!body) return;
+  const core = rbCore(), full = rbFull();
+  const html = rmd(RB_TAB === "core" ? core : full);
+  body.innerHTML = html || '<p style="color:var(--red)">体系文本缺失（rbDoc 为空）</p>';
+  body.scrollTop = 0;
+  document.querySelectorAll(".rb-tab").forEach(b =>
+    b.classList.toggle("on", b.getAttribute("data-tab") === RB_TAB));
+  const meta = document.getElementById("rbMeta");
+  if (meta) meta.textContent = "正文 " + core.length + " 字 · AI 评价前会先整段读取"
+    + (RB_TAB === "core" ? "" : " · 当前为完整文档");
+  const note = document.getElementById("rbNote");
+  if (note) note.textContent = RB_TAB === "core"
+    ? "点「AI 重写」时，这一页会原样放进 system 作为前置规范"
+    : "完整文档含可粘到别家模型的 SYSTEM / USER 模板";
+}
+
+function rbCopyText(txt, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "已复制";
+    setTimeout(() => { btn.textContent = o; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(() => rbCopyLegacy(txt, done));
+  } else rbCopyLegacy(txt, done);
+}
+function rbCopyLegacy(txt, done){
+  const ta = document.createElement("textarea");
+  ta.value = txt;
+  ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+function rbOpen(){
+  const box = document.getElementById("rb");
+  if (!box) return;
+  rbRender();
+  box.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function rbClose(){
+  const box = document.getElementById("rb");
+  if (!box) return;
+  box.classList.remove("open");
+  document.body.style.overflow = "";
+}
+function rbInit(){
+  const box = document.getElementById("rb");
+  if (!box) return;
+  const op = document.getElementById("rbOpen");
+  if (op) op.onclick = () => rbOpen();
+  const cl = document.getElementById("rbClose");
+  if (cl) cl.onclick = () => rbClose();
+  box.addEventListener("click", e => { if (e.target === box) rbClose(); });
+  document.querySelectorAll(".rb-tab").forEach(b => {
+    b.onclick = () => { RB_TAB = b.getAttribute("data-tab"); rbRender(); };
+  });
+  const cp = document.getElementById("rbCopy");
+  if (cp) cp.onclick = () => rbCopyText(RB_TAB === "core" ? rbCore() : rbFull(), cp);
+  const rbtn = document.getElementById("rbOpen");
+  if (rbtn) rbtn.classList.add("on");
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && box.classList.contains("open")) rbClose();
+  });
+  rbRender();
+}
+
+function aiMessages(D, V){
+  const rubric = rbCore();
+  const sys = [
+    "你是《从军》(Enlisted) 国服的老玩家，在贴吧混了很多年，最擅长看战绩给人下判断，说话直接、有点损。",
+    "用户会给你一份**已经由程序算好的数据**。动笔之前，你必须先把下面这份《评价体系》完整读一遍，"
+      + "然后严格按它的数据口径、分级标准、正文结构和写作纪律来写。体系的规则优先于你的直觉和习惯写法。",
+    rubric ? "===== 评价体系 开始 =====\n" + rubric + "\n===== 评价体系 结束 =====" : "",
+    "【风格硬要求，违反任何一条都算不合格】",
+    "1. 篇幅 1000~1500 字，8~12 段；段落长短交错，禁止每段都是同一个句式结构（比如每段都以「XX 方面」开头）。",
+    "2. 第一句直接下判断：他是哪一档、强在哪、弱在哪，一句话说完。禁止任何铺垫式开场。",
+    "3. 禁用这些词和句式：首先、其次、再次、最后、综上所述、总的来说、值得注意的是、不难看出、从数据来看、"
+      + "整体表现、综合来看、具有一定的、表现出色、有待提高、作为一名玩家、可以说、换言之。",
+    "4. 不许用项目符号、编号列表、堆叠小标题；用自然段说话。小标题最多 2 个，可有可无。",
+    "5. 每个判断后面要跟一个具体数字，数字要带对比（例：场均 133.9 杀，比同级平均高一倍），不要光报数。",
+    "6. 至少三处只属于这个人的细节（某个比例特别高或特别低、某一段走势塌了、某个国家打得最多），"
+      + "换个玩家就套不进去的那种。",
+    "7. 必须写清两件事：他在 12 级表里的位置（几级几档），以及这一档的对战换算（打老兵/路人王要几个）。"
+      + "再说明他距离下一档差哪一项，别泛泛地说「还需努力」。",
+    "8. 结尾短、有态度，落地一句人话，不许重复开头。",
+    "9. 不要复述体系内容，不要写「我已阅读评价体系」「根据体系要求」这类话，直接输出正文。",
+    "10. 必须单独用一段讲四国偏向：他主玩哪国、偏到什么程度（集中度）、最能打的是不是主玩国；"
+      + "如果爱玩的国不是最强的国，要直接点出来。结尾给一句「该多玩哪个、该少碰哪个」的具体建议。",
+    "11. 必须单独用一段讲对局环境：每场双方有多少真人、对面真人平均几个、这数据有多少水分；"
+      + "有回放子样本时再带上人机占比（人机只能从回放阵容看，别把真人数量说成人机占比）。"
+      + "有固定车队要写清队友和同队场次，并说明「这不是纯单排数据」。"
+      + "活人很少、人机占比高时，绝对不许把胜率和场均击杀当成纯个人实力吹。",
+    "补充：数据里没有的东西（地图、武器型号、某场具体战例）一律不许编；所有数字都来自已算好的数据，不许重算。"
+  ].filter(Boolean).join("\n");
+
+  const user = "这是 " + D.name + " 的数据：\n\n" + aiFacts(D, V)
+    + "\n\n请按上面的要求和体系里的分级标准，写一段 1000~1500 字的评价。";
+
+  return [{ role: "system", content: sys }, { role: "user", content: user }];
+}
+
+/* 极简 markdown：只认 ## 小标题、**加粗**、空行分段 */
+function mdLite(src){
+  const lines = esc(src).split("\n");
+  const out = [];
+  let buf = [];
+  const inline = l => l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/^[-·]\s*/, "· ");
+  const flush = () => { if (buf.length){ out.push("<p>" + buf.join("<br>") + "</p>"); buf = []; } };
+  lines.forEach(raw => {
+    const l = raw.trim();
+    if (!l){ flush(); return; }
+    const h = l.match(/^#{1,4}\s*(.+)$/);
+    if (h){ flush(); out.push("<h4>" + inline(h[1]) + "</h4>"); return; }
+    buf.push(inline(l));
+  });
+  flush();
+  return out.join("");
+}
+
+/* 「AI 思考中」至少停留多久：在下面两个数之间随机取一个（单位毫秒）。
+   想让结果出得更快就改成 2000/3000，想更久就 12000/15000。 */
+const AI_THINK_MIN = 5000, AI_THINK_MAX = 10000;
+
+/* 「AI 思考中」占位：正文不立刻露，先让这个动画停留一会儿 */
+function aiThinkHTML(){
+  return '<div class="ai-think"><span class="tdots"><i></i><i></i><i></i></span>'
+    + '<b>AI 思考中</b><em id="aiThinkSec">0s</em></div>';
+}
+
+function aiShell(){
+  const rc = rbCore().length;
+  return '<div class="card ai-card" id="aiCard"><div class="card-h"><h2>AI点评</h2>'
+    + (rc ? '<span class="ai-rb" id="aiRb" title="AI 这次遵守的评价体系，点击查看">体系 ' + rc + ' 字</span>' : "")
+    + '<span class="ln"></span>'
+    + '<span class="ai-state" id="aiState"></span><button class="ai-run" id="aiRe">重写</button></div>'
+    + '<div class="ai-body" id="aiBody"></div></div>';
+}
+
+async function aiRun(D, V){
+  if (AI_OFF) return;
+  if (AI_RUN.on) return;
+  /* 没测过连通性（或上次没测通）就不建这个框：先测一次，真通了才继续 */
+  if (!aiOk()){
+    toastLine("先测一下 AI 连通性…", "var(--dim)", 20000);
+    /* 测不通就把规则文案填回去：正文此时还是骨架，不能一直空着 */
+    if (!(await aiProbe())){ vdRestore(V); return; }
+  }
+  let box = $("#aiBox");
+  if (!box){ vdRestore(V); return; }
+  box.innerHTML = aiShell();
+  const rbl = $("#aiRb");
+  if (rbl) rbl.onclick = () => rbOpen();
+  const body = $("#aiBody"), state = $("#aiState"), btn = $("#aiRe");
+  const t0 = Date.now();
+  /* 生成成功后交接：把「成分评价」卡里的正文换成 AI 版，AI 卡本身收掉，
+     页面上只留一份评价；分数条 / 加分项 / 分级条是规则算的，一个字都不动 */
+  const handoff = (txt) => {
+    const vd = $("#vdBody");
+    if (!vd) return false;
+    vd.innerHTML = mdLite(txt)
+      + '<div class="motto">-- 以上由 AI 按数据重写；总分与分级仍按规则计算 --</div>';
+    vd.dataset.ai = "done";     // 标记成 AI 正文，后面失败回落时不会把这段覆盖掉
+    const vc = $("#verdictCard");
+    if (vc){
+      const h2 = vc.querySelector("h2");
+      if (h2) h2.innerHTML = "成分评价" + '<span class="ai-tag">AI 重写</span>';
+      const go = vc.querySelector("#aiGo");
+      if (go) go.textContent = "重新生成";
+    }
+    const bx = $("#aiBox");
+    if (bx) bx.innerHTML = "";
+    return true;
+  };
+  /* 正文不立刻露出来：先让「AI 思考中」停留 AI_THINK_MIN~AI_THINK_MAX 毫秒（每次随机），到点再显示 */
+  const revealAt = t0 + AI_THINK_MIN
+    + Math.floor(Math.random() * (AI_THINK_MAX - AI_THINK_MIN + 1));
+  const waitReveal = () => new Promise(r => {
+    const left = revealAt - Date.now();
+    left > 0 ? setTimeout(r, left) : r();
+  });
+  AI_RUN.on = true;
+  btn.disabled = true;
+
+  /* key 没填：直接把改哪里说清楚，不发无谓请求 */
+  if (!aiKey()){
+    state.dataset.done = "1";
+    state.textContent = "未配置 KEY";
+    const hint = location.protocol === "file:"
+      ? '双击同目录的 <code>设置DS配置.bat</code>，按提示粘贴 DeepSeek 的 key 后运行一次即可。'
+      : '这个网页没内置 key：用一次 <code>…/#k=sk-你的key</code> 的地址打开，'
+        + '它会把 key 存进你这台机器的浏览器，之后正常访问就行。';
+    body.innerHTML = '<div class="ai-err">AI 还没配好 key。<br><br>' + hint
+      + '<br><br>下面的评价已经换成规则版，不受影响。</div>';
+    vdRestore(V);
+    AI_RUN.on = false;
+    btn.disabled = false;
+    return;
+  }
+
+  state.textContent = "AI 思考中" + (aiModel() ? " · " + aiModel() : "");
+  body.innerHTML = aiThinkHTML();
+
+  const ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  AI_RUN.ctrl = ctrl;
+  const timer = setInterval(() => {
+    if (state.dataset.done) return;
+    const el = (Date.now() - t0) / 1000;
+    const revealed = state.dataset.revealed === "1";
+    state.textContent = (revealed ? "生成中 " : "AI 思考中 ") + el.toFixed(0) + "s";
+    const sec = $("#aiThinkSec");
+    if (sec) sec.textContent = el.toFixed(0) + "s";
+  }, 300);
+
+  try{
+    const hdr = { "Content-Type": "application/json" };
+    const sk = aiKey();
+    if (sk) hdr["Authorization"] = "Bearer " + sk;   // 直连中转站时由浏览器自己带 key
+    const mdl = aiModel();
+    const msgs = aiMessages(D, V);
+    /* 有些推理模型（gpt-5 系 / o 系）不接受 temperature 或 max_tokens，
+       会把整个请求判成参数错误。所以先按常规发，碰到参数类报错就降级重发一次。 */
+    const mkBody = (full) => {
+      const b = { messages: msgs, stream: true };
+      if (mdl) b.model = mdl;
+      if (full){ b.temperature = 0.9; b.max_tokens = 4000; }
+      return JSON.stringify(b);
+    };
+    const post = (full) => fetch(aiEndpoint(), {
+      method: "POST",
+      headers: hdr,
+      body: mkBody(full),
+      signal: ctrl ? ctrl.signal : undefined
+    });
+    let res = await post(true);
+    if (!res.ok){
+      let first = "HTTP " + res.status, raw = "";
+      try{
+        raw = await res.text();
+        const j = JSON.parse(raw);
+        const e2 = j && (j.error || j);
+        if (typeof e2 === "string") first = e2;
+        else if (e2 && e2.message) first = e2.message;
+        else if (j && j.msg) first = j.msg;
+      }catch(e){ first = raw ? raw.slice(0, 200) : first; }
+      /* 400/422 且提到参数 → 去掉 temperature / max_tokens 再试一次 */
+      const paramIssue = (res.status === 400 || res.status === 422)
+        && /temperature|max_tokens|max_completion_tokens|unsupported|invalid.*(param|value)|not support/i.test(first);
+      if (paramIssue){
+        state.textContent = "模型不接受默认参数，正在降级重试…";
+        const res2 = await post(false);
+        if (res2.ok){ res = res2; }
+        else {
+          let m2 = "HTTP " + res2.status;
+          try{
+            const j2 = await res2.json();
+            const e3 = j2 && (j2.error || j2);
+            if (typeof e3 === "string") m2 = e3;
+            else if (e3 && e3.message) m2 = e3.message;
+          }catch(e){}
+          throw new Error(m2 + "（已自动去掉 temperature/max_tokens 仍失败）");
+        }
+      } else {
+        if (res.status === 401 || res.status === 403) first += "（KEY 无效、过期，或账户没余额）";
+        if (mdl && /model/i.test(first)) first += "（请求的模型名是 " + mdl + "，核对中转站模型列表是否一致）";
+        throw new Error(first);
+      }
+    }
+    let finalTxt = "";
+    if (!res.body) { // 老浏览器兜底：整体读
+      const j = await res.json();
+      const txt = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "";
+      await waitReveal();
+      finalTxt = txt;
+      body.innerHTML = mdLite(txt);
+    } else {
+      const reader = res.body.getReader();
+      const dec = new TextDecoder("utf-8");
+      let acc = "", think = "", buf = "", dirty = false;
+      const paint = (force) => {
+        /* 还没到显示时间就继续显示「思考中」，内容先攒着 */
+        if (!force && Date.now() < revealAt) return;
+        if (!dirty && !force) return;
+        state.dataset.revealed = "1";
+        dirty = false;
+        body.innerHTML = mdLite(acc) + '<span class="caret"></span>';
+      };
+      const tick = setInterval(paint, 90);
+      while (true){
+        const r = await reader.read();
+        if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        const parts = buf.split("\n");
+        buf = parts.pop();
+        for (const line of parts){
+          const t = line.trim();
+          if (!t || t.startsWith(":")) continue;
+          if (!t.startsWith("data:")) continue;
+          const d = t.slice(5).trim();
+          if (!d || d === "[DONE]") continue;
+          try{
+            const o = JSON.parse(d);
+            const dl = o.choices && o.choices[0] && o.choices[0].delta || {};
+            const c = dl.content;
+            if (c){ acc += c; dirty = true; }
+            /* 推理模型会先把思考过程放在 reasoning_content 里，正文可能要走完才吐 */
+            if (dl.reasoning_content) think += dl.reasoning_content;
+          }catch(e){ /* 半包忽略 */ }
+        }
+      }
+      clearInterval(tick);
+      await waitReveal();                 // 内容早到了，也把「思考中」停满 5~10 秒
+      /* 极少数模型只回思考不回正文：拿思考内容兜底，总比一片空白强 */
+      if (!acc.trim() && think.trim()) acc = think;
+      if (!acc.trim()) throw new Error("模型返回为空（key 过期、模型名不对，或上游拒了这个接口）");
+      finalTxt = acc;
+      paint(true);
+      const cur = body.querySelector(".caret");   // 收尾不留闪烁光标
+      if (cur) cur.remove();
+    }
+    state.dataset.done = "1";
+    /* 显示你实际等的时间（含那段刻意的思考停留），比只报模型耗时更符合直觉 */
+    state.textContent = "AI 生成 · " + ((Date.now() - t0) / 1000).toFixed(1) + "s";
+    /* 正文搬到上面那张评价卡里，AI 卡收掉——页面上只留一份评价 */
+    handoff(finalTxt);
+  }catch(e){
+    state.dataset.done = "1";
+    state.textContent = "失败";
+    const m = String(e && e.message || e);
+    const net = /Failed to fetch|NetworkError|Load failed|fetch failed|Network request failed/i.test(m);
+    let tip;
+    tip = "直连 DeepSeek，常见原因：① key 无效 / 余额不足（401、402）—— 去 platform.deepseek.com 看一眼；"
+      + "② 模型名不对（当前 <code>" + (aiModel() || "未填") + "</code>，可用 deepseek-chat / deepseek-v4-pro）；"
+      + "③ 地址应为 <code>https://api.deepseek.com/v1</code>（不要少了 /v1）；"
+      + "④ 网络或代理拦了 api.deepseek.com —— 换个网络、关掉代理再试。"
+      + (net ? "<br><br><b>这次是压根没连上</b>，多半是 ④。" : "");
+    body.innerHTML = '<div class="ai-err">AI 这步没成功：' + esc(m) + "<br><br>" + tip
+      + "<br><br>上面的评价已换回规则版，内容照旧能看。"
+      + "AI 已临时关闭：修好后点右上「测试 AI 连通性」，测通了下次查询才会再自动生成。</div>";
+    /* 正文此时还是骨架，必须换回规则文案，否则整张评价卡空着 */
+    vdRestore(V);
+    /* 失败就不再自动跑：回到「没测通」的状态，下次查询不建这个框，免得每次都弹一坨报错 */
+    aiSetOk(false);
+    const dd = $("#aiDot"); if (dd) dd.className = "dot err";
+  }finally{
+    clearInterval(timer);
+    AI_RUN.on = false;
+    AI_RUN.ctrl = null;
+    btn.disabled = false;
+    btn.textContent = "重写";
+  }
+}
+
+function aiBind(D, V){
+  if (AI_OFF) return;
+  const go = document.getElementById("aiGo");
+  if (go) go.onclick = () => { if (!document.getElementById("aiBox")) {
+      const d = document.createElement("div"); d.id = "aiBox"; document.getElementById("result").appendChild(d);
+    } aiRun(D, V); };
+  const re = document.getElementById("aiRe");
+  if (re) re.onclick = () => aiRun(D, V);
+}
+
+/* ---------------- 主流程 ---------------- */
+let busy = false;
+let LAST = null;          // { D, V } 最近一次分析结果，供"AI 重写"按钮复用（规则版也要用，别放进 AI 段）
+let LASTQ = null;         // { q, uid, n } 最近一次查询参数：TOKEN 换好后按它自动重查
+async function analyze(target, n){
+  if (busy) return;
+  if (!token()){ $("#tkPanel").classList.add("open"); openTkDlg(); return; }
+  target = (target || "").trim();
+  if (!target) return;
+  LASTQ = { q: target, uid: /^\d{3,}$/.test(target) ? target : null, n: n };
+  busy = true;
+  $("#go").disabled = true;
+  $("#go").textContent = "查询中…";
+  stReset();
+  $("#result").innerHTML = "";
+
+  RUN.cancelled = false;
+  RUN.abort = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  ovlOpen("正在查询 " + target, "解析身份 → 概览 → 战绩 → 小队");
+
+  try{
+    const s1 = stLine("解析身份：" + esc(target));
+    let rg, roll = null;
+    try{
+      rg = await resolveUid(target, msg => {
+        /* 搜索过程全部进加载框：换环节就新增一行，同一环节的滚动进度（x/y、…）原地更新 */
+        const tick = /[0-9]+\s*\/\s*[0-9]+/.test(msg) || /…$/.test(msg);
+        if (!roll){
+          roll = ovlLine(msg);
+        }else if (tick && roll._tick){
+          stSet(roll, msg); roll._txt = msg;
+        }else{
+          stSkip(roll, roll._txt || "已试过");   // 上一步走完（试过），保留原文
+          roll = ovlLine(msg);
+        }
+        if (roll) roll._tick = tick;
+        ovlSub(msg);
+        ovlTick();
+      });
+      if (roll) stSkip(roll, roll._txt || "已确认");
+      stDone(s1, "UID " + rg.uid + (rg.name ? "（" + rg.name + "）" : "") + " · 来源 " + rg.src);
+    }catch(e){
+      if (RUN.cancelled) throw e;
+      if (roll) stSkip(roll, roll._txt || "已中断");
+      stFail(s1, "解析身份失败：" + e.message); throw e;
+    }
+    ovlStage(); ovlSub("身份已确认：UID " + rg.uid);
+
+    const uid = rg.uid;
+    if (LASTQ) LASTQ.uid = uid;
+    ovlSub("拉取生涯概览 overview");
+    const s2 = stLine("拉取生涯概览");
+    const ov = await api("/cj-record-rankings/combat/overview", { uid: uid });
+    stDone(s2, "概览：" + num(ov.sumBattles || 0) + " 场，胜率 " + (ov.sumVict || "-") + "%");
+    ovlStage();
+
+    ovlSub("拉取最近 " + n + " 场战绩 hisBattles");
+    const s3 = stLine("拉取最近 " + n + " 场战绩");
+    const bd = await api("/cj-record-rankings/combat/hisBattles", { uid: uid, pageSize: n, pageNum: 1 });
+    const rows = (bd.data || []).sort((a, b) => (b.commitTime || 0) - (a.commitTime || 0));
+    stDone(s3, "拿到 " + rows.length + " 条记录（可查 " + num(bd.total || 0) + " 条）");
+    ovlStage();
+
+    ovlSub("拉取小队数据 mySquad");
+    const s4 = stLine("拉取小队数据");
+    let sqRaw = [];
+    try{
+      const sd = await api("/cj-record-rankings/combat/mySquad", { uid: uid });
+      sqRaw = sd.squads || [];
+      stDone(s4, "小队 " + sqRaw.length + " 支");
+    }catch(e){
+      if (RUN.cancelled) throw e;
+      stFail(s4, "小队数据取不到：" + e.message);
+    }
+    ovlStage();
+
+    ovlSub("统计对局环境（真人规模 / 组队）");
+    const s4b = stLine("统计对局环境（真人规模 / 组队）");
+    let env = null, replayEnv = null;
+
+    /* ① 回放样本：现在只用来算人机占比 + 给隐身号补昵称（每人最多 10 场，天然是子样本） */
+    try{
+      let rpLine = null;
+      replayEnv = await scanEnv(uid, rg.name, msg => {
+        if (!rpLine) rpLine = stLine(msg, "", true); else stSet(rpLine, msg);
+        ovlSub(msg); ovlTick();
+      });
+      if (replayEnv) stSkip(rpLine, "回放样本 " + replayEnv.n + " 场（只用于人机占比）");
+      else stSkip(rpLine, "没有可用的回放样本，人机占比这项空着");
+    }catch(e){
+      if (RUN.cancelled) throw e;
+      replayEnv = null;
+    }
+    ovlStage();
+
+    /* ② 按查询的 N 场战绩逐场取阵容：真人规模 + 固定队友 */
+    try{
+      let envLine = null;
+      env = await scanBattleEnv(rows, uid, msg => {
+        if (!envLine) envLine = stLine(msg, "", true); else stSet(envLine, msg);
+        ovlSub(msg); ovlTick();
+      });
+      if (env){
+        stDone(envLine, "战绩 " + env.n + " 场");
+        stDone(s4b, "对局环境：" + env.n + " 场 · 平均真人 " + f1(env.avgHumans) + "/场（我方 "
+          + f1(env.myHumans) + " / 对面 " + f1(env.opHumans) + "）· 固定队友 " + env.fixed.length + " 人"
+          + (replayEnv ? " · 回放样本人机 " + f1(replayEnv.botRate) + "%" : ""));
+      } else {
+        stSkip(envLine, "这批战绩里取不到对局阵容");
+        stSkip(s4b, "跳过对局环境（battleDetail 没返回阵容）");
+      }
+    }catch(e){
+      if (RUN.cancelled) throw e;
+      stFail(s4b, "对局环境统计失败：" + e.message);
+    }
+    if (env && replayEnv) env.replay = replayEnv;
+    else if (!env && replayEnv) env = replayEnv;
+    ovlStage();
+
+    if (!rows.length) throw new Error("没有逐场记录");
+
+    /* 只给 UID 的情况（隐身号）：昵称从回放阵容里补回来，标注来源，不当作已确认的昵称 */
+    if (!rg.name && replayEnv && replayEnv.myName){
+      rg.name = replayEnv.myName;
+      rg.src = rg.src + "（昵称取自最近回放，隐身号每局可能不同）";
+      stLine("昵称：" + esc(rg.name) + " · 从最近回放阵容里认出来的");
+    }
+
+    /* 逐场定权：拿到阵容的场次按「双方真人总数」打折（<7 人的局降权），拿不到的按满权 */
+    const humOf = {};
+    if (env && env.recs) env.recs.forEach(x => { humOf[x.sid] = x.n; });
+    rows.forEach(r => { r.__w = wOfHumans(humOf[r.sessionId]); });
+
+    const flee = rows.filter(isFlee);
+    const quick = rows.filter(isQuick);
+    const clean = rows.filter(r => !isFlee(r));
+    const sq = squadStats(sqRaw);
+    const segs = segments(clean, 4);
+
+    const D = {
+      uid: uid, name: rg.name || ("UID " + uid), src: rg.src,
+      srcWhen: rg.when, srcMap: rg.map, weak: rg.weak, weakNote: rg.weakNote,
+      ov: ov, country: countryStats(clean, ov), env: env,
+      rows: rows, clean: clean, flee: flee, quick: quick, sq: sq, segs: segs
+    };
+
+    ovlSub("生成成分评价");
+    const s5 = stLine("生成成分评价");
+    const V = buildVerdict(D);
+    stDone(s5, "完成：" + V.title + "（" + Math.round(V.grade ? V.grade.v : V.sc) + " 分）");
+
+    $("#result").innerHTML =
+      renderIdentity(D) + renderOverview(ov, D.name) + renderBattles(D)
+      + renderCountry(D) + renderEnv(D) + renderSquads(sq) + renderVerdict(V)
+      + '<div id="aiBox"></div>';
+
+    LAST = { D: D, V: V };
+    aiBind(D, V);
+
+    ovlSettle("done");
+    $("#ovlTitle").textContent = "查询完成";
+    $("#ovlSub").textContent = (rg.name || ("UID " + uid)) + " · " + V.title + "（" + Math.round(V.grade ? V.grade.v : V.sc) + " 分）";
+    $("#ovlTime").textContent = "共 " + ((Date.now() - OVL.t0) / 1000).toFixed(1) + " 秒";
+    await sleep(420);
+    ovlClose();
+
+    if (aiAuto()) aiRun(D, V);
+
+    // 历史
+    if (rg.name) addHist(rg.name, n);
+    else addHist(String(uid), n);
+
+  }catch(e){
+    if (RUN.cancelled){
+      ovlClose();
+      $("#status").classList.remove("show");
+      $("#result").innerHTML = '<div class="card"><div class="empty"><div class="big">—</div>'
+        + "<p>查询已取消。</p>"
+        + '<p style="margin-top:10px;font-size:13px;color:var(--dim2)">接口本身有延迟，读录像阵容和翻排行榜时尤其慢；'
+        + "换个名字或稍后再试。</p></div></div>";
+      return;
+    }
+    ovlSettle("fail");
+    $("#ovlTitle").textContent = "查询失败";
+    $("#ovlSub").textContent = e.message || "未知错误";
+    /* 失败时把搜索过程留在框里让人看清楚，按钮改成「关闭」，不会自己弹走 */
+    const cb = $("#ovlCancel");
+    cb.disabled = false;
+    cb.textContent = "关闭";
+    cb.onclick = () => { if (OVL.on) ovlClose(); };
+    await sleep(5000);   // 留 5 秒让人看清搜索过程（点「关闭」可以提前走）
+    const bad = /500100/.test(e.message || "");
+    if (bad){ TK_BAD = true; TK_RETRY = LASTQ; refreshTokenUI(); }
+    $("#result").innerHTML = '<div class="card"><div class="empty"><div class="big">!</div>'
+      + "<p style=\"color:var(--red)\">" + esc(e.message) + "</p>"
+      + (bad
+        ? '<p style="margin-top:10px;font-size:14px;color:var(--prose);line-height:1.85">TOKEN 是限时的，过期之后所有接口都会回 500100。<br>'
+          + '点下面按钮，用书签从已登录的战火页面自动取一份新的；验证通过后会把这一次自动重查一遍。</p>'
+          + '<button class="btn" id="tkFix" style="margin-top:15px">自动提取 TOKEN 并重查</button>'
+        : '<p style="margin-top:10px;font-size:13px;color:var(--dim2)">若提示 500100 或 token 相关，请点右上角检查 TOKEN；'
+          + "若提示找不到昵称，注意昵称<b>大小写敏感</b>——录像和排行榜都查不到时才会报「无法搜索该用户」，"
+          + "这种情况把昵称反馈给作者，我再想办法。</p>")
+      + "</div></div>";
+    const fx = document.getElementById("tkFix");
+    if (fx) fx.onclick = () => { $("#tkPanel").classList.add("open"); openTkDlg(); };
+  }finally{
+    busy = false;
+    RUN.abort = null;
+    $("#go").disabled = false;
+    $("#go").textContent = "开始分析";
+    if (OVL.on) ovlClose();
+  }
+}
+
+/* ---------------- 历史 ---------------- */
+function getHist(){ try{ return JSON.parse(localStorage.getItem("cj_hist") || "[]"); }catch(e){ return []; } }
+function addHist(name, n){
+  let h = getHist().filter(x => x.name !== name);
+  h.unshift({ name: name, n: n });
+  h = h.slice(0, 12);
+  localStorage.setItem("cj_hist", JSON.stringify(h));
+  renderHist();
+}
+function renderHist(){
+  const box = $("#hist");
+  if (!box) return;                    // 「近期查询记录」已从页面移除，只往 localStorage 里记，不再展示
+  const h = getHist();
+  if (!h.length){ box.innerHTML = ""; return; }
+  box.innerHTML = h.map(x =>
+    '<button data-n="' + esc(x.name) + '" data-c="' + x.n + '">' + esc(x.name) + "</button>").join("");
+}
+
+/* ---------------- 事件 ---------------- */
+$("#tkToggle").onclick = () => $("#tkPanel").classList.toggle("open");
+/* 手填输入框与「清掉我粘的」按钮都已撤掉：TOKEN 一律走「自动提取」或直接 Ctrl+V（全局 paste 捕获） */
+/* 这几个元素在规则版里不存在，统一做空值保护 */
+const $aiTest = $("#aiTest"), $aiTestTop = $("#aiTestTop"), $aiAuto = $("#aiAuto");
+if ($aiTest) $aiTest.onclick = () => aiProbe();
+/* 顶部常驻的「测试 AI」：面板里那行常驻状态已删掉，结果改用底部小条提示，不再展开面板 */
+if ($aiTestTop) $aiTestTop.onclick = () => aiProbe();
+if ($aiAuto) $aiAuto.onchange = e => localStorage.setItem("cj_ai_auto", e.target.checked ? "1" : "0");
+/* 场次输入框：没有默认值，必须自己填；只收数字 */
+function readN(){
+  const el = $("#qn");
+  const v = parseInt((el.value || "").replace(/\D/g, ""), 10);
+  if (!v || v < 1){
+    stReset();
+    toastLine("请先填写需要分析的场次（例如 30 / 50 / 100），再开始分析", "var(--amber)", 4200);
+    el.focus();
+    try{ el.select(); }catch(_){ }
+    return 0;
+  }
+  return v;
+}
+$("#qn").addEventListener("input", e => {
+  const v = e.target.value.replace(/\D/g, "");
+  if (v !== e.target.value) e.target.value = v;
+});
+$("#qn").addEventListener("keydown", e => { if (e.key === "Enter") $("#go").click(); });
+$("#go").onclick = () => { const n = readN(); if (!n) return; analyze($("#q").value, n); };
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") $("#go").click(); });
+/* 按 UID 查：隐身 ID 每局昵称随机，昵称这条路走不通，只能给数字 UID */
+$("#qu").addEventListener("input", e => {
+  const v = e.target.value.replace(/[^\d]/g, "");
+  if (v !== e.target.value) e.target.value = v;
+});
+$("#goUid").onclick = () => {
+  const v = ($("#qu").value || "").replace(/\D/g, "");
+  if (!v){ $("#qu").focus(); return; }
+  const n = readN(); if (!n) return;
+  $("#q").value = "";
+  analyze(v, n);
+};
+$("#qu").addEventListener("keydown", e => { if (e.key === "Enter") $("#goUid").click(); });
+function refreshTokenUI(){
+  const own = localStorage.getItem("cj_token") || "";
+  const t = token();
+  $("#tkDot").className = "dot" + (TK_BAD ? " err" : (t ? " on" : ""));
+  $("#tkLabel").textContent = TK_BAD
+    ? "TOKEN 已失效 · 点此换"
+    : (t ? (own ? "TOKEN 已设置 · 自定义" : "TOKEN 已设置 · 内置") : "未设置 TOKEN");
+  $("#tkLabel").title = TK_BAD
+    ? "接口回了 500100，这份 TOKEN 过期了；点开点「自动提取」换一份"
+    : (own ? "当前用的是你手粘的 TOKEN，点开可换或恢复内置"
+           : "当前用的是页面内置 TOKEN（失效后粘一份新的即可覆盖）");
+  if (!t) $("#tkPanel").classList.add("open");
+}
+
+/* ================= TOKEN 自动提取 =================
+   浏览器不允许一个页面读另一个 origin 的存储，所以「自动提取」只能在 act.zhanhuo.com
+   那边执行：给一个书签，点一下把本机存着的 JWT 全翻出来，逐个拿去 cjapi 验，把能用的那份
+   复制到剪贴板；这边切回来粘贴（或直接读剪贴板）就完成填充 + 验证 + 保存。
+   书签源码放在 <script type="text/plain" id="tkBmSrc"> 里，避免一长串转义；运行时替换 __API__ / __UID__。 */
+let TK_RETRY = null;      // 500100 失败时记下这次查询，换好 TOKEN 后自动重跑
+let TK_WAIT = false;      // 弹窗开着、等用户去别的标签页取 TOKEN
+let TK_TRY = 0;           // 读剪贴板的节流时间戳
+let TK_AUTO = 0;          // 自动读剪贴板已试次数（每次开弹窗重置，最多两次，免得不弹权限还反复弹）
+
+function tkBmCode(){
+  const el = document.getElementById("tkBmSrc");
+  if (!el) return "";
+  const uid = (LASTQ && LASTQ.uid) || "1804096";
+  return el.textContent.replace(/\s*\n\s*/g, " ")
+    .replace("__API__", API)
+    .replace("__UID__", String(uid))
+    .trim();
+}
+
+/* 从一堆粘贴物里认出 TOKEN：允许带 CJTOKEN: 前缀、Bearer 前缀、引号、换行 */
+function tkNorm(raw){
+  let s = String(raw == null ? "" : raw).trim().replace(/^["'`]+|["'`]+$/g, "");
+  s = s.replace(/^CJTOKEN\s*:\s*/i, "").replace(/^bearer\s+/i, "").trim();
+  const m = s.match(/eyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}/);
+  return m ? m[0] : "";
+}
+
+function tkSt(cls, html){
+  const el = document.getElementById("tkdSt");
+  if (!el) return;
+  el.className = "tkd-st" + (cls ? " " + cls : "");
+  el.innerHTML = html;
+}
+
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){ }
+  try{
+    const ta = document.createElement("textarea");
+    ta.value = t;
+    ta.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return !!ok;
+  }catch(e){ return false; }
+}
+
+/* 探活：拿一个已知存在的 UID 请求 1 条战绩，code===0 就算这份 TOKEN 能用 */
+async function verifyToken(v){
+  const uid = (LASTQ && LASTQ.uid) || "1804096";
+  try{
+    const r = await fetch(API + "/cj-record-rankings/combat/hisBattles?uid=" + uid + "&pageSize=1&pageNum=1",
+      { headers: { "accept": "application/json", "authorization": "Bearer " + v } });
+    const j = await r.json();
+    if (j && j.code === 0) return { ok: true };
+    return { ok: false, msg: "服务端返回 code=" + (j && j.code) + " " + ((j && j.msg) || "") };
+  }catch(e){
+    return { ok: false, netFail: true, msg: fetchHint("验证请求失败：" + (e && e.message ? e.message : e)) };
+  }
+}
+
+/* 存 + 验 + （有上次失败就）重查 */
+async function tkApply(raw){
+  const v = tkNorm(raw);
+  if (!v) return false;
+  localStorage.setItem("cj_token", v);
+  TK_BAD = false;
+  refreshTokenUI();
+  tkSt("", "✓ 提取成功，正在验证…");
+  const r = await verifyToken(v);
+  if (r.ok){
+    TK_WAIT = false;
+    const rerun = TK_RETRY;
+    TK_RETRY = null;
+    tkSt("ok", "✓ 提取成功，已自动保存并通过验证。"
+      + (rerun ? "马上把刚才那次查询重跑一遍…" : ""));
+    setTimeout(() => {
+      closeTkDlg();
+      if (rerun && !busy) analyze(rerun.uid ? String(rerun.uid) : rerun.q, rerun.n);
+    }, rerun ? 600 : 1100);
+  }else{
+    /* 500100 是明确判死：把顶栏也切成失效态，别让人以为已经换好了 */
+    if (/500100/.test(r.msg || "")){ TK_BAD = true; refreshTokenUI(); }
+    if (r.netFail && PREVIEW_ENV){
+      /* 连不上不是 TOKEN 的问题：已经存好了，但存的是预览面板这个域的存储，
+         切到 file:// 打开时读不到，得再粘一次（剪贴板里还在） */
+      tkSt("", "✓ 已存下这份 TOKEN。只是连不上接口 —— " + esc(PREVIEW_MSG) + "。<br>"
+        + "提示：预览面板和本地文件不是同一个域，存储不互通，切过去打开后<b>再按一次 <code>Ctrl+V</code></b>（剪贴板里还在）。");
+      return false;
+    }
+    tkSt("bad", "已保存，但验证没通过：" + esc(r.msg)
+      + "。如果这份是刚复制的，可能只是服务端抖了一下，直接查询试试；<br>"
+      + "还是 500100 就说明战火那边登录过期了，重新登录再点一次书签。");
+  }
+  return r.ok;
+}
+
+async function tkReadClipboard(silent){
+  if (Date.now() - TK_TRY < 3000) return false;
+  TK_TRY = Date.now();
+  if (!navigator.clipboard || !navigator.clipboard.readText){
+    if (!silent) tkSt("bad", "这个浏览器不让脚本读剪贴板。直接按 <code>Ctrl+V</code>，粘在本页<b>任意位置</b>都能识别。");
+    return false;
+  }
+  try{
+    const t = await navigator.clipboard.readText();
+    if (!tkNorm(t)){
+      if (!silent) tkSt("bad", "剪贴板里现在没有 TOKEN。先在上面第 2 步点一下书签，它会自动复制。");
+      return false;
+    }
+    return await tkApply(t);
+  }catch(e){
+    if (!silent) tkSt("bad", "浏览器拒绝了读剪贴板（用本地文件打开时几乎都会拒）。按 <code>Ctrl+V</code> 粘在本页任意位置，一样会自动填充保存。");
+    return false;
+  }
+}
+
+function tkDlgHTML(){
+  return '<div class="sqd" role="dialog" aria-modal="true" aria-labelledby="tkdTitle">'
+    + '<div class="sqd-h"><h3 id="tkdTitle">自动提取 TOKEN</h3>'
+    + '<span class="sub">书签 · 只设一次</span>'
+    + '<button class="sqd-x" id="tkdX" aria-label="关闭">×</button></div>'
+    + '<div class="sqd-b tkd-b">'
+    + "<p>浏览器不许一个网页读另一个网站的存储，所以本页没办法自己把 token「抓」过来。"
+    + "做法是装一个小书签，之后换 TOKEN 就是「点书签 → 回来粘贴」两步。</p>"
+    + "<ol>"
+    + "<li><b>第 1 步 · 只做一次</b>：把 <a class=\"tkd-bm\" id=\"tkdBm\" href=\"javascript:void 0\" draggable=\"true\">取从军 TOKEN</a> "
+    + "拖进浏览器书签栏（拖不动就点下面「复制书签代码」，书签栏右键 → 添加网页 → 名称随便填、网址粘这段代码）。"
+    + "<br><span class=\"tkd-old\">装过旧书签的，这里要<b>重新拖一次覆盖它</b>——旧版弹窗会把 TOKEN 明文显示出来；"
+    + "新版弹窗只有一句「✓ 提取成功，请按 Ctrl+V」。</span></li>"
+    + "<li><b>第 2 步</b>：同一个浏览器里打开并登录 <code>act.zhanhuo.com</code>，点一下这个书签。"
+    + "它会把本机存着的 token 全翻出来，逐个拿去接口验，把能用的那份复制走。</li>"
+    + "<li><b>第 3 步</b>：切回本页按 <code>Ctrl+V</code>。填充、验证、保存一次做完；"
+    + "如果刚才是因为 500100 失败的，还会自动把那次查询重跑一遍。</li>"
+    + "</ol>"
+    + '<div class="tkd-row">'
+    + '<button class="btn btn-ghost" id="tkdCopy">复制书签代码</button>'
+    + '<button class="btn btn-ghost" id="tkdRead">从剪贴板读一次</button>'
+    + "</div>"
+    + '<div class="tkd-st" id="tkdSt">还没开始。剪贴板里已经有 TOKEN 的话，直接按 Ctrl+V 就行。</div>'
+    + '<textarea id="tkdCode" readonly spellcheck="false" style="display:none;margin-top:10px;width:100%;height:66px;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--dim);background:var(--input);border:1px solid var(--line);border-radius:8px;padding:8px"></textarea>'
+    + '<p class="tkd-fine">token 只写在你自己这个浏览器的 localStorage 里，不往任何第三方发；书签代码只做「读本机 + 调一次 cjapi 验证」。'
+    + "书签点了没反应，一般是战火页面那条安全策略把 bookmarklet 拦了 —— 把代码粘到 F12 控制台回车，效果一样。</p>"
+    + "</div></div>";
+}
+
+function openTkDlg(){
+  let el = document.getElementById("tkDlg");
+  if (!el){
+    el = document.createElement("div");
+    el.id = "tkDlg";
+    document.body.appendChild(el);
+  }
+  el.innerHTML = tkDlgHTML();
+  el.classList.add("on");
+  document.body.style.overflow = "hidden";
+  TK_WAIT = true;
+  TK_AUTO = 0;
+
+  const code = tkBmCode();
+  const a = document.getElementById("tkdBm");
+  if (a){
+    a.setAttribute("href", code);
+    a.onclick = e => {
+      e.preventDefault();
+      tkSt("", "书签不用在本页点 —— 把它拖到书签栏，再去 act.zhanhuo.com 点。");
+    };
+  }
+  const cp = document.getElementById("tkdCopy");
+  if (cp) cp.onclick = async () => {
+    const ok = await copyText(code);
+    if (ok){
+      tkSt("ok", "✓ 书签代码已复制。书签栏右键 → 添加网页 / 添加书签，名称随意，网址粘这段。");
+    }else{
+      const ta = document.getElementById("tkdCode");
+      if (ta){ ta.style.display = "block"; ta.value = code; ta.focus(); ta.select(); }
+      tkSt("bad", "复制失败了，下面框里的代码已选中，手动 <code>Ctrl+C</code>。");
+    }
+  };
+  const rd = document.getElementById("tkdRead");
+  if (rd) rd.onclick = () => tkReadClipboard(false);
+  const x = document.getElementById("tkdX");
+  if (x) x.focus();
+}
+
+function closeTkDlg(){
+  const el = document.getElementById("tkDlg");
+  if (!el || !el.classList.contains("on")) return;
+  el.classList.remove("on");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("click", e => {
+  const el = document.getElementById("tkDlg");
+  if (!el || !el.classList.contains("on")) return;
+  if (e.target.closest && e.target.closest("#tkdX")) closeTkDlg();
+  else if (e.target === el) closeTkDlg();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.getElementById("tkDlg")?.classList.contains("on")) closeTkDlg();
+});
+/* 从别的标签页切回来，先试着直接读剪贴板（读不到就让用户自己 Ctrl+V） */
+function tkAutoRead(){
+  if (!TK_WAIT || TK_AUTO >= 2) return;
+  TK_AUTO++;
+  tkReadClipboard(true);
+}
+window.addEventListener("focus", tkAutoRead);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) tkAutoRead(); });
+/* 全局粘贴：任意位置粘到 TOKEN 都能接住 */
+window.addEventListener("paste", e => {
+  const dt = e.clipboardData;
+  if (!dt) return;
+  const raw = dt.getData("text/plain") || dt.getData("text") || "";
+  if (!tkNorm(raw)) return;
+  e.preventDefault();
+  if (document.getElementById("tkDlg")?.classList.contains("on")) tkApply(raw);
+  else { openTkDlg(); tkApply(raw); }
+});
+$("#tkGrab").onclick = () => openTkDlg();
+
+refreshTokenUI();
+renderBench();
+rbInit();
+refreshAiUI();
+if ($aiAuto) $aiAuto.checked = aiAuto();
+/* 上次测通过就一直记着：顶部圆点直接标绿，表示「AI 已启用，查完会自动生成」
+   没测过就保持熄灭 —— 那种情况下查完不出现 AI 框，也不发请求 */
+(function(){
+  const d = document.getElementById("aiDot");
+  if (d && !AI_OFF && aiOk()) d.className = "dot on";
+})();
+/* 规则版：把 AI 相关的入口整块摘掉（代码留着但永不触发，不发任何请求） */
+if (AI_OFF){
+  ["aiTestTop", "aiSetBlock"].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.remove();
+  });
+}
+renderHist();
+
+/* 预览面板里打开时，接口一定连不通（CSP 拦了 connect-src），提前把话说明白，
+   省得每次查询都像「TOKEN 又失效了」。只在预览环境插入，本地双击打开不会出现。 */
+if (PREVIEW_ENV && !document.getElementById("pvNote")){
+  const bar = document.createElement("div");
+  bar.id = "pvNote";
+  bar.style.cssText = "margin:14px auto 0;max-width:1180px;padding:10px 14px;border-radius:10px;"
+    + "border:1px solid rgba(220,185,110,.45);background:rgba(220,185,110,.1);color:var(--amber);"
+    + "font-size:13px;line-height:1.7;display:flex;gap:12px;align-items:flex-start";
+  bar.innerHTML = '<span style="flex:1">现在是在<b>预览面板</b>里打开的：它的安全策略不允许连 cjapi，'
+    + "查询和 TOKEN 验证都会报「Failed to fetch」（跟 TOKEN 无关）。"
+    + "双击 <code>成分分析.html</code> 用 Chrome / Edge 打开就正常 —— "
+    + "注意这里粘的 TOKEN 也带不过去（不是同一个域），到那边再按一次 <code>Ctrl+V</code>。</span>"
+    + '<button id="pvNoteX" style="flex:0 0 auto;border:1px solid rgba(220,185,110,.45);background:transparent;'
+    + 'color:var(--amber);border-radius:7px;padding:3px 10px;cursor:pointer;font-size:12.5px">知道了</button>';
+  const hd = document.querySelector("header");
+  if (hd && hd.parentNode) hd.parentNode.insertBefore(bar, hd.nextSibling);
+  const bx = bar.querySelector("#pvNoteX");
+  if (bx) bx.onclick = () => bar.remove();
+}
+// 支持 ?q=昵称 / ?uid=数字 直接查询
+const qp = new URLSearchParams(location.search);
+if (qp.get("uid")){
+  const u = String(qp.get("uid")).replace(/\D/g, "");
+  $("#qu").value = u;
+  if (u) analyze(u, parseInt(qp.get("n")) || 100);
+} else if (qp.get("q")){
+  $("#q").value = qp.get("q");
+  if (token()) analyze(qp.get("q"), parseInt(qp.get("n")) || 100);
+}
+</script>
+</body>
+</html>
