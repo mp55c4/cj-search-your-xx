@@ -249,6 +249,11 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--green-d);bo
   color:var(--red);border:1px solid rgba(210,110,100,.45);background:rgba(210,110,100,.12);
   padding:2px 9px;border-radius:20px;font-family:var(--sans);letter-spacing:.4px;
 }
+/* 抗压大师徽标：金色，只发称号不加分 */
+.card-h .tag.stress{
+  color:var(--amber);border:1px solid rgba(220,185,110,.5);background:rgba(220,185,110,.14);
+  padding:2px 9px;border-radius:20px;font-family:var(--sans);letter-spacing:.4px;
+}
 
 /* identity */
 .id-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
@@ -815,10 +820,12 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 | 小队 | 场均被打光 ≥7 小队常被打光 / ≤4 那一路挺稳 |
 | 助攻 | 助攻率 ≥12% 爱补刀 / ≥8% 会配合 |
 | 枪法 | 爆头率 ≥13% 枪法硬 / <8% 乱扫 |
+| 处境（称号） | 少打多加成成立 → 以少打多；出彩 ≥8 场且占比 ≥45%、对面平均多 ≥2.4 人 → **抗压大师**（纯称号，不另加分） |
 
 ### 4.5 玩家分级（12 级 / 6 大档 × 2 小档）
 
 **判定口径**：**总分 100 分 = 枪法分 + 六项额外加分 + 环境修正（填线 ±、少打多 +）**，不是六维加权；标准1的总分就是 100 分。
+「抗压大师」是**纯称号**，不进任何一笔分数（少打多的场面已由少打多加成体现）。
 **标尺是一条写死的基准战绩**：代号 `标准1`（UID 2341138，2026-11-08 取样 100 场，生涯 428 场）。
 - **枪法分 = 枪法比 × 100**。**枪法比 = 场均击杀（人机局整场剔除、只算满编局）÷ 标准1 的 120.7**
   （只看击杀数，K/D 不进枪法分）。
@@ -868,6 +875,12 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   加分 **+1 ~ +5 分**。正文口径：同样一个人头，在少打多的方向上换出来含金量不一样；这种局换谁打数据都会掉一截。
   **口径必须写明**：`myN / opN` 来自战绩名单（每场只回 3~13 条，人机不在名单里），只能当"这一场哪边人多"的相对信号，
   不是真实满编人数。
+- **「抗压大师」称号**（2026-11-08 新增，**只发称号、不另加分**）：
+  少打多局里"打得出来"的场次够多才发，三条同时成立——
+  **① 出彩场次 ≥ 8 场**（"场次多"就指这一条绝对量）；**② 出彩占全部少打多局 ≥ 45%**（防止样本极大时几场也算多）；
+  **③ 对面平均多 ≥ 2.4 个真人**（对面只多 2 个人凑数的不算抗压）。强度 `stress` 只用于文案语气，不改分。
+  - **不许重复计分**：这笔场面已经体现在上面的少打多加成（1~5 分）里，称号纯荣誉，正文必须点明"称号只是称号，不另加分"。
+  - 正文写法：人少也肯往上顶、不挑局、不是被局势推着走；**不许**写成"喜欢送"或"人多就崩"。
 - **环境修正不参与判级**：填线修正与少打多加成**直接进总分**，但 `6.2+ / 数据有疑问` 只看
   **枪法分 + 额外加分**（`core`）。否则两笔补偿叠加最多 +11.5 分，会把一个正常号硬推过 115 那条"疑似开挂"线。
   - **比标准1强 → 6.2+**：总分越过 **100** 只记「**6.2+ 超出刻度**」，这是真人能打出来的上限，**不许写成开挂**。
@@ -966,6 +979,9 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
     并点明「同样的人头在少打多的方向上换出来，含金量不一样」。加分已算进总分，**不许再额外加分**。
     **不许**把这份加成说成"对面菜""打人机"；也要写明口径是战绩名单（每场 3~13 条、人机不在内），
     不是真实满编人数。
+19. **抗压大师只是称号**：资料里出现「抗压大师」时必须点明这个称号，写成"人少也肯顶、不挑局"，
+    并**明确写出称号不另加分**（该给的已在少打多加成里算过）。**禁止**再给它叠分数，
+    也**禁止**把它说成"专门去送"或"人一多就崩"。
 
 ### 7. 六个必须避开的判断陷阱
 
@@ -1093,6 +1109,9 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   场均 <X> 杀 / <X> 死，胜率 <X>%，人少的一边还杀得比队友多。已加 <X> 分。
   正文要写成「同样的人头在少打多的方向上换出来，含金量不一样」，并写明口径是战绩名单（每场 3~13 条、人机不在内）；
   **不许**再额外加分，**不许**说成"对面菜"。
+- 抗压大师（如果给的资料里有这一项，**必须点出称号**）：少打多局里打得出来的达 <X> 场，占 <X>%（对面平均多 <X> 人），
+  所以给「抗压大师」称号。正文写成"人少也肯往上顶、不挑局"，并**明确写出称号只是称号、不另加分**；
+  **不许**再叠加分数，**不许**写成"爱送"或"人一多就崩"。
 - 分级：<几级几档，如 4.1 老兵>（<大档>档），总分 <X>/100（6.2 及格线 = 标准1 = 100 分）；
   总分越过 100 → 记「6.2+ 超出刻度」（真人上限，不许写成开挂）；
   超过 115（比标准1高 15% 以上）→ 记「6.2+ 数据有疑问」（疑似开挂，只写"幅度不像真人"，不人身攻击）
@@ -1790,6 +1809,12 @@ async function scanBattleEnv(rows, uid, log){
    minHit / minRate：至少命中几场、命中率多少，才给这笔加分（样本太小容易碰运气）
    min / max：加分区间 1 ~ 5 分 */
 const OUT_W = { gap: 2, mine: 1.25, minHit: 3, minRate: 35, min: 1.0, max: 5.0 };
+/* 抗压大师（2026-11-08）：少打多的「场次」多到一定程度，给称号。
+   只发称号、不另加分 —— 这笔场面已经体现在少打多加成（1~5 分）里了，重复计分就是刷分。
+     minHit  ：少打多局里真正打得出来的场次（绝对量，"场次多"就是这一条）
+     minRate ：这些场次占他全部少打多局的比例（防止样本极大时几场也算"多"）
+     minGap  ：对面平均得多出几个真人（对面只多 2 个人凑数的不算抗压） */
+const OUT_M = { minHit: 8, minRate: 45, minGap: 2.4 };
 function battleEnvStats(recs){
   const n = recs.length || 1;
   const sum = f => recs.reduce((a, x) => a + (x[f] || 0), 0);
@@ -1872,12 +1897,20 @@ function battleEnvStats(recs){
     myNAvg: sumOf(shortAll, x => x.myN), opNAvg: sumOf(shortAll, x => x.opN),
     kAvg: sumOf(shortHit, x => x.myK), dAvg: sumOf(shortHit, x => x.myD),
     winRate: shortHit.length ? shortHit.filter(x => x.win).length / shortHit.length * 100 : 0,
-    power: 0, adj: 0
+    power: 0, adj: 0, master: false, stress: 0
   };
   if (outnumbered.hit >= OUT_W.minHit && outnumbered.rate >= OUT_W.minRate){
     outnumbered.power = 0.6 * Math.min(1, outnumbered.gapAvg / 3)
       + 0.4 * Math.min(1, outnumbered.rate / 100);
     outnumbered.adj = OUT_W.min + (OUT_W.max - OUT_W.min) * outnumbered.power;
+  }
+  /* 抗压大师：场次够多 + 打得出来的比例够高 + 对面确实多出一截，三条同时成立 */
+  if (outnumbered.hit >= OUT_M.minHit && outnumbered.rate >= OUT_M.minRate
+      && outnumbered.gapAvg >= OUT_M.minGap){
+    outnumbered.master = true;
+    outnumbered.stress = 0.5 * Math.min(1, outnumbered.hit / 16)
+      + 0.3 * Math.min(1, outnumbered.rate / 70)
+      + 0.2 * Math.min(1, outnumbered.gapAvg / 3.5);
   }
 
   return {
@@ -2416,6 +2449,7 @@ function renderBench(){
     + "另有一笔<b>填线修正</b>：杀得多、死得也多、K/D 被拖低 → 加 2~6.5 分（填线战神）；"
     + "杀得少、死得还多 → 扣 1.2~4 分（填线宝宝）。"
     + "还有一笔<b>少打多加成</b>：对面名单比他这边多 ≥2 个真人、这一局他还打得出来 → 加 1~5 分。"
+    + "少打多局里打得出来的场次到 " + OUT_M.minHit + " 场、占比 ≥" + OUT_M.minRate + "% → 发<b>抗压大师</b>称号（纯称号，不另加分）。"
     + "这两笔都直接进总分、不改枪法比，也<b>不参与 6.2+ / 数据有疑问的判定</b>（只看枪法 + 加分）。"
     + "人机局（双方真人 &lt;7）逐场降权：4~6 人按四成、≤3 人按两成计。这份数据写在页面里，不查接口也显示，也参与算分。</div>"
     + '<button class="bench-more" id="benchMore">展开全部 ' + (all.length + cells.length) + " 项数据 ▾</button>"
@@ -2574,6 +2608,8 @@ function buildVerdict(D){
   }
   /* 少打多：只在这笔加分真的成立时贴标签，别给没加分的号也挂一个 */
   if (OT && OT.adj > 0.05) tags.unshift({ t: "以少打多", tone: "hi" });
+  /* 抗压大师：少打多场次够多才发称号，摆在「以少打多」前面 —— 称号比属性更该先看到 */
+  if (OT && OT.master) tags.unshift({ t: "抗压大师", tone: "hi" });
   /* 被带领先贴在最前面：这是「怎么打出这个数据的」，比风格标签更该先看到。
      同时把「惜命」这个夸奖改口 —— 判了被带，死得少就不是会走位，是没上去。 */
   if (CR && CR.hit >= 3 && CR.rate >= 40){
@@ -2767,6 +2803,14 @@ function buildVerdict(D){
       + "好几场干脆是整场击杀第一。";
     po += "所以评分里另加一笔「少打多加成」<b>+" + f1(OT.adj) + "</b> 分："
       + "同样一个人头，在少打多的方向上换出来，含金量是不一样的——这种局换谁来打，数据都会往下掉一截。";
+    /* 抗压大师：用称号再点一次，不加分 */
+    if (OT.master){
+      po += "<br>这个量已经不是偶发了——<b>" + OT.hit + "</b> 场人少还打得出来，占他少打多局的 <b>"
+        + f1(OT.rate) + "%</b>，所以给个<b>抗压大师</b>的称号。"
+        + (OT.stress >= 0.7 ? "这个比例放在人群里是很靠前的一档：人越少他越肯往上顶，不是被局势推着走的那种。"
+            : "意思是他不挑局，人数吃亏也照打，不是看阵容不行就缩着混完。")
+        + "称号只是称号，<b>不另加分</b>——该给的已经算在上面那笔里了。";
+    }
     po += " 口径说明：这里的「人多」「人少」按战绩名单算（每场只回 3~13 条，人机不在名单里），"
       + "只能当这一场哪边人多的相对信号看，不是真实满编人数。";
     P.push({ html: po });
@@ -3507,10 +3551,13 @@ function renderVerdict(V){
   const CRV = (V.s && V.s.carried) || null;
   /* 填线徽标：god = 填线战神（杀得多死得多），baby = 填线宝宝（杀得少死得多） */
   const FLV = (G && G.fill) || (V.s && V.s.fill) || null;
+  /* 抗压徽标：少打多场次够多 → 抗压大师 */
+  const OTV = (G && G.outnumbered) || (V.s && V.s.outnumbered) || null;
   let h = '<div class="card" id="verdictCard"><div class="card-h"><h2>成分评价</h2><span class="ln"></span>'
     + '<span class="tag">' + (G ? G.g.no + " " + G.g.name + " · 总分 " + f1(G.raw) : "机器分 " + Math.round(V.sc)) + "</span>"
     + (FLV && FLV.kind === "god" ? '<span class="tag fill">填线战神</span>'
       : FLV && FLV.kind === "baby" ? '<span class="tag fillbaby">填线宝宝</span>' : "")
+    + (OTV && OTV.master ? '<span class="tag stress">抗压大师</span>' : "")
     + (CRV && CRV.verdict
         ? '<span class="tag monkey' + (CRV.verdict === "leaned" ? " soft" : "") + '">🐵 被带'
           + (CRV.verdict === "leaned" ? " " + f1(CRV.rate) + "%" : "") + "</span>"
@@ -3863,6 +3910,14 @@ function aiFacts(D, V){
       + "正文要写成「同样的人头在少打多的方向上换出来，含金量不一样」，"
       + "并说明口径是战绩名单（每场 3~13 条、人机不在内），不是真实满编人数。"
       + "这笔已经算进总分，禁止再额外加分");
+    /* 抗压大师：纯称号，正文必须出现，且必须说明不加分 */
+    if (ot.master){
+      add("抗压大师称号（必须在正文里点明）",
+        "少打多局里打得出来的场次达到 " + ot.hit + " 场，占他少打多局的 " + f1(ot.rate) + "%（门槛 "
+        + OUT_M.minHit + " 场 / " + OUT_M.minRate + "%），对面平均多 " + f1(ot.gapAvg) + " 个真人，"
+        + "所以给「抗压大师」称号。正文要点明这个称号，写成「人少也肯顶、不挑局」，"
+        + "并明确说明：称号只是称号，不另加分 —— 该给的已经在少打多加成里算过了，禁止再叠加分数");
+    }
   }
 
   const SD = V.detail;
