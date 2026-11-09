@@ -1506,11 +1506,12 @@ const done=tk=>{
     ? '✓ 提取成功，请按 Ctrl+V'
     : '✓ 提取成功，但浏览器没让写剪贴板。点一下页面空白处让页面拿到焦点，再点一次这个书签；还不行就把书签代码粘到 F12 控制台回车。'));
 };
-/* 点错页面是最常见的"没找到 token"原因：token 存在 act.zhanhuo.com 这个源下，
-   在别的站（包括本分析页、预览面板、别的 zhanhuo 子域）点书签，读的是那个源自己的存储，自然是空的 */
+/* 点错页面是最常见的"没找到 token"原因：token 存在登录站那个源下，
+   在别的站（包括本分析页、预览面板、别的子域）点书签，读的是那个源自己的存储，自然是空的。
+   2026-11-09 改：国服主入口是 cj.zhanhuo.com（/index/ 登录），老的活动站 act.zhanhuo.com 也留着放行。 */
 const H=(location.hostname||'');
-if(H.toLowerCase()!=='act.zhanhuo.com'){
-  box('','这个书签只能在 act.zhanhuo.com（已登录、右上角能看到账号）的页面上点。你现在在「'+(H||'本地文件页面')+'」，这个源的存储里没有从军的登录信息，所以什么也扫不到。');
+if(!/^(act|cj)\.zhanhuo\.com$/i.test(H)&&!/\.(act|cj)\.zhanhuo\.com$/i.test(H)){
+  box('','这个书签要在 cj.zhanhuo.com（国服主站，/index/ 那个页面，已登录、右上角能看到账号）上点；act.zhanhuo.com 也行。你现在在「'+(H||'本地文件页面')+'」，这个源的存储里没有从军的登录信息，所以什么也扫不到。');
   return;
 }
 if(!R.length){ box('','这个页面里没找到 token。先确认已经登录战火（右上角能看到账号），刷新一次页面再点这个书签。'); return; }
@@ -5942,8 +5943,9 @@ function refreshTokenUI(){
 }
 
 /* ================= TOKEN 自动提取 =================
-   浏览器不允许一个页面读另一个 origin 的存储，所以「自动提取」只能在 act.zhanhuo.com
-   那边执行：给一个书签，点一下把本机存着的 JWT 全翻出来，逐个拿去 cjapi 验，把能用的那份
+   浏览器不允许一个页面读另一个 origin 的存储，所以「自动提取」只能在登录站
+   （cj.zhanhuo.com/index/，老的 act.zhanhuo.com 同样放行）那边执行：
+   给一个书签，点一下把本机存着的 JWT 全翻出来，逐个拿去 cjapi 验，把能用的那份
    复制到剪贴板；这边切回来粘贴（或直接读剪贴板）就完成填充 + 验证 + 保存。
    书签源码放在 <script type="text/plain" id="tkBmSrc"> 里，避免一长串转义；运行时替换 __API__ / __UID__。 */
 let TK_RETRY = null;      // 500100 失败时记下这次查询，换好 TOKEN 后自动重跑
@@ -6073,7 +6075,8 @@ function tkDlgHTML(){
     + "拖进浏览器书签栏（拖不动就点下面「复制书签代码」，书签栏右键 → 添加网页 → 名称随便填、网址粘这段代码）。"
     + "<br><span class=\"tkd-old\">装过旧书签的，这里要<b>重新拖一次覆盖它</b>——旧版弹窗会把 TOKEN 明文显示出来；"
     + "新版弹窗只有一句「✓ 提取成功，请按 Ctrl+V」。</span></li>"
-    + "<li><b>第 2 步</b>：同一个浏览器里打开并登录 <code>act.zhanhuo.com</code>，点一下这个书签。"
+    + "<li><b>第 2 步</b>：同一个浏览器里打开并登录 <code>cj.zhanhuo.com/index/</code>"
+    + "（老的 <code>act.zhanhuo.com</code> 也行），点一下这个书签。"
     + "它会把本机存着的 token 全翻出来，逐个拿去接口验，把能用的那份复制走。</li>"
     + "<li><b>第 3 步</b>：切回本页按 <code>Ctrl+V</code>。填充、验证、保存一次做完；"
     + "如果刚才是因为 500100 失败的，还会自动把那次查询重跑一遍。</li>"
@@ -6108,7 +6111,7 @@ function openTkDlg(){
     a.setAttribute("href", code);
     a.onclick = e => {
       e.preventDefault();
-      tkSt("", "书签不用在本页点 —— 把它拖到书签栏，再去 act.zhanhuo.com 点。");
+      tkSt("", "书签不用在本页点 —— 把它拖到书签栏，再去 cj.zhanhuo.com/index/ 登录后点。");
     };
   }
   const cp = document.getElementById("tkdCopy");
