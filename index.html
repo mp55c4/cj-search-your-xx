@@ -747,11 +747,16 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   胜率 / K/D / 场均被打掉 / 场均得分 / 点内% / 工程·场 / 载具·场 都按这个加权口径算，
   「折合有效场次」= Σ权重。
 
-**死亡口径（2026-11-08 更正，全站统一）**：所有「死亡」都用 `squadDeaths`（这一局被打掉几个班 = 玩家真正被击杀的次数），
-**不是** `deaths`（兵员阵亡总数，含班里的每一个兵）。标准1 的实测：100 场被打掉 **486** 个班（场均 4.86），
-同期兵员阵亡 3217 人（场均 32.17），两者差 6.6 倍。K/D、场均被打掉、每分钟被打掉、填线判定、被带判定、
-逐场表的「被打掉」列，全部按 `squadDeaths` 算；`deaths` 只在标尺卡里作「兵员阵亡/场」参照，不进任何计算。
-K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），跟游戏内显示的 K/D 不是一个口径，不要混着引用。
+**死亡口径（2026-11-09 改定，两个字段各管一件事，别再混）：**
+
+| 口径 | 字段 | 管什么 | 标准1 实测 |
+|---|---|---|---|
+| **阵亡人数** | `deaths` | **K/D = 击杀 ÷ 阵亡人数**、场均阵亡、被带判定 | 100 场 3217 人 → 场均 32.17，K/D = 12074 ÷ 3217 = **3.75** |
+| **被打掉的班数** | `squadDeaths` | **冲点强度**：冲点死了多少队 → 填线判定、每战斗分钟被打掉、逐场表「被打掉」列 | 100 场 486 个班 → 场均 4.86 |
+
+两者比值固定 **≈ 6.6 人/班**（3217 ÷ 486）。一句话：
+**K/D 看的是「人怎么死的」，班数看的是「队怎么送的」——冲点搭进去多少队，只有班数能看出来。**
+换口径数字会整体平移 6.6 倍，正文里报数必须先想清楚报的是哪一个，**不许把两个数混在一起比**。
 
 正文里必须说明「场均击杀已剔除 X 场人机局」。**两套口径不要混着推**：
 `场均击杀 × 场次 ≠ 总击杀` 是正常的，别拿这个说"数据对不上"。
@@ -776,7 +781,7 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
 |---|---|---|
 | 胜率 | min(胜率 / 95, 1) × 34 | 34 |
 | 场均战功 | min(场均战功 / 150, 1) × 24 | 24 |
-| K/D | min(K/D / 26.5, 1) × 18（基准 24.84，班数口径） | 18 |
+| K/D | min(K/D / 4.01, 1) × 18（基准 3.75，阵亡人数口径） | 18 |
 | 场均占点 | min(场均占点 / 2.5, 1) × 12 | 12 |
 | 全场第一率 | min(全场第一率 / 60, 1) × 12 | 12 |
 
@@ -840,7 +845,7 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
   **这 120 分就是 6.2 的及格线**（拿满 100 分只到 6.1）。
 - **额外加分**（比例 4 : 2 : 1 : 1 : 1 : 1，只算**超出标准1的部分**，标准1本人恒 0）：
   修造复活点（工程设施/场，标准1 4.61）4 份、反击载具（**击毁台数/场，一台算一台，不折算战功**，标准1 1.52）2 份、
-  占领点（占旗/场，标准1 1.81）1 份、点内击杀占比（标准1 25.7%）1 份、K/D（标准1 24.84）1 份、场均击杀（标准1 120.7）1 份。
+  占领点（占旗/场，标准1 1.81）1 份、点内击杀占比（标准1 25.7%）1 份、K/D（标准1 3.75，人数口径）1 份、场均击杀（标准1 120.7）1 份。
   每份 **0.6 分**，加分封顶 **+6**。
 - **击杀领先加成**（2026-11-08 新增，只放大枪法分，不动加分项）：
   逐场取该局有战绩记录的真人名单，按**击杀数降序**排，取紧随其后的那一位，算
@@ -852,28 +857,28 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
 - **被带判定（🐵）**（2026-11-08 新增，贴标签，**不改分数、不改分级**）：
   逐场取同队（同 country）名单里**击杀最高的那个队友**，四条同时成立才算这一场「被带」：
   ① 队友击杀 ≥ 本人击杀 × 1.8（他确实是队里的主攻手）；
-  ② 队友被打掉 ≥ max(0.45, 本人 × 2)（他在正面换命，不是缩着打）；
-  ③ 本人被打掉 ≤ 队友击杀 × 0.06（自己这条命保得太干净）；
-  ④ 本人 K/D ≥ 19.9（不是打不动，是打得「太漂亮」）。
+  ② 队友阵亡 ≥ max(3, 本人阵亡 × 2)（他在正面换命，不是缩着打）；
+  ③ 本人阵亡 ≤ 队友击杀 × 0.4（自己这条命保得太干净）；
+  ④ 本人 K/D ≥ 3（不是打不动，是打得「太漂亮」）。
   外加本人该场至少 5 杀，免得 3 杀 0 死的偶发局把人判死。
   占比 = 命中场数 ÷ **能取到同队名单的场数**（`battleDetail` 名单残缺，只能这么算，界面必须写样本量）。
   **占比 ≥ 40% 且命中 ≥ 3 场** → 贴「🐵 被带」标签（有倾向）；
   **占比 ≥ 60% 且命中 ≥ 5 场** → 判定「**🐵 完了**」，正文直说这个 K/D 是队友挡出来的，往下砍一档看待。
-  用户口径的例子：队友 100 杀 / 被打掉 7 个兵（≈2 个班）、本人 50 杀 / 被打掉 2 个兵（≈1 个班）→ 命中，判 🐵。
-  （阈值按班数口径换算：队友被打掉 ≥ max(0.45, 自己×2)、自己 ≤ 队友击杀×0.06、自己 K/D ≥ 19.9。）
+  用户口径的例子：队友 100 杀 / 7 人阵亡、本人 50 杀 / 2 人阵亡 → 命中，判 🐵。
+  （上面四条全部是**阵亡人数**口径。）
   这条只影响**文案和标签**：不扣分、不加分、不动分级；正文禁止把「死亡少」夸成会走位、会惜命。
 - **填线判定**（2026-11-08 新增，**算进总分**，两种方向）：
   "填线"=往战线上填人，正面顶、拿命换位置。只看 K/D 会把这种人看扁，所以要单独算一笔。
   - **填线战神**（杀得多、死得也多、K/D 被死亡拖低）：三条同时成立
-    ① 场均击杀 ≥ 标准1 的 45%（≈54 杀/场）；② 场均被打掉 ≥ 标准1 的 115%（≈5.6 个班/场）；
-    ③ K/D ≤ 标准1 的 45%（≈11.2）。→ **总分 +2 ~ +6.5 分**，
-    强度 = 0.45×击杀规模 + 0.30×死亡规模 + 0.25×KD 之低，再线性映射到加分区间。
+    ① 场均击杀 ≥ 标准1 的 45%（≈54 杀/场）；② **场均被打掉 ≥ 标准1 的 115%（≈5.6 个班/场，冲点一局搭进去 5.6 队）**；
+    ③ K/D ≤ 标准1 的 45%（≈1.69，阵亡人数口径）。→ **总分 +2 ~ +6.5 分**，
+    强度 = 0.45×击杀规模 + 0.30×**死亡班数规模** + 0.25×KD 之低，再线性映射到加分区间。
     正文口径：死得多不是不会躲，是他在最前面；这号是按人头硬换、把对面按在正面，队友才推得上去。
     **判了战神，「拿命换头」这个标签要撤掉**（那不是缺点，是他在顶）。
   - **填线宝宝**（杀得少、死得还多）：三条同时成立
-    ① 场均击杀 ≤ 标准1 的 35%（≈42 杀/场）；② K/D ≤ 5.96（≈标准1 的 24%，兵数口径的「K/D≤0.9、死多于杀」）；③ 场均被打掉 ≥ 3.6 个班。
+    ① 场均击杀 ≤ 标准1 的 35%（≈42 杀/场）；② K/D ≤ **0.9**（死的比杀的还多）；③ 场均被打掉 ≥ 3.6 个班。
     → **总分 −1.2 ~ −4 分**，强度 = 0.55×杀得少的程度 + 0.45×KD 之低。
-    正文口径：这不叫敢冲，是冲上去没换成（路线直、不看侧翼、死在还没抬枪的时候），属于纯兵力损耗。
+    正文口径：这不叫敢冲，是冲上去没换成（路线直、不看侧翼、死在还没抬枪的时候），属于纯兵力损耗——**一局整队整队往里搭**。
     **判了宝宝，「惜命」标签要撤掉**（死得多才被判的宝宝，惜命是反话）。
   - 样本 < 8 场不判（噪声太大）；这笔**直接进总分、不改枪法比**，所以「枪法 100% = 标准1」这条刻度不受影响。
   - 两个方向的正文都只描述打法与产出，**不许升级成人身攻击**，也不许说人"菜"。
@@ -916,7 +921,7 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
 **标定基准**：下面那组「建标画像」只用来写各档的定性描述（这一档该是什么样、该练什么），
 不再反推分带；真正的锚点是标准1的枪法数值。要换标尺，改页面里 `BENCH` 的数值即可。
 换完记得回填 `BASE_SCORE`（标准1的判分，默认 100），并重跑一遍 `生成三个版本.py`。
-胜率 35/43/47/50/53/58/63/68/73/80/86/92（%），K/D 4/6/8/9/11/13/15/17/20/25/29/37（班数口径），
+胜率 35/43/47/50/53/58/63/68/73/80/86/92（%），K/D 0.6/0.9/1.2/1.4/1.7/2.0/2.3/2.6/3.0/3.8/4.4/5.6（阵亡人数口径），
 场均击杀 12/28/38/46/55/65/75/88/100/120/135/150，生涯场次 80/400/900/1200/2000/3000/4000/5000/6000/7000/9000/12000。
 
 | 等级 | 画像（这一档该有的样子） | 对战换算 |
@@ -1004,6 +1009,10 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
     并说明评分上**枪法权重 ×1.2**（枪法比从 <X>% 抬到 <X>%，折 +<X> 分，**在枪法分里、不另立加分项**）；
     标准1 本人就是抗压大师，所以 **6.2 的及格线是 120 分**，不是 100 分，**别把 100 分说成满分或及格线**。
     **禁止**再给它叠第三笔分，也**禁止**把它说成"专门去送"或"人一多就崩"。
+20. **死亡的两个口径不许混用**：K/D 报的是**阵亡人数**（击杀 ÷ `deaths`，标准1 = 3.75）；
+    「被打掉几个班」是**冲点强度**（`squadDeaths`，冲点死了多少队，标准1 场均 4.86 班）。
+    两个数相差 ≈6.6 倍，正文里要么都写清单位（人 / 班），要么只用其中一个；
+    **不许**用"死得多"同时指两个口径，也**不许**拿人数 K/D 去跟班数比较。
 
 ### 7. 六个必须避开的判断陷阱
 
@@ -1101,17 +1110,18 @@ K/D 的基准也随之变成 **24.84**（标准1：12074 杀 ÷ 486 个班），
 - 人机局处理：人机局（双方真人 <7）<X> 场 —— 场均击杀已整场剔除、只按 <X> 场满编局算；
   其余指标按场次权重折算，折合有效场次 <X> 场（没有就写「无人机局」）
 - 取样：最近 <X> 场（其中全 0 逃跑 <X> 场、早退 <X> 场，占 <X>%；剔除后有效 <X> 场）
-- 有效战绩：<X> 胜 <X> 负，胜率 <X>%，K/D <X>，场均 <X> 杀（满编局口径）/ <X> 死 / <X> 助，
+- 有效战绩：<X> 胜 <X> 负，胜率 <X>%，K/D <X>（击杀 ÷ 阵亡人数），场均 <X> 杀（满编局口径）/
+  <X> 人阵亡（冲点被打掉 <X> 个班）/ <X> 助，
   场均得分 <X>，单场最高 <X>，全场第一 <X>/<X>（全部为取样口径）
-- 总战斗时长：<X> 小时 <X> 分（得分效率 <X> 分/分，死亡 <X> 次/分）
+- 总战斗时长：<X> 小时 <X> 分（得分效率 <X> 分/分，被打掉 <X> 班/分）
 - 枪法：爆头率 <X>%
 - 战功 / 载具：击杀 <X>，击毁敌方载具 <X> 台（坦克 <X> / 飞机 <X> / 运兵车 <X>），
   按坦克5、飞机3、运兵车3折算战功 +<X>，战功合计 <X>（场均 <X>），载具占战功 <X>%
 - 争夺：点内击杀 <X>（进攻 <X> / 防守 <X>），占 <X>%；占领点 <X> 次（场均 <X>）
 - 武器：近战 <X>%、手雷/炸药包 <X>%、手枪 <X>%
 - 支援：一血 <X> 次（场均 <X>），助攻 <X>（占击杀 <X>%），工程设施 <X> 次、工事 <X> 次，
-  兵员阵亡 <X> 人（只作参照）
-- 被打掉：全部 <X> 场里被打掉 <X> 个班（场均 <X>），每战斗分钟 <X> 班
+  总阵亡 <X> 人（合 <X> 个班被打掉）
+- 被打掉（冲点强度，班数口径）：全部 <X> 场里被打掉 <X> 个班（场均 <X>），每战斗分钟 <X> 班
 - 判分构成：总分 100 = 枪法分（枪法比 <X>% × 100 = <X> 分）+ 额外加分 +<X>（4:2:1:1:1:1）
   + 填线修正 <±X>（没有填线判定就写 0）+ 少打多加成 +<X>（没有就写 0）
   （枪法比里已经含击杀领先 +<X>% 与抗压大师 ×1.2；6.2+ / 数据有疑问 只按「枪法 + 加分」判，
@@ -1203,7 +1213,7 @@ DeepSeek、通义、智谱、Kimi 都兼容；不兼容的只能手工用：把�
 
 | 字段 | 用途 |
 |---|---|
-| kills / squadDeaths / assists | 基础击杀、被打掉班数（**死亡主口径**）、助攻率 |
+| kills / deaths / squadDeaths / assists | 基础击杀、阵亡人数（K/D 口径）、被打掉的班数（冲点强度）、助攻率 |
 | battleScore | 场均得分、得分效率 |
 | battleTime | 总时长、每分钟被打掉、逃跑判定 |
 | victories | 胜率 |
@@ -1217,8 +1227,8 @@ DeepSeek、通义、智谱、Kimi 都兼容；不兼容的只能手工用：把�
 | firstBlood | 开团能力 |
 | engineerBuildingUsage | 工程支援 |
 | fortificationBuilt | 工事修建 |
-| squadDeaths | **死亡主口径**：被打掉的班数（K/D、填线、被带全用它） |
-| deaths | 兵员阵亡总数（含班里每个兵），只作参照，不进计算 |
+| squadDeaths | **被打掉的班数**：冲点死了多少队 → 填线判定、每分钟被打掉、逐场表「被打掉」列 |
+| deaths | **阵亡人数**：K/D、场均阵亡、被带判定（2026-11-09 起 K/D 用这个） |
 | earlyQuits | 纪律（早退） |
 | country | 阵营分布 |
 | commitTime | 作息、走势、连续逃跑检测 |</script>
@@ -1788,9 +1798,9 @@ async function scanBattleEnv(rows, uid, log){
          他比我少得越多，说明这些人头不是捡的、是硬抢出来的，击杀权重就该往上抬。
          只统计有「下一位」的场次；自己至少 5 杀才算数，免得 2 杀 1 杀的局瞎放大。 */
       const kOf = x => (x.kills != null ? +x.kills : (x.kill != null ? +x.kill : 0));
-      /* 死亡取 squadDeaths（这一局被打掉几个班），与全站口径一致。
-         battleDetail 的字段与 hisBattles 相同，旧版取的是 deaths（兵员阵亡数），比实际被击杀次数大 6.6 倍。 */
-      const dOf = x => (x.squadDeaths != null ? +x.squadDeaths : (x.deaths != null ? +x.deaths * D_SCALE : 0));
+      /* 死亡取 deaths（阵亡人数），与 2026-11-09 起的 K/D 口径一致。
+         battleDetail 的字段与 hisBattles 相同，两个字段都有；缺 deaths 时按「1 班 ≈ 6.6 人」回推。 */
+      const dOf = x => (x.deaths != null ? +x.deaths : (x.squadDeaths != null ? +x.squadDeaths / D_SCALE : 0));
       let lead = null, myK = 0, myD = 0, nxK = 0, nxName = "", killTop = false;
       /* 同队最强队友的击杀/死亡（2026-11-08 新增，用于「被带」判定）。
          注意 battleDetail 名单不全（一场只回 3 人上下），所以只能算「名单里的同队」，
@@ -1882,18 +1892,18 @@ function battleEnvStats(recs){
      同队有人顶着正面 —— 击杀近乎自己的两倍、死亡是自己的两倍以上；
      自己人头也不少、却几乎不死 —— 那 K/D 是队友替他挡出来的，判「🐵」。
      用户给的例子：队友 100 杀 7 死，本人 50 杀 2 死 → 命中。
-     四条同时成立才算（阈值为班数口径，老阈值 × D_SCALE 换算）：
+     四条同时成立才算（全部是阵亡人数口径）：
        ① 队友击杀 ≥ 自己 × 1.8   （确实是队里的主攻手）
-       ② 队友被打掉 ≥ max(3×D_SCALE, 自己×2)（他真在正面换命，不是缩在后面）
-       ③ 自己被打掉 ≤ 队友击杀 × 0.4×D_SCALE（自己这条命保得太干净）
-       ④ 自己 K/D ≥ 3÷D_SCALE    （不是打不动，是打得「太漂亮」）
+       ② 队友阵亡 ≥ max(3, 自己×2)（他真在正面换命，不是缩在后面）
+       ③ 自己阵亡 ≤ 队友击杀 × 0.4（自己这条命保得太干净）
+       ④ 自己 K/D ≥ 3            （不是打不动，是打得「太漂亮」）
      外加自己该场至少 5 杀，免得 3 杀 0 死的偶发局把人判死。 */
   const cr = recs.filter(x => x.mK > 0 && x.myK >= 5);
   const hit = cr.filter(x =>
     x.mK >= x.myK * 1.8 &&
-    x.mD >= Math.max(3 * D_SCALE, x.myD * 2) &&
-    x.myD <= x.mK * 0.4 * D_SCALE &&
-    (x.myK / Math.max(D_SCALE, x.myD)) >= 3 / D_SCALE
+    x.mD >= Math.max(3, x.myD * 2) &&
+    x.myD <= x.mK * 0.4 &&
+    (x.myK / Math.max(1, x.myD)) >= 3
   );
   const avgOf = (arr, f) => (arr.length ? arr.reduce((a, x) => a + f(x), 0) / arr.length : 0);
   const nameCnt = {};
@@ -1904,7 +1914,7 @@ function battleEnvStats(recs){
     rate: cr.length ? hit.length / cr.length * 100 : 0,
     myKAvg: avgOf(hit, x => x.myK), mKAvg: avgOf(hit, x => x.mK),
     myDAvg: avgOf(hit, x => x.myD), mDAvg: avgOf(hit, x => x.mD),
-    kdAvg: avgOf(hit, x => x.myK / Math.max(D_SCALE, x.myD)),
+    kdAvg: avgOf(hit, x => x.myK / Math.max(1, x.myD)),
     mate: nameTop ? { name: nameTop, n: nameCnt[nameTop] } : null
   };
   carried.verdict = (carried.rate >= 60 && carried.hit >= 5) ? "monkey"
@@ -1979,11 +1989,13 @@ function summarize(rows){
   const wN = rows.reduce((a, r) => a + Wt(r), 0) || 1;
   const sum = f => rows.reduce((a, r) => a + Wt(r) * (r[f] || 0), 0);
   const raw = f => rows.reduce((a, r) => a + (r[f] || 0), 0);
-  /* 死亡口径（2026-11-08 用户更正）：用 squadDeaths（这一局被打掉几个班 = 玩家真正被击杀的次数），
-     不是 deaths（那是兵员阵亡总数，含班内的兵，比实际被击杀次数大六倍多）。
-     K/D、场均被打掉、每分钟被打掉、填线判定全部跟着这一个 d 走。 */
-  const k = sum("kills"), d = sum("squadDeaths"), a = sum("assists"), hs = sum("headshots");
-  const dRaw = sum("deaths");   // 兵员阵亡总数，只留作口径说明/原始参照，不进任何计算
+  /* 两套口径（2026-11-09 用户定，别再混）：
+     ① K/D、场均阵亡 → deaths，即「阵亡人数」，就是玩家被打死的人数；
+     ② 冲点强度 → squadDeaths，即「被打掉几个班」= 冲点死了多少队，
+        填线判定、每分被打掉、逐场表的「被打掉」列都看这个。
+     两者比值固定 ≈6.6（标准1：3217 人 ÷ 486 班），换个口径数字就跟着变。 */
+  const k = sum("kills"), d = sum("deaths"), dSq = sum("squadDeaths");
+  const a = sum("assists"), hs = sum("headshots");
   /* 场均击杀：人机局（双方真人 <7）整场剔除，只按满编局算（2026-11-08 用户要求）。
      拿不到阵容的场次权重是 1.0、当真人对局保留（不猜）；一场满编都没有时回落加权均值，
      免得新号/纯人机号出现 0 杀。别处（胜率、K/D、得分）仍按加权口径，两边别混。 */
@@ -1995,7 +2007,7 @@ function summarize(rows){
   const pinA = sum("killsWhileAttackingPoint"), pinD = sum("killsWhileDefendingPoint");
   const melee = sum("meleeKills"), pistol = sum("pistolKills"), nade = sum("grenadeKills");
   const fb = sum("firstBlood"), eng = sum("engineerBuildingUsage"), fort = sum("fortificationBuilt");
-  const sqd = d;   // 与死亡同源（小队被打掉的班数），保留字段名给旧文案用
+  const sqd = dSq;   // 被打掉的班数 = 冲点死了多少队（填线/每分被打掉的判据）
   const sc = rows.map(r => r.battleScore || 0);
   const tm = sum("battleTime");            // 加权总时长（效率按这个算）
   const tmRaw = raw("battleTime");         // 原始总时长（展示「一共打了多久」）
@@ -2011,9 +2023,9 @@ function summarize(rows){
   const wKills = k + vehVal;   // 战功值 = 人头 + 载具折算
   return {
     n: rows.length, wN: wN, wins, loss: rows.length - wins, winRate: winsW / wN * 100,
-    kills: r1(k), deaths: r1(d), deathsRaw: r1(dRaw), assists: r1(a), kd: d ? k / d : k,
+    kills: r1(k), deaths: r1(d), deathsSq: r1(dSq), assists: r1(a), kd: d ? k / d : k,
     avgK: avgKFull, avgKAll: k / wN, fullN: fullRows.length, botDrop: rows.length - fullRows.length,
-    avgD: d / wN, avgA: a / wN,
+    avgD: d / wN, avgDSq: dSq / wN, avgA: a / wN,
     hs: r1(hs), hsRate: hs / gk * 100,
     cap: r1(cap), capAvg: cap / wN,
     tk: r1(tk), ak: r1(ak), apc: r1(apc), veh: r1(veh),
@@ -2027,9 +2039,9 @@ function summarize(rows){
     nadeRate: nade / gk * 100, closeRate: (melee + nade + pistol) / gk * 100,
     // 一血 / 支援 / 牺牲
     fb: r1(fb), fbPer: fb / wN, eng: r1(eng), fort: r1(fort), engPer: eng / wN, fortPer: fort / wN,
-    sqd: r1(sqd), sqdPer: sqd / wN,
-    // 效率（按分钟）
-    dpm: d / min, spm: (sum("battleScore")) / min,
+    sqd: r1(sqd), sqdPer: sqd / wN,        // 班数口径（冲点死了多少队）
+    // 效率（按分钟）：每分被打掉的是「班」，不是人数（人数除以 6.6 才是班）
+    dpm: dSq / min, spm: (sum("battleScore")) / min,
     asstRate: a / gk * 100,
     // 纪律
     eq: raw("earlyQuits"),
@@ -2052,7 +2064,7 @@ function countryStats(rows, ov){
     const n = rs.length;
     const w = rs.filter(isWin).length;
     const k = rs.reduce((a, r) => a + (r.kills || 0), 0);
-    const d = rs.reduce((a, r) => a + (r.squadDeaths || 0), 0);   // 口径同全站：班数
+    const d = rs.reduce((a, r) => a + (r.deaths != null ? +r.deaths : (r.squadDeaths || 0) / D_SCALE), 0);   // 口径同全站：阵亡人数
     const sc = rs.reduce((a, r) => a + (r.battleScore || 0), 0);
     const t = rs.reduce((a, r) => a + (r.battleTime || 0), 0);
     const pin = rs.reduce((a, r) => a + (r.killsWhileAttackingPoint || 0) + (r.killsWhileDefendingPoint || 0), 0);
@@ -2195,7 +2207,7 @@ function scoreBase(o){
   const kb = 1 + Math.max(0, Math.min(0.18, o.killBoost || 0));  // 击杀领先加成，只作用于击杀项
   const a = Math.min(o.winRate / 95, 1) * 34;   // 胜率
   const b = Math.min(o.avgWK / 150, 1) * 24 * kb; // 场均击杀（载具已按战功折算，不再单列加分）
-  const c = Math.min(o.kd / (BENCH.kd * 1.07), 1) * 18;  // K/D（基准已切到班数口径，24.84）
+  const c = Math.min(o.kd / (BENCH.kd * 1.07), 1) * 18;  // K/D（人数口径，基准 3.75）
   const d = Math.min(o.capAvg / 2.5, 1) * 12;   // 场均占点
   const e = Math.min(o.top1Rate / 60, 1) * 12;  // 全场第一率
   return a + b + c + d + e;
@@ -2208,7 +2220,7 @@ function scoreAdjust(o, fleeRate){
 
   // 1 争夺参与：点内击杀占比（进攻 + 防守）
   add("点内击杀", o.pinRate >= 35 ? 4 : o.pinRate >= 25 ? 2 : o.pinRate >= 15 ? 0 : -5, f1(o.pinRate) + "%");
-  // 2 生存：每战斗分钟被击杀数（口径 = 班数，阈值按标准1 的 dpm 相对定：0.775 / 0.93 / 1.085 倍）
+  // 2 生存：每战斗分钟被打掉的班数（冲点频率，阈值按标准1 的 dpm 相对定：0.775 / 0.93 / 1.085 倍）
   add("生存", o.dpm <= BENCH.dpm * 0.775 ? 3 : o.dpm <= BENCH.dpm * 0.93 ? 1.5 : o.dpm <= BENCH.dpm * 1.085 ? 0 : -3, f2(o.dpm) + " 班/分");
   // 3 纪律：逃跑 / 早退比例
   add("纪律", fleeRate <= 0.5 ? 3 : fleeRate <= 2 ? 1 : fleeRate <= 5 ? -1 : -4, f1(fleeRate) + "% 逃跑");
@@ -2392,11 +2404,12 @@ const c01 = v => Math.max(0, Math.min(1, isFinite(v) ? v : 0));
    以后要换标尺：改这个对象 + BASE_SCORE，枪法函数和分带都不用动。 */
 const BENCH = {
   uid: 2341138, name: "标准1", sample: 100, battles: 428, takenAt: "2026-11-08",
-  /* 死亡口径 = squadDeaths（被打掉的班数）：100 场 486 次 → 场均 4.86。
-     不是 deaths 的 3217（兵员阵亡总数，含班里每个兵，比实际被击杀次数大 6.6 倍）。
-     kd 也跟着重算：12074 ÷ 486 = 24.84；dpm 同口径：486 ÷ 1246.9 分钟 ≈ 0.39。 */
-  winRate: 93.0, kd: 24.84, avgK: 120.74, avgD: 4.86, kills: 12074, deaths: 486,
-  deathsRaw: 3217,
+  /* 两套死亡口径（2026-11-09 用户定，各管一件事）：
+     ① K/D、场均阵亡 → deaths（阵亡人数）：100 场 3217 人 → 场均 32.17，12074 ÷ 3217 = 3.75；
+     ② 冲点强度 → squadDeaths（被打掉的班数）：100 场 486 个班 → 场均 4.86 = 冲点死了多少队。
+     dpm 按班算：486 ÷ 1246.9 分钟 ≈ 0.39 班/分。 */
+  winRate: 93.0, kd: 3.75, avgK: 120.74, avgD: 32.17, avgDSq: 4.86,
+  kills: 12074, deaths: 3217, deathsSq: 486,
   pinRate: 25.73, engPer: 4.61, asstRate: 6.97, vehRate: 5.39, vehPer: 1.52,
   score: 6525, scoreMax: 14343, top1Rate: 72, hsRate: 13.79,
   fbPer: 0.25, dpm: 0.39, spm: 523, sqdPer: 4.86, capAvg: 1.81,
@@ -2404,9 +2417,9 @@ const BENCH = {
 };
 const BASE_SCORE = BENCH.base;   // 标准1 的原始枪法刻度 = 100 分（他加完抗压权重后是 120 分 = 6.2 及格线）
 
-/* 兵数 → 班数 的换算系数（标准1：一次被击杀 ≈ 6.6 个兵阵亡）。
-   只给「按兵数定的老阈值」做换算用，所有统计本身已经直接取 squadDeaths，不需要乘。 */
-const D_SCALE = 486 / 3217;      // ≈ 0.151
+/* 班 ↔ 人 的换算系数（标准1：1 个班被打掉 ≈ 6.62 个兵阵亡 = 3217 人 ÷ 486 班）。
+   两个字段接口里都有，统计直接各取各的；只有某个字段缺失时才用它回推。 */
+const D_SCALE = 486 / 3217;      // ≈ 0.151 = 班 ÷ 人；反过来 人 ÷ 班 ≈ 6.62
 
 /* 单场权重：双方真人总数 < 7 的人机局按比例降权，避免刷人机把数据抬上去
    ≥7 人 = 满权；4~6 人 = 0.4；≤3 人 = 0.2；没取到阵容的场次按 1.0（不猜） */
@@ -2482,12 +2495,13 @@ function renderBench(){
   ];
   const all = [
     ["取样场次", num(b.sample) + " 场"], ["生涯场次", num(b.battles) + " 场"],
-    ["总击杀", num(b.kills)], ["被打掉班数", num(b.deaths)],
-    ["场均被打掉", f1(b.avgD)], ["场均得分", num(b.score)],
+    ["总击杀", num(b.kills)], ["阵亡人数", num(b.deaths) + " 人"],
+    ["场均阵亡", f1(b.avgD) + " 人"], ["被打掉班数", num(b.deathsSq) + " 个班"],
+    ["场均被打掉", f1(b.avgDSq) + " 个班"], ["场均得分", num(b.score)],
     ["工程器械/场", f1(b.engPer)], ["助攻率", f1(b.asstRate) + "%"],
     ["载具战功占比", f1(b.vehRate) + "%"], ["爆头率", f1(b.hsRate) + "%"],
-    ["一血/场", f2(b.fbPer)], ["被打掉/分钟", f2(b.dpm)],
-    ["得分/分钟", num(b.spm)], ["兵员阵亡/场", f1((b.deathsRaw || 0) / (b.sample || 1))],
+    ["一血/场", f2(b.fbPer)], ["被打掉/分钟", f2(b.dpm) + " 个班"],
+    ["得分/分钟", num(b.spm)],
     ["占旗/场", f2(b.capAvg)]
   ];
   el.innerHTML = '<div class="bench-h"><b>评分标尺 · ' + esc(b.name) + "</b>"
@@ -2511,8 +2525,9 @@ function renderBench(){
     + "少打多局里打得出来的场次到 " + OUT_M.minHit + " 场、占比 ≥" + OUT_M.minRate + "% → 发<b>抗压大师</b>称号，"
     + "同时把<b>枪法权重放大到 " + OUT_M.mul.toFixed(2) + " 倍</b>（这笔进枪法分，参与判级）。"
     + "填线与少打多这两笔环境修正都直接进总分、不改枪法比，也<b>不参与 6.2+ / 数据有疑问的判定</b>（只看枪法 + 加分）。"
-    + "<b>死亡一律按 squadDeaths 算</b>（这一局被打掉几个班 = 真正被击杀的次数）；"
-    + "兵员阵亡数（deaths，含班里的每个兵）只作参照，不进任何计算。"
+    + "<b>死亡分两套口径</b>：<b>K/D 用阵亡人数</b>（kills ÷ deaths，标准1 = " + f2(BENCH.kd) + "）；"
+    + "<b>冲点强度看被打掉的班数</b>（squadDeaths＝冲点死了多少队，标准1 场均 " + f1(BENCH.avgDSq)
+    + " 个班、折 " + f1(BENCH.avgD) + " 人），填线判定和每分被打掉都按班算。"
     + "人机局（双方真人 &lt;7）逐场降权：4~6 人按四成、≤3 人按两成计。这份数据写在页面里，不查接口也显示，也参与算分。</div>"
     + '<button class="bench-more" id="benchMore">展开全部 ' + (all.length + cells.length) + " 项数据 ▾</button>"
     + '<div class="bench-all" id="benchAll">'
@@ -2525,34 +2540,38 @@ function renderBench(){
   };
 }
 
-/* ---------------- 填线（2026-11-08，用户口径） ----------------
+/* ---------------- 填线（2026-11-08，用户口径；2026-11-09 换口径） ----------------
    「填线」是往战线上填人：正面顶、拿命换位置。
    光看 K/D 会把这种人看扁 —— 死得多被当成菜，其实是他在最前面。
    所以分两种：
 
    ① 填线战神：杀得多、死得也多，K/D 被死亡拖到很低。
-      三条同时成立：场均击杀 ≥ 标准1 的 45%（≈54）、场均被打掉 ≥ 标准1 的 115%（≈5.6 班）、K/D ≤ 标准1 的 45%（≈11.2）。
+      三条同时成立：场均击杀 ≥ 标准1 的 45%（≈54）、场均被打掉 ≥ 标准1 的 115%（≈5.6 个班）、K/D ≤ 标准1 的 45%（≈1.69）。
       这种人正面交换比是划算的（每场几十条人命换出来的人头），评分上单给一笔「填线加成」+2 ~ +6.5 分。
-   ② 填线宝宝：杀得少、死得还多，K/D 不到 1。
-      场均击杀 ≤ 标准1 的 35%（≈42）、K/D ≤ 标准1 的 45%（≈11.2）、场均被打掉 ≥ 3.6 班。
+   ② 填线宝宝：杀得少、死得还多，K/D 不到 0.9（死的比杀的还多）。
+      场均击杀 ≤ 标准1 的 35%（≈42）、K/D ≤ 0.9、场均被打掉 ≥ 3.6 个班。
       不是「敢冲」，是冲上去没换成 —— 称号照给，总分倒扣 1.2 ~ 4 分。
 
-   注意：这里的「死」全部是 squadDeaths（被打掉的班数）口径，不是兵员阵亡数。
+   口径（2026-11-09 用户定）：**K/D 用阵亡人数**（kills ÷ deaths），
+   **「死得多」这件事看被打掉的班数**（squadDeaths）——冲点死了多少队，
+   这才是填线的衡量标准：一个人头没换成、还搭进一队人，比单纯 K/D 低更说明问题。
    两点约束：样本 <8 场不判（噪声太大）；加成/扣分直接进总分，不改枪法比，
    所以「枪法 100% = 标准1」这条刻度不会被填线搅乱。 */
 const FILL = {
   godK: BENCH.avgK * 0.45,      // ≈54.3 杀/场
-  godD: BENCH.avgD * 1.15,      // ≈5.6 班/场
-  godKd: BENCH.kd * 0.45,       // ≈11.2
+  godD: BENCH.avgDSq * 1.15,    // ≈5.6 个班/场（冲点一局搭进去 5.6 队）
+  godKd: BENCH.kd * 0.45,       // ≈1.69（人数口径 K/D）
   babyK: BENCH.avgK * 0.35,     // ≈42.3 杀/场
-  babyKd: 0.9 / D_SCALE,        // ≈5.96：兵数口径的「K/D ≤ 0.9（死多于杀）」换算到班数
-  babyD: BENCH.avgD * 0.75,     // ≈3.6 班/场
+  babyKd: 0.9,                  // 死多于杀（人数口径 K/D）
+  babyD: BENCH.avgDSq * 0.75,   // ≈3.6 个班/场
   godMin: 2.0, godMax: 6.5,     // 战神加分区间
   babyMin: 1.2, babyMax: 4.0,   // 宝宝扣分区间（正数存，用的时候取负）
   minN: 8
 };
 function fillOf(s){
-  const n = (s && s.n) || 0, K = (s && s.avgK) || 0, D = (s && s.avgD) || 0, kd = (s && s.kd) || 0;
+  const n = (s && s.n) || 0, K = (s && s.avgK) || 0;
+  const D = (s && s.avgDSq) || 0;                 // 冲点死了多少个班
+  const kd = (s && s.kd) || 0;                    // 人数口径 K/D
   const out = { kind: "", K: K, D: D, kd: kd, adj: 0, power: 0, why: "" };
   if (n < FILL.minN){ out.why = "样本不足"; return out; }
   if (K <= 0 && D <= 0){ out.why = "无数据"; return out; }
@@ -2560,17 +2579,17 @@ function fillOf(s){
   /* 战神：三条门槛必须先全过，再按「杀得多 / 死得多 / KD 低」三个方向算强度 */
   if (K >= FILL.godK && D >= FILL.godD && kd <= FILL.godKd){
     const kS = c01((K - FILL.godK) / Math.max(1, BENCH.avgK - FILL.godK));   // 54→0，120→1
-    const dS = c01((D - FILL.godD) / Math.max(1, BENCH.avgD * 1.5));          // 5.6→0，7.3→1
-    const rS = c01((FILL.godKd - kd) / FILL.godKd);                          // 11.2→0，0→1
+    const dS = c01((D - FILL.godD) / Math.max(1, BENCH.avgDSq * 1.5));        // 5.6→0，7.3→1
+    const rS = c01((FILL.godKd - kd) / FILL.godKd);                          // 1.69→0，0→1
     out.power = 0.45 * kS + 0.30 * dS + 0.25 * rS;
     out.kind = "god";
     out.adj = FILL.godMin + (FILL.godMax - FILL.godMin) * out.power;
     return out;
   }
-  /* 宝宝：杀得少 + 死多于杀 + 死亡量够看 */
+  /* 宝宝：杀得少 + 死多于杀 + 死的队数够看 */
   if (K <= FILL.babyK && kd <= FILL.babyKd && D >= FILL.babyD){
     const weak = c01((FILL.babyK - K) / Math.max(1, FILL.babyK));            // 42→0，0→1
-    const deep = c01((FILL.babyKd - kd) / FILL.babyKd);                      // 1.0→0，0→1
+    const deep = c01((FILL.babyKd - kd) / FILL.babyKd);                      // 0.9→0，0→1
     out.power = 0.55 * weak + 0.45 * deep;
     out.kind = "baby";
     out.adj = -(FILL.babyMin + (FILL.babyMax - FILL.babyMin) * out.power);
@@ -2738,7 +2757,8 @@ function buildVerdict(D){
 
   // 2 战绩细节
   let p2 = rnd(["先说硬的，枪口和反甲：", "第一层永远是枪法：", "从最能打的地方说起："])
-    + "场均 <b>" + f1(s.avgK) + " 杀 / " + f1(s.avgD) + " 个班被打掉 / " + f1(s.avgA) + " 助</b>，场均 <b>"
+    + "场均 <b>" + f1(s.avgK) + " 杀 / 阵亡 " + f1(s.avgD) + " 人（冲点被打掉 " + f1(s.avgDSq) + " 个班）/ "
+    + f1(s.avgA) + " 助</b>，场均 <b>"
     + num(Math.round(s.score)) + "</b> 分，单场最高 <b>" + num(s.scoreMax) + "</b> 分。";
   if (s.hsRate >= 13) p2 += "爆头率 <span class=\"hl\">" + f1(s.hsRate) + "%</span>，枪口抬得稳，不是乱扫。";
   else if (s.hsRate >= 9) p2 += "爆头率 <b>" + f1(s.hsRate) + "%</b>，中规中矩。";
@@ -2842,8 +2862,9 @@ function buildVerdict(D){
     let pf = rnd(["还有一条不能漏：<b>他是往里填的那种人。</b>",
         "这笔账不能只按 K/D 算：<b>他是拿来填线的那种人。</b>",
         "这号最容易看错的地方在这儿：<b>他死得多，但他是死在最前面。</b>"])
-      + "场均 <b>" + f1(FL.K) + " 杀 / 被打掉 " + f1(FL.D) + " 个班</b>，K/D 只有 <b>" + f2(FL.kd) + "</b>——"
-      + "标准1 是 " + f2(BENCH.kd) + "，他连一半都不到。光看这个比值，他像不会活；"
+      + "场均 <b>" + f1(FL.K) + " 杀 / 冲点搭进去 " + f1(FL.D) + " 个班（" + f1(s.avgD) + " 人）</b>，K/D 只有 <b>"
+      + f2(FL.kd) + "</b>——"
+      + "标准1 是 " + f2(BENCH.kd) + "，他这条比值被死数摁住。光看 K/D，他像不会活；"
       + "可同一份数据里场均能掏出 <b>" + f1(FL.K) + "</b> 个人头，说明<b>他没躲在后面算 K/D，是在正面硬换</b>。";
     pf += "这种打法在点上真管用：他把人按在正面，队友才推得上去、才站得住旗子——"
       + "<span class=\"hl\">死得多不是因为不会躲，是因为他不躲</span>。";
@@ -2857,8 +2878,8 @@ function buildVerdict(D){
     let pf = rnd(["这条不太好看，但得说：<b>他在往战线上填，标准的填线宝宝。</b>",
         "有件事得点明：<b>他现在就是填线宝宝。</b>",
         "这里实话实说：<b>死的人里，他是被填进去的那个——填线宝宝。</b>"])
-      + "场均 <b>" + f1(FL.K) + " 杀 / 被打掉 " + f1(FL.D) + " 个班</b>，K/D <b>" + f2(FL.kd) + "</b>——"
-      + "一局下来，一个班的命换不回一个人头。";
+      + "场均 <b>" + f1(FL.K) + " 杀 / 冲点搭进去 " + f1(FL.D) + " 个班</b>，K/D <b>" + f2(FL.kd) + "</b>——"
+      + "一局下来，死的比杀的还多，还整队整队往里搭。";
     pf += "这不叫敢冲，<b>是冲上去没换成</b>：路线走得直、进点不看侧翼、死在还没抬枪的时候。"
       + "在国服这叫纯兵力损耗，队友补位都补不赢。";
     pf += "评分上扣了 <b>" + f1(Math.abs(FL.adj)) + "</b> 分，不是为了骂人，是因为这种死法不产生战果——"
@@ -2875,7 +2896,7 @@ function buildVerdict(D){
       + "能排出阵容的 " + ((env && env.n) || OT.n) + " 场里，有 <b>" + OT.n + "</b> 场是<b>少打多</b>——"
       + "对面名单平均比他这边多 <b>" + f1(OT.gapAvg) + "</b> 个真人（我方 " + f1(OT.myNAvg)
       + " / 对面 " + f1(OT.opNAvg) + "）；其中 <b>" + OT.hit + "</b> 场（" + f1(OT.rate) + "%）他打得出来。";
-    po += "这些局里他场均 <b>" + f1(OT.kAvg) + " 杀 / 被打掉 " + f1(OT.dAvg) + " 个班</b>，胜率 <b>"
+    po += "这些局里他场均 <b>" + f1(OT.kAvg) + " 杀 / 阵亡 " + f1(OT.dAvg) + " 人</b>，胜率 <b>"
       + f1(OT.winRate) + "%</b>，而且不是跟着混——<span class=\"hl\">人少的那一边，他还杀得比队友多</span>，"
       + "好几场干脆是整场击杀第一。";
     po += "所以评分里另加一笔「少打多加成」<b>+" + f1(OT.adj) + "</b> 分："
@@ -3276,7 +3297,7 @@ function renderBattles(D){
   h += '<div class="metrics">'
     + m("战绩", s.wins + "胜" + s.loss + "负")
     + m("胜率", f1(s.winRate), "%", s.winRate >= 70 ? "hi" : s.winRate >= 50 ? "" : "bad")
-    + m("K/D", f2(s.kd), "", s.kd >= 2.5 ? "hi" : "")
+    + m("K/D", f2(s.kd), "", s.kd >= 3 ? "hi" : "")
     + m("场均击杀", f1(s.avgK), "", s.avgK >= 100 ? "hi" : "")
     + m("战功场均", f1(s.avgWK), "", s.avgWK >= 110 ? "hi" : "")
     + m("场均得分", num(Math.round(s.score)))
@@ -3284,7 +3305,7 @@ function renderBattles(D){
     + "</div>";
 
   h += '<div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:10px 22px;font-size:13.5px;color:var(--dim)">'
-    + kv("场均被打掉", f1(s.avgD) + " 个班") + kv("场均助攻", f1(s.avgA))
+    + kv("场均阵亡", f1(s.avgD) + " 人（冲点 " + f1(s.avgDSq) + " 个班）") + kv("场均助攻", f1(s.avgA))
     + kv("爆头率", f1(s.hsRate) + "%")
     + kv("点内击杀占比", f1(s.pinRate) + "%")
     + kv("点内 攻 / 守", num(s.pinA) + " / " + num(s.pinD))
@@ -3295,7 +3316,7 @@ function renderBattles(D){
     + kv("载具折算", "+" + num(s.vehVal) + " 战功（×5/×3）")
     + kv("工程设施 / 工事", num(s.eng) + " / " + num(s.fort) + " 次")
     + kv("工程 每场", f1(s.engPer) + " / " + f1(s.fortPer) + " 次")
-    + kv("兵员阵亡（参照）", num(s.deathsRaw) + " 人")
+    + kv("冲点被打掉", num(s.deathsSq) + " 个班（" + num(s.deaths) + " 人阵亡）")
     + kv("得分效率", num(Math.round(s.spm)) + " 分/分")
     + kv("被打掉频率", f2(s.dpm) + " 班/分")
     + kv("全场第一", num(s.top1) + " 次（" + f1(BTopRate) + "%）")
@@ -3945,9 +3966,9 @@ function aiFacts(D, V){
       + f1(s.wN) + " 场）。两套口径不要混着推，正文里要点明「场均击杀已剔除人机局」");
   }
   add("有效战绩", s.wins + " 胜 " + s.loss + " 负（加权胜率 " + f1(s.winRate) + "%），K/D " + f2(s.kd)
-    + "（口径：击杀 ÷ 被打掉的班数，标准1 是 " + f2(BENCH.kd) + "）"
+    + "（口径：击杀 ÷ 阵亡人数，标准1 是 " + f2(BENCH.kd) + "）"
     + "，场均 " + f1(s.avgK) + " 杀" + (s.botDrop > 0 ? "（已剔除人机局）" : "")
-    + " / 场均被打掉 " + f1(s.avgD) + " 个班 / " + f1(s.avgA) + " 助，场均得分 " + Math.round(s.score)
+    + " / 场均阵亡 " + f1(s.avgD) + " 人（冲点被打掉 " + f1(s.avgDSq) + " 个班） / " + f1(s.avgA) + " 助，场均得分 " + Math.round(s.score)
     + "，单场最高 " + num(s.scoreMax)
     + "，全场第一 " + num(s.top1) + "/" + num(s.n) + "（" + f1(BTopRate) + "%）");
   add("总战斗时长", durLong(s.time) + "（得分效率 " + Math.round(s.spm) + " 分/分，被打掉 " + f2(s.dpm) + " 班/分）");
@@ -3959,8 +3980,8 @@ function aiFacts(D, V){
     + f1(s.pinRate) + "%；占领点 " + num(s.cap) + " 次（场均 " + f2(s.capAvg) + "）");
   add("武器", "近战 " + f1(s.meleeRate) + "%、手雷/炸药包 " + f1(s.nadeRate) + "%、手枪 " + f1(s.pistolRate) + "%");
   add("支援", "一血 " + num(s.fb) + " 次（场均 " + f2(s.fbPer) + "），助攻 " + num(s.assists) + "（占击杀 "
-    + f1(s.asstRate) + "%），工程设施 " + num(s.eng) + " 次、工事 " + num(s.fort) + " 次，兵员阵亡 "
-    + num(s.deathsRaw) + " 人（只作参照，不进算分）");
+    + f1(s.asstRate) + "%），工程设施 " + num(s.eng) + " 次、工事 " + num(s.fort) + " 次，总阵亡 "
+    + num(s.deaths) + " 人（合 " + num(s.deathsSq) + " 个班被打掉，冲点强度看这个）");
 
   /* 击杀领先加成：已经算进枪法分，这里只是让正文能提，禁止再叠加 */
   const kl = (V && V.s && V.s.killLead) || null;
@@ -3991,11 +4012,11 @@ function aiFacts(D, V){
   const fl = (V && V.grade && V.grade.fill) || (V && V.s && V.s.fill) || null;
   if (fl && fl.kind){
     add("填线判定（必须在正文里点明）",
-      "场均 " + f1(fl.K) + " 杀 / 被打掉 " + f1(fl.D) + " 个班，K/D " + f2(fl.kd)
+      "场均 " + f1(fl.K) + " 杀 / 冲点被打掉 " + f1(fl.D) + " 个班，K/D " + f2(fl.kd)
       + (fl.kind === "god"
           ? "，判「填线战神」：杀得多、死得也多，K/D 是被死亡拖低的，正面换命其实是产出——"
             + "正文里要写清「死得多不是不会躲，是他在最前面」，并给出已加的 " + f1(fl.adj) + " 分"
-          : "，判「填线宝宝」：杀得少、死得还多，K/D 不到 1，属于纯兵力损耗——"
+          : "，判「填线宝宝」：杀得少、死得还多，K/D 不到 0.9（死的比杀的还多），属于纯兵力损耗——"
             + "正文里要直说「冲上去没换成」，并给出已扣的 " + f1(Math.abs(fl.adj)) + " 分")
       + "。这笔已经算进总分（填线修正 " + (fl.adj > 0 ? "+" : "") + f1(fl.adj)
       + "），禁止再额外加分或扣分，也禁止改分级");
