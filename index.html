@@ -823,6 +823,100 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 | ≥ 34 | 路人 |
 | < 34 | 混子 |
 
+### 3.6 占点评价（0~100，单列；2026-11-09 v3）
+
+**为什么单列**：`pointsCaptured` 只能说明"站上旗子几次"，说明不了"该占的时候在不在"。
+一局 3~5 个点，3 次在 5 点局只是跟上，在 3 点局就是满贯；队友都在 4~5 次、你 1 次，
+绝对数看着"有占"，实际是挂名。所以要**绝对 + 队友相对**两条一起算。
+
+用户原话（2026-11-09）：「基本上 3 以上的占点就基本上打满全场了，也要跟队友去比，
+比如我方最高占点 5，你 1，那就拉完了，如果是 3 那就是跟着打满了全场。」
+
+**分母**：只放"有点可占"的局（`capMode.open`）。整队一方 0 占点（`denied`）和无占点模式（`none`）
+都不进分母 —— 被推平的局不能算他不站旗。
+
+**三个分量：**
+
+```
+绝对达标度 = min(场均占点 ÷ 3, 1)                            3 次/场 = 打满全场
+队友相对度 = min((场均占点 ÷ 队友当场最高占点) ÷ 0.6, 1)      到队友的六成 = 跟满（队友 5、我 3）
+满贯度     = min(max(场均占点 − 3, 0) ÷ 2, 1)                 3 → 5 次，每多占一次多一分
+
+占点分 = 50 × 绝对达标度 + 40 × 队友相对度 + 10 × 满贯度
+```
+
+**分档（分数打底，队友相对封顶）：**
+
+| 分档 | 词 | 含义 |
+|---|---|---|
+| 分数 ≥85 且相对 ≥0.9 | 扛旗位（满贯 = 场均 ≥4.2） | 队里就是他在站旗 |
+| 分数 ≥72 且相对 ≥0.75 | 主力占点 | 占得多，也跟得上队友 |
+| 分数 ≥58 且相对 ≥0.6 | 跟着打满 | **队友 5 我 3** —— 有他一份，不是挂名 |
+| 分数 ≥44 且相对 ≥0.4 | 跟了一半 | 前面有人踩点，他补零头 |
+| 其余 | 挂名跟点 | 有占，但少 |
+| **相对 ≤0.25** | **拉完了** | **队友 5 我 1**，旗子跟他没关系 |
+
+- 有点局 <3 场不判（只给数字、标"样本不足"）；没有真人队友时退回只看绝对达标度。
+- 实测对照：我 1 / 队友 5 → 30 分「拉完了」；我 3 / 队友 5 → 90 分「跟着打满」；
+  我 3 / 队友 3 → 90 分「扛旗位」；我 5 / 队友 3 → 100 分「扛旗位（满贯）」。
+- 正文必须**同时**给绝对值和队友对比，**禁止**只拿绝对次数下结论（3 次在 5 点局里只是跟满）。
+
+### 3.7 队内相对：每一项都要跟队友比（2026-11-09，总原则）
+
+用户原话：「基本上战绩都要跟队友进行对比，不要单看个人。」
+
+**为什么**：同一个数字放在不同的队里分量完全不同。130 杀/场在纯人机局是刷的、
+在一队 4 个高手里是垫底；占点 2 次/场在一局 3 点里是满贯、在一队全占 5 次的队里是挂名。
+所以**任何一项战绩都必须带「队友是多少 + 他占队友的百分之多少 + 队内第几」**，
+只给绝对值的结论一律算不合格。
+
+**数据来源**：逐场 `battleDetail` 名单（只列有战绩的真人，人机不进名单），
+把我 + 我方真人队友放进同一张榜里排，逐场记「本人 / 队友均值 / 队内名次百分位（1 = 第一）」。
+所以这里说的"队友"就是**同场真人队友**，不用另外推断。
+
+**七项比什么：**
+
+| 项 | 方向 | 进不进队内指数 | 说明 |
+|---|---|---|---|
+| 击杀 | 越高越好 | 进 | 产出规模 |
+| K/D | 越高越好 | 进 | 但 🐵 完了 判了就不算 K/D 加分 |
+| 点内击杀 | 越高越好 | 进 | 参不参与争夺的正解 |
+| 占点 | 越高越好 | 进 | 见 3.6，绝对 + 相对 |
+| 得分 | 越高越好 | 进 | 综合产出 |
+| 阵亡（人） | **中性读数** | **不进** | 高可能是顶在正面，也可能是送 |
+| 被打掉的班 | **中性读数** | **不进** | 同上；冲点强度看它，但不判优劣 |
+
+**队内指数与修正：**
+
+```
+队内指数 idx（0~100） = 五项正向产出「队内名次百分位」的平均 × 100
+                          100 = 五项都队内第一，50 = 队内中位，0 = 五项都垫底
+队内修正 adj = (idx − 50) ÷ 50 × 2        封顶 ±2，队友可比场次 <8 场不生效
+总分 = 枪法分 + 额外加分 + 环境修正（填线 ±、少打多 +、**队内相对 ±2**）
+```
+
+- 修正幅度刻意压小（±2），**只调环境、不改枪法、不参与 6.2+ / 存疑判定** ——
+  它的作用是"把绝对数据放回他实际打的队里"，不是重新排座次。
+- 判定强弱：某项 ≥ 队友均值 115% = 明显强，≤ 87% = 明显弱，中间算持平。
+- 平均名次由指数反推（100 → 第 1 名、0 → 第 N 名），**不许拿"得分名次"和"队内指数"混着说**，
+  两个口径不同，混着写会出现"指数垫底、名次第 2"这种自相矛盾。
+
+**正文怎么写（4.6 段）：**
+
+1. 先把五项逐个摆出来，每项都带队友的数和百分比：「击杀 150 / 队友 110（136%，队里第一）」；
+2. 再说队内位次：靠前 / 中上 / 中下 / 垫底 + 平均第几（如"平均第 1.4/4 名"）；
+3. 点强项和短板：明显强过队友的是哪些、拖后腿的是哪些；
+4. 阵亡和班数**只报读数、明说不判优劣**；
+5. 最后说明这一条在总分里按 ±X 分计。
+
+**禁止：**
+
+- **禁止**只拿个人绝对值下结论（不许出现"场均 133 杀，很强"这种没有队友参照的句子）；
+- **禁止**把「占点 / 点内击杀低于队友」直接写成「不参与争夺」——
+  先分清清点型（点内强、站旗靠队友）还是真不去（两项都低）；
+- **禁止**把"阵亡低于队友"说成优点、把"高于队友"说成缺点，这一项是中性读数；
+- **禁止**用队内相对去否定已经成立的事实（队友全都很菜时，队内第一也要说"这一队整体偏弱"）。
+
 ### 4. 打法标签（不进分数，只做风格指纹）
 
 | 维度 | 阈值 → 标签 |
@@ -877,15 +971,16 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   （上面四条全部是**阵亡人数**口径。）
   这条只影响**文案和标签**：不扣分、不加分、不动分级；正文禁止把「死亡少」夸成会走位、会惜命。
 - **🐵 完了判定**（2026-11-09 新增，**只关掉「K/D」那一项加分**，不动枪法分和分带）：
-  > ⚠️ **「🐵 完了」现在有两个来源，同名不同义**：①本节＝**载具版**（人在车上，K/D 被铁壳抬起来）；
-  > ②上面「被带判定」＝**队友版**（K/D 是队友在前面换命帮他垫出来的）。
-  > 资料里只给一个「🐵 完了」时，必须看判据句（有没有「K/D ≥7.5 / 阵亡远低于标准 / 不占点」）分清是哪种，
+  > ⚠️ **「🐵 完了」名字只有一个，来源有三条**：①本节 A 路/B 路＝**载具版**（人在车上，K/D 被铁壳抬起来）；
+  > ②本节 C 路＝**队内版**（不跟标准1 比，跟队友比，样样产出都最低）；
+  > ③上面「被带判定」＝**队友版**（🐵 被带，K/D 是队友在前面换命帮他垫出来的，这是另一枚徽标）。
+  > 资料里只给一个「🐵 完了」时，必须看判据句（有没有「K/D ≥7.5 / 阵亡远低于标准 / 占点只有队友 XX% / 击杀少于队友」）分清是哪种，
   > 正文写成「**完了 —— 坐在车上**」或「**完了 —— 靠队友**」，**禁止**把两个原因混成一句。
   用户口径：**高 K/D、低击杀、占点低，一般情况下就是玩载具了，这种直接判「🐵 完了」**；
   同日补充：**K/D 只有 3 点多、阵亡人数只有标准的一半，也是明显的 🐵 完了** ——
   K/D 是**比值**，人在车上杀得少、死得也少，比值会落回基准附近（3.x「看着还行」），只看比值必漏。　
   战绩接口**没有**「坐在载具上杀了多少人」这个字段（`tankKills` 是**击毁**敌方载具，属反甲战果，拿它判会判反），
-  只能靠间接信号反推，**两条路命中一条就判**。
+  只能靠间接信号反推，**三条路命中一条就判（判定顺序 A → B → C）**。
 
   **A 路（显性高 K/D）三条同时成立**
   ① **K/D ≥ 标准1 的 2 倍**（≥7.5，阵亡人数口径）；② **场均击杀 ≤ 标准1 的 55%**（≤66.4 杀/场）；
@@ -896,6 +991,20 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   ① **场均阵亡 ≤ 标准1 的 65%**（≤20.9 人/场，标准1 32.17）：在步兵线上顶的号死不到这么少；
   ② **场均击杀 ≤ 标准1 的 70%**（≤84.5 杀/场）：不是「又要人头又不死」的神仙；
   ③ **占旗 ≤ 1.63 次/场 或 点内击杀 ≤ 23.1%**（标准的九成）：他不用去争夺点。
+
+  **C 路（队内视角）**（2026-11-09 第二次补充，用户原话：
+  「那种 K/D 高，对比队友战绩排前面的几个，击杀低，小队死亡数低，而且占点还低，直接判定 🐵 完了」）　
+  这条路**不跟标准1 比**，跟他**同场的真人队友**比（数据来自 battleDetail 名单，人机不进名单）；
+  需要 8 场以上有队友可比的局，四条同时成立：
+  ① **K/D ≥ 4.9**（标准1 的 1.3 倍）**且 ≥ 队友平均 K/D 的 1.4 倍**（比值比全队都漂亮）；
+  ② **场均击杀 ≤ 队友均值的 85%**（人头比队友少）；
+  ③ **场均被打掉的班数 ≤ 队友均值的 75%**（没在正面换命）；
+  ④ **占点 ≤ 队友当场最高的 50%**（旗子靠队友站）。
+  队内得分名次（`rankPct`）**只进强度、不作硬门槛** —— 击杀和班数都低的人分数本来就上不去，
+  硬卡「排前面」会把该抓的全漏掉；真正说明问题的是「K/D 比全队漂亮，产出样样最少」。
+  - 正文写法（C 路）：先摆队友对比数（K/D 我 5.0 / 队友 2.6、击杀 95 / 队友 120、被打掉 3.5 班 / 队友 6.5 班、
+    占点只有队友最高的 27%），再定性「杀人比队友少、挨打比队友少、站旗比队友少 = 没在正面」，
+    **禁止**把高 K/D 说成会走位，也**禁止**说开挂。
 
   - **后果只有一条硬约束**：额外加分里的 **「K/D」这一项归零**（K/D 是铁皮替他数的，不是走位好），
     其余五项、枪法分、分带、判级线全部不动。正文要给一句"K/D 这一项不计分"。
@@ -909,7 +1018,8 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
   - 样本 <8 场不判；**已判填线战神/宝宝的号不判**（那两条看的是敢死/敢送，和蹲车是反的）。
   - **口径必须写明**：这是统计信号的反推，属于统计定性，**不是抓到他上车的证据**。
   - 强度 `power`：A 路 = 0.40×KD 之高 + 0.35×击杀之低 + 0.25×不占点；
-    B 路 = 0.45×死得少 + 0.35×击杀之低 + 0.20×不占点。只用于文案语气，不参与计算。
+    B 路 = 0.45×死得少 + 0.35×击杀之低 + 0.20×不占点；
+    C 路 = 0.30×队内名次 + 0.30×击杀之低 + 0.20×班数之低 + 0.20×占点之低。只用于文案语气，不参与计算。
 - **填线判定**（2026-11-08 新增，**算进总分**，两种方向）：
   "填线"=往战线上填人，正面顶、拿命换位置。只看 K/D 会把这种人看扁，所以要单独算一笔。
   - **填线战神**（杀得多、死得也多、K/D 被死亡拖低）：三条同时成立
@@ -995,8 +1105,9 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 | 0 | 分级 | 几级几档、判定分、这一档的画像，一句话定性 |
 | 1 | 结论 | 什么档位、判定分、取了哪些场、几胜几负 |
 | 2 | 枪法与反甲 | 场均杀/死/助、爆头率、击毁载具台数与折算战功、载具占比意味着什么 |
-| 3 | 打法诊断 | **核心判据是点内击杀占比，不是占点次数**；攻点型还是守点型；占点次数只作辅助并说明二者不同；命中 🐵 完了时另开一段说明"K/D 是铁壳替他数的" |
-| 4 | 武器构成 | 近战/手雷/手枪比例说明交战距离偏好；高载具时雷要解读成炸药包 |
+| 3 | 打法诊断 | **核心判据是点内击杀占比，不是占点次数**；攻点型还是守点型；占点另开一段：**先给绝对（3 次/场 = 打满、5 次 = 大满贯），再跟队友当场最高比（六成 = 跟满、四分之一 = 拉完了）**，两句话都要有；命中 🐵 完了时另开一段说明"K/D 是铁壳替他数的"（C 路则说"样样产出都比队友低"） |
+| 4 | **队内相对** | **每一项都要跟队友比**：击杀 / K/D / 点内击杀 / 占点 / 得分，逐个给「他 X / 队友 Y（Z%）+ 队内第几」；再说队内指数与位次（靠前 / 中上 / 中下 / 垫底 + 平均第几）；点出明显强过队友的项和拖后腿的项；阵亡与班数**只报读数、明说不判优劣**；最后说明按 ±X 分计入总分 |
+| 4.5 | 武器构成 | 近战/手雷/手枪比例说明交战距离偏好；高载具时雷要解读成炸药包 |
 | 5 | 支援与效率 | 工程、工事、助攻、得分效率、被打掉班数、被打掉频率 |
 | 6 | 稳定性 | 四段胜率走势（看极差，不只看首尾） |
 | 7 | 逃跑 | 必须单列：几场全 0、几场早退、是否连续逃、名义胜率与实战胜率的落差 |
@@ -1061,8 +1172,27 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
     **禁止**用 `tankKills / aircraftKills / apcKills` 当判据（那是击毁敌方载具，反甲战果，越高越是反甲强），
     也**禁止**把「死得少」夸成会走位、会算复活点，更**禁止**说人开挂或再额外扣分。
     另注：判定是三个统计特征的**反推**，正文要写清"接口没有坐载具杀人的字段"，别写成抓到了他上车的证据。
+22. **整队 0 占点 ≠ 他不站旗**：资料里出现「占点模式 / 无点可占」时，正文必须先说这一条——
+    这几场是**我方名单全员 0 占点、对面在占**，属于这一方**没有点能占**（推不进去 / 被推平）。
+    **禁止**写成"他不去站旗""占点能力差""没有争夺意识"，也**禁止**拿它当扣分理由。
+23. **占点必须绝对值 + 队友相对一起写**：资料里给出「占点评价」时，正文要写清
+    ① 有点可占的局里场均几次（3 次 = 打满全场，5 次 = 大满贯）；② 队友当场最高几次、他是队友的百分之多少。
+    **禁止**只拿绝对次数下结论（3 次在 5 点局里只是跟满，不是满贯）；
+    **禁止**在"整队 0 占点"的局已经剔除后，还说他"占点低是因为不去站旗"。
+    相对 ≤25%（队友 5、我 1）要直说"拉完了"，但**不许**用侮辱性词汇。
+    如果资料里同时给了「孤军顶线」场次，要正面写出来（整队被压时他还在点里换人头）。
+    口径必须写清：判定来自 `battleDetail` 名单（每人都有 `pointsCaptured`，按 `country` 分边求和），
+    只认"我方全员 0 **且对面真的占到点**"，双方都 0 是僵持、不算。
 
-### 7. 六个必须避开的判断陷阱
+24. **每一项战绩都要跟队友比，不许只看个人**（2026-11-09 用户口径）：
+    资料里给了「队内相对」时，任何一项结论都必须带队友参照 ——
+    「击杀 150 / 队友 110（136%）」「占点只有队友的 25%」「队内指数 62/100，平均第 2/4 名」。
+    **禁止**出现"场均 133 杀，很强"这种没有队友参照的绝对句；
+    **禁止**把「阵亡低于队友」当优点、「高于队友」当缺点（这两项是中性读数，可能是在顶正面）；
+    **禁止**把「队内指数」和「得分名次」混着说，两个口径不同；
+    **禁止**用队内相对推翻已成立的事实——队友整体很菜时，队内第一也要补一句"这一队整体偏弱"。
+
+### 7. 七个必须避开的判断陷阱
 
 1. **别用占点次数判"数据刷子"** —— 应该看点内击杀占比。在点里清人、让队友站上去，旗子不算他的，但活是他干的。
 2. **走势别只看首尾差** —— 首尾接近但中间挖了 20 多个点的坑，属于"过山车"，要用四段极差判。
@@ -1074,6 +1204,10 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 6. **人机局别当硬实力** —— 对局固定 10v10，战绩名单只列真人，**缺的席位就是人机**（不用回放推断）。
    人机占比过半、或双方真人合计不到 8 个时，胜率和场均击杀都要打折看，
    不许拿人机局的 90% 胜率说这人能打。反过来，满编真人局里同样的数据含金量更高，这点要讲出来。
+7. **整队 0 占点别算他头上** —— 我方名单全员 `pointsCaptured = 0`、对面在占的局，
+   是这一方没有点能占（推不进去 / 被推平），不是他「不去站旗」。
+   这种局要单列并说明，**不许**拿它减分、**不许**说「占点能力差」；
+   但如果他在这种局里还在点内换人头（点内击杀 ≥20%），那是**孤军顶线**，要正面写。
 
 ---
 
@@ -1098,6 +1232,30 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
    是往坦克上扔的炸药包，属于反甲；不许一口咬定「只会扔雷清点」。
 4. pointsCaptured 是实际占下旗子的次数。它低不代表不参与争夺——在点里把人清掉、
    让队友站上去，旗子不算他的。判断争夺参与度要用「点内击杀占比」，不是占点数。
+4.1 **整队一方 0 占点 = 这一方没有点能占**（2026-11-09 用户口径）。
+   判定在 `battleDetail` 名单层做：名单里每个人都有 `pointsCaptured`，按 `country` 分我方 / 对面求和。
+   三档：
+   - **无占点模式**：双方 cap 全 0、点内击杀也全 0 → 这局不是占点玩法，不计入占点统计；
+   - **无点可占**：**我方名单全员 cap = 0、对面 cap > 0** → 这一方推不进去（进攻打不下来 / 防守被推平），
+     这些局**不能算进他的占点账**，不许写成「他不去站旗」「占点能力差」；
+     条件是名单里我方 ≥4 人（撑得起「全队」两个字），不足 4 人的只记「疑似」，仍按有点局算；
+   - 其余（含双方 cap 都 0 但点内有人头 = 僵持）→ 正常有点局。
+   只认「对面真的占到了」：双方都 0 是僵持，不能剔除，否则谁都能靠「没占到点」免单。
+   被压局里如果他本人还在点里换人头（点内击杀占比 ≥20%、且 ≥5 个），单独记「**孤军顶线**」，那是正面证据。
+   「无点可占」占有点玩法的局 ≥40% 时，他的占点数据不能拿去跟别人横向比。
+4.2 **占点要跟队友比**（2026-11-09 用户口径）：一局 3~5 个点，**场均 3 次以上 = 打满全场、5 次 = 大满贯**；
+   还得跟他**同场队友**比：队友当场最高占 5、他占 1 →「拉完了」，他占 3 →「跟着打满全场」。
+   程序会给出「占点评价」（0~100 分 + 一个词）：50×绝对达标（占点 ÷ 3）+ 40×队友相对（÷队友最高 ÷ 0.6）
+   + 10×满贯；相对 ≤0.25 直接判「拉完了」。正文必须**绝对值和队友对比都写**，禁止只拿次数下结论。
+4.3 **🐵 完了 的第三条路是队内对比**：K/D ≥4.9 且 ≥队友平均的 1.4 倍、击杀 ≤队友均值 85%、
+   被打掉班数 ≤队友均值 75%、占点 ≤队友当场最高 50% → 直接判 🐵 完了（与 A/B 两路同等效力，
+   只关掉「K/D」那一项加分）。写法是"比队友少杀人、少挨打、少站旗"，不是"会走位"。
+4.4 **所有战绩都要跟队友比，不许单看个人**（2026-11-09 总原则，详见 3.7）：
+   程序会给出「队内相对」——击杀 / K/D / 点内击杀 / 占点 / 得分五项，每项都有
+   「本人值 / 队友均值 / 占队友百分之多少 / 队内名次百分位」，汇总成**队内指数 0~100**
+   （50 = 队内中位）和一句位次（队里靠前 / 中上 / 中下 / 垫底），并按 **±2 分**计入总分（队友可比 <8 场不调）。
+   正文里**每一项都要带队友参照**，禁止出现没有比较对象的绝对句。
+   阵亡人数与被打掉的班**只作读数**（高出队友可能是在正面顶），不判强弱、不进队内指数。
 5. 「全 0 记录」（时长 0、得分 0）是逃跑，已从有效战绩里剔除。逃跑比例单独给出，
    必须单独成段评价，不许混进胜率里糊过去。名义胜率与剔除后的实战胜率要分开说。
 6. **超级小队这一档不统计**（页面里显示 NaN）。接口 type 字段两个方向都会错标、按名字认也不
@@ -1169,6 +1327,18 @@ overview 的生涯胜率 / K/D / 场均击杀 / 最高分 / MVP 次数**一律�
 - 战功 / 载具：击杀 <X>，击毁敌方载具 <X> 台（坦克 <X> / 飞机 <X> / 运兵车 <X>），
   按坦克5、飞机3、运兵车3折算战功 +<X>，战功合计 <X>（场均 <X>），载具占战功 <X>%
 - 争夺：点内击杀 <X>（进攻 <X> / 防守 <X>），占 <X>%；占领点 <X> 次（场均 <X>）
+- 占点模式：有点玩法的局 <X> 场，其中**我方名单全员 0 占点、对面在占** <X> 场（<X>%）→
+  这一方没有点能占，不计入占点账；孤军顶线 <X> 场；无占点模式 <X> 场；名单不足 4 人 <X> 场
+  （没有「无点可占」就写「没有整队 0 占点的局」）
+- 占点评价：有点可占 <X> 场，场均 <X> 次（<X>% 的局到 3 次以上）；队友当场最高场均 <X>、均值 <X>，
+  他是队友的 <X>%（六成 = 跟满、四分之一以下 = 拉完了）→ <扛旗位 / 主力占点 / 跟着打满 / 跟了一半 /
+  挂名跟点 / 拉完了>（<X>/100 = 绝对 <X>%×50 + 相对 <X>%×40 + 满贯 <X>%×10）
+- 队内相对：有真人队友可比 <X> 场（每场名单平均 <X> 人）；
+  击杀 <X> / 队友 <X>（<X>%）、K/D <X> / 队友 <X>（<X>%）、点内击杀 <X> / 队友 <X>（<X>%）、
+  占点 <X> / 队友 <X>（<X>%）、得分 <X> / 队友 <X>（<X>%）；
+  队内指数 <X>/100（50 = 队内中位）→ <队里靠前 / 中上 / 中下 / 垫底>，平均队内第 <X>/<X> 名；
+  明显强过队友 <X>，明显弱于队友 <X>；阵亡 <X> / 队友 <X>、被打掉 <X> 班 / 队友 <X> 班（只作读数，不判优劣）；
+  总分按 <±X> 分计（封顶 ±2，队友可比不足 8 场不调分）
 - 武器：近战 <X>%、手雷/炸药包 <X>%、手枪 <X>%
 - 支援：一血 <X> 次（场均 <X>），助攻 <X>（占击杀 <X>%），工程设施 <X> 次、工事 <X> 次，
   总阵亡 <X> 人（合 <X> 个班被打掉）
@@ -1885,6 +2055,64 @@ async function scanBattleEnv(rows, uid, log){
         }
       }
 
+      /* 占点模式（2026-11-09 用户口径）：整队一方 0 占点、对面却在占 = 这一方没有点能占。
+         名单里每个人都有 pointsCaptured，按 country 分边求和即可，不用额外请求。
+         mePin 只记本人，用于「整队被压时他还在点里换人头」的孤军顶线。 */
+      const capOf = x => (+x.pointsCaptured || 0);
+      const pinOf = x => (+x.killsWhileAttackingPoint || 0) + (+x.killsWhileDefendingPoint || 0);
+
+      /* 队内相对坐标（2026-11-09 用户口径）：占点不能只看绝对次数，得跟自己队友比。
+         用户原话：「基本上 3 以上的占点就基本上打满全场了，也要跟队友去比，
+         比如我方最高占点 5，你 1，那就拉完了，如果是 3 那就是跟着打满了全场。」
+         同一份名单里还能拿到队友的击杀 / 班数 / 得分，顺手做成「队内对比」，
+         给 🐵 完了 的第三条路（战绩排前面、但击杀/班数/占点都比队友低）用。
+         名单只列真人（人机不进名单），所以「队友」= 这场的真人队友。 */
+      const scOf = x => (+x.battleScore || 0);
+      const sqOf = x => (x.squadDeaths != null ? +x.squadDeaths : 0);
+      const tms = my.filter(x => x.userId !== uid);
+      const meCap = me ? capOf(me) : 0, meSq = me ? sqOf(me) : 0, meSc = me ? scOf(me) : 0;
+      let mateCapMax = 0, mateCapAvg = 0, mateKAvg = 0, mateSqAvg = 0, mateScMax = 0, mateKdAvg = 0;
+      if (tms.length){
+        const av = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+        mateCapMax = Math.max.apply(null, tms.map(capOf).concat([0]));
+        mateCapAvg = av(tms.map(capOf));
+        mateKAvg = av(tms.map(kOf));
+        mateSqAvg = av(tms.map(sqOf));
+        mateScMax = Math.max.apply(null, tms.map(scOf).concat([0]));
+        /* 队友自己的 K/D（人数口径）：用来判断「他这比值是不是比队友都好看」 */
+        mateKdAvg = av(tms.map(x => kOf(x) / Math.max(1, dOf(x))));
+      }
+      /* 队内得分名次（我 + 队友，按 battleScore 排，1 = 队内第一）。
+         名次靠前但击杀、班数、占点都低 = K/D 把名次顶上去、人却没在正面，这是第三条路的形态。 */
+      const rankArr = my.slice().sort((a, b) => scOf(b) - scOf(a));
+      const myRank = rankArr.findIndex(x => x.userId === uid) + 1;
+
+      /* 队内位次（2026-11-09 用户口径：「基本上战绩都要跟队友进行对比，不要单看个人」）
+         逐场把我 + 我方真人队友放进同一个榜里排，记三样：
+           me    本人场值
+           mate  队友均值（不含自己）
+           pct   队内名次百分位（1 = 队里第一，0 = 垫底；名单只有自己时记 null）
+         七项：击杀、K/D、点内击杀、占点、得分（正向），阵亡、被打掉的班（只读数，判好坏要结合打法）。
+         名单只列有战绩的真人，人机不进名单 → 这里的「队友」就是同场真人队友，不用另外推断。 */
+      const tmAv = f => (tms.length ? tms.reduce((a, x) => a + (f(x) || 0), 0) / tms.length : 0);
+      const teamPos = (f, asc) => {
+        if (!me) return { me: 0, mate: 0, pct: null };
+        const v = f(me) || 0;
+        const arr = my.slice().sort((a, b) => asc ? (f(a) - f(b)) : (f(b) - f(a)));
+        const at = arr.findIndex(x => x.userId === uid);
+        const pct = (my.length > 1 && at >= 0) ? 1 - at / (my.length - 1) : null;
+        return { me: Math.round(v * 100) / 100, mate: Math.round(tmAv(f) * 100) / 100, pct: pct };
+      };
+      const tPos = {
+        k:   teamPos(kOf),
+        kd:  teamPos(x => kOf(x) / Math.max(1, dOf(x))),
+        pin: teamPos(pinOf),
+        cap: teamPos(capOf),
+        sc:  teamPos(scOf),
+        d:   teamPos(dOf, true),     // 升序排 → pct 1 = 死得最少
+        sq:  teamPos(sqOf, true)     // 升序排 → pct 1 = 被打掉最少
+      };
+
       recs.push({
         sid: r.sessionId, t: r.commitTime, c: c,
         n: d.length, myN: my.length, opN: op.length,
@@ -1892,6 +2120,17 @@ async function scanBattleEnv(rows, uid, log){
            （胜负只在「出彩」里做加权，不单独算命中） */
         myKSum: my.reduce((a, x) => a + kOf(x), 0),
         win: (r.victories || 0) >= 1,
+        /* 占点：两边名单合计 + 本人点内击杀 */
+        myCap: my.reduce((a, x) => a + capOf(x), 0),
+        opCap: op.reduce((a, x) => a + capOf(x), 0),
+        myPin: my.reduce((a, x) => a + pinOf(x), 0),
+        opPin: op.reduce((a, x) => a + pinOf(x), 0),
+        mePin: me ? pinOf(me) : 0,
+        /* 队内相对：本人占点 / 班数 / 得分，队友当场最高占点、队友均值、队内得分名次 */
+        meCap: meCap, meSq: meSq, meSc: meSc,
+        mateCapMax: mateCapMax, mateCapAvg: mateCapAvg,
+        mateKAvg: mateKAvg, mateSqAvg: mateSqAvg, mateScMax: mateScMax, mateKdAvg: mateKdAvg,
+        mateN: tms.length, myRank: myRank, rankN: my.length, tPos: tPos,
         lead: lead, myK: myK, myD: myD, nxK: nxK, nxName: nxName, killTop: killTop,
         mK: mK, mD: mD, mName: mName,
         mates: my.filter(x => x.userId !== uid)
@@ -1903,6 +2142,30 @@ async function scanBattleEnv(rows, uid, log){
   if (!recs.length) return null;
   return battleEnvStats(recs);
 }
+/* 占点评价（2026-11-09，用户口径 v3）
+   用户原话：「基本上 3 以上的占点就基本上打满全场了，也要跟队友去比，
+   比如我方最高占点 5，你 1，那就拉完了，如果是 3 那就是跟着打满了全场。」
+
+   为什么不能只看绝对次数：一局 3~5 个点，占 3 次在 5 点局里只算跟满，在 3 点局里就是满贯；
+   反过来队友都在 4~5 次、你 1 次，绝对数看着「有占」，实际是挂名。所以两项都要算：
+
+     绝对达标度 = min(场均占点 ÷ 3, 1)              // 3 次/场 = 打满，5 次/场 = 大满贯
+     队友相对度 = min((场均占点 ÷ 队友当场最高占点) ÷ 0.6, 1)   // 到队友的 6 成才算跟满
+     满贯度     = min(max(场均占点 − 3, 0) ÷ 2, 1)  // 3 次以上到 5 次，多占一次多一分
+     占点分（0~100） = 50 × 绝对达标度 + 40 × 队友相对度 + 10 × 满贯度
+
+   判级另外加两道「相对闸门」：队友明显比你占得多，就不许给「扛旗 / 主力」这两个词；
+   只到队友四分之一以下（队友 5、我 1）直接判「拉完了」——这一条是用户原话。
+
+   分母只放「有点可占」的局（capMode.open）：整队 0 占点（denied）和无占点模式（none）都不进，
+   否则被推平的几场会把他判成「不站旗」——这正是用户 2026-11-09 定的那一条。 */
+const CAP_E = {
+  full: 3,        // 3 次/场 = 打满全场（用户给的锚点）
+  grand: 4.2,     // ≈5 次/场 = 大满贯（3 点局占满 + 换点/回防）
+  relFull: 0.6,   // 占到自己队友当场最高的 6 成 = 跟满（队友 5、我 3）
+  relZero: 0.25,  // 不到队友最高的四分之一 = 拉完了（队友 5、我 1）
+  minN: 3         // 有点局少于 3 场不给分
+};
 /* 少打多的门槛（2026-11-08）
    gap    ：对面名单比我们多几个真人，才算「少打多」（2 = 至少多两个）
    mine   ：人少的一边，本人击杀要达到我方人均的几倍，才算这局打得出来
@@ -2024,6 +2287,154 @@ function battleEnvStats(recs){
       + 0.2 * Math.min(1, outnumbered.gapAvg / 3.5);
   }
 
+  /* 占点模式（2026-11-09 用户口径）：整队一方 0 占点 = 这一方没有点能占
+     用户原话：「如果全员一方出现 0 占点，那就判定这局大概率是没有点能占领的一方」。
+     判定在名单层做（battleDetail 每个人都有自己的 pointsCaptured，按 country 分边求和）：
+       · none   双方 cap 全 0、点内击杀也全 0 → 这局不是占点玩法，剔除
+       · denied 我方全员 cap = 0、对面 cap > 0 → 这一方推不进去，单列，不进占点分母
+       · lowconf 同上但我方名单不足 4 人 → 撑不起「全队」，仍进分母，单独计数
+       · open   其余（对方也没占到 = 僵持，也算 open）
+     为什么不能一概剔除：只认「对面真的占到了」。双方都 0 却没占到点是僵持，
+     剔了就等于谁都能靠「没占到点」免单。 */
+  const CAP_MIN_MY = 4;
+  const capMode = { none: 0, denied: 0, lowconf: 0, open: 0, lastStand: 0 };
+  const openRecs = [];
+  for (const x of recs){
+    const myCap = x.myCap || 0, opCap = x.opCap || 0;
+    const anyPin = (x.myPin || 0) + (x.opPin || 0);
+    if (!myCap && !opCap && !anyPin){ capMode.none++; continue; }
+    if (!myCap && opCap > 0){
+      if ((x.myN || 0) >= CAP_MIN_MY){
+        capMode.denied++;
+        /* 整队被压的局里，他本人还在点里换人头 → 孤军顶线（正面证据，不是处境） */
+        const meK = x.myK || 0, mePin = x.mePin || 0;
+        if (mePin >= 5 && meK > 0 && mePin / meK >= 0.2) capMode.lastStand++;
+      } else capMode.lowconf++;
+      continue;
+    }
+    capMode.open++;
+    openRecs.push(x);
+  }
+  const capPlayed = capMode.open + capMode.denied;
+  capMode.deniedRate = capPlayed ? capMode.denied / capPlayed * 100 : 0;
+  capMode.label = !capPlayed ? ""
+    : capMode.deniedRate >= 40 ? "denied"
+    : capMode.deniedRate >= 20 ? "often" : "";
+
+  /* ---- 占点评价：绝对达标 + 队友相对（口径见上面 CAP_E） ---- */
+  const capEval = (function(){
+    const rs = openRecs;
+    const out = { n: rs.length, capAvg: 0, abs: 0, rel: 0, relN: 0, score: 0, ok: false,
+      grade: "", label: "", fullRate: 0, zeroRate: 0, mateMax: 0, mateAvg: 0, grand: false, why: "" };
+    if (!rs.length){ out.why = "没有有点可占的局"; return out; }
+    const av = f => rs.reduce((a, x) => a + (f(x) || 0), 0) / rs.length;
+    out.capAvg = av(x => x.meCap);
+    out.abs = Math.min(1, out.capAvg / CAP_E.full);
+    out.grand = out.capAvg >= CAP_E.grand;
+    out.fullRate = rs.filter(x => (x.meCap || 0) >= CAP_E.full).length / rs.length * 100;
+    const rr = rs.filter(x => (x.mateCapMax || 0) > 0);
+    out.relN = rr.length;
+    if (rr.length){
+      out.rel = rr.reduce((a, x) => a + Math.min(1, (x.meCap || 0) / x.mateCapMax), 0) / rr.length;
+      out.mateMax = rr.reduce((a, x) => a + x.mateCapMax, 0) / rr.length;
+      out.mateAvg = rr.reduce((a, x) => a + (x.mateCapAvg || 0), 0) / rr.length;
+      out.zeroRate = rr.filter(x => (x.meCap || 0) === 0).length / rr.length * 100;
+    } else {
+      out.rel = out.abs;   // 全是人机陪跑，没有真人队友可比 → 退回只用绝对达标度
+    }
+    const relS = Math.min(1, out.rel / CAP_E.relFull);
+    const grandS = Math.min(1, Math.max(0, out.capAvg - CAP_E.full) / 2);
+    out.score = 50 * out.abs + 40 * relS + 10 * grandS;
+    out.ok = rs.length >= CAP_E.minN;
+    if (!out.ok) out.why = "有点局不足 " + CAP_E.minN + " 场";
+    /* 判级：先按分数分档，再用「队友相对」封顶 —— 绝对数够了但明显不如队友，词就得往下压。
+       比较带 1e-9 容差：3 ÷ 5 平摊 20 场会浮成 0.5999999，正好卡在「跟满」的线上。 */
+    const A = out.abs, R = out.rel, hasMate = out.relN >= CAP_E.minN;
+    const ORD = ["zero", "name", "half", "follow", "main", "carry"];
+    let g = out.score >= 85 ? "carry" : out.score >= 72 ? "main" : out.score >= 58 ? "follow"
+      : out.score >= 44 ? "half" : out.score >= 28 ? "name" : "zero";
+    if (hasMate){
+      /* 队友相对封顶：队友 5 我 3（六成）= 最多「跟着打满」；只到四分之一以下 = 直接拉完 */
+      const capG = R + 1e-9 <= CAP_E.relZero ? "zero"
+        : R + 1e-9 < CAP_E.relFull ? "half"
+        : R + 1e-9 < 0.75 ? "follow"
+        : R + 1e-9 < 0.9 ? "main" : "carry";
+      if (ORD.indexOf(capG) < ORD.indexOf(g)) g = capG;
+    }
+    out.grade = g;
+    out.label = { carry: "扛旗位", main: "主力占点", follow: "跟着打满",
+      half: "跟了一半", name: "挂名跟点", zero: "拉完了" }[out.grade];
+    if (out.grade === "carry" && out.grand) out.label = "扛旗位（满贯）";
+    return out;
+  })();
+
+  /* ---- 队内对比：给 🐵 完了 的第三条路用（战绩排前面、击杀/班数/占点都比队友低） ---- */
+  const mr = recs.filter(x => (x.mateN || 0) >= 1 && (x.myK || 0) > 0);
+  const mateCmp = { n: mr.length, kAvg: 0, mateK: 0, sqAvg: 0, mateSq: 0, rankPct: 0, capRel: 0,
+    kRatio: 1, sqRatio: 1, mateKd: 0, kdRatio: 0, why: "" };
+  if (mr.length){
+    const av = f => mr.reduce((a, x) => a + (f(x) || 0), 0) / mr.length;
+    mateCmp.kAvg = av(x => x.myK); mateCmp.mateK = av(x => x.mateKAvg);
+    mateCmp.sqAvg = av(x => x.meSq); mateCmp.mateSq = av(x => x.mateSqAvg);
+    mateCmp.kRatio = mateCmp.mateK > 0 ? mateCmp.kAvg / mateCmp.mateK : 1;
+    mateCmp.sqRatio = mateCmp.mateSq > 0 ? mateCmp.sqAvg / mateCmp.mateSq : 1;
+    mateCmp.mateKd = av(x => x.mateKdAvg);
+    const rp = mr.filter(x => (x.rankN || 1) > 1).map(x => 1 - (x.myRank - 1) / (x.rankN - 1));
+    mateCmp.rankPct = rp.length ? rp.reduce((a, b) => a + b, 0) / rp.length : 0;
+    const cr = mr.filter(x => (x.mateCapMax || 0) > 0);
+    mateCmp.capRel = cr.length
+      ? cr.reduce((a, x) => a + Math.min(1, (x.meCap || 0) / x.mateCapMax), 0) / cr.length : 0;
+  } else mateCmp.why = "没有真人队友可比";
+
+  /* 队内相对层（2026-11-09 用户口径：「基本上战绩都要跟队友进行对比，不要单看个人」）
+     七项逐个汇总：本人均值、队友均值、比值、队内名次百分位均值。
+     正向五项（击杀 / K/D / 点内击杀 / 占点 / 得分）判「强 / 弱」，合成一个队内指数 idx（0~100，50 = 队内中位）；
+     **阵亡、被打掉的班只给读数，不判强弱** —— 死得多可能是在正面顶，也可能是送，单看这一项会奖励躲。
+     修正 adj ∈ [-2, +2]：队内第一 +2、中位 0、垫底 −2，样本 <8 场不生效（避免小样本翻盘）。 */
+  const MR_DEF = [
+    { key: "k",   label: "击杀",       unit: "杀", dec: 1, dir: 1 },
+    { key: "kd",  label: "K/D",        unit: "",   dec: 2, dir: 1 },
+    { key: "pin", label: "点内击杀",   unit: "个", dec: 1, dir: 1 },
+    { key: "cap", label: "占点",       unit: "次", dec: 2, dir: 1 },
+    { key: "sc",  label: "得分",       unit: "分", dec: 0, dir: 1 },
+    { key: "d",   label: "阵亡",       unit: "人", dec: 1, dir: 0 },
+    { key: "sq",  label: "被打掉的班", unit: "班", dec: 1, dir: 0 }
+  ];
+  const mateRank = { n: 0, items: [], idx: 0, adj: 0, pos: 0, rankAvg: 0, sizeAvg: 0,
+    strong: [], weak: [], label: "", why: "" };
+  const mrRecs = recs.filter(x => x.tPos && (x.mateN || 0) >= 1 && (x.myK || 0) > 0);
+  mateRank.n = mrRecs.length;
+  if (mrRecs.length){
+    const av = f => mrRecs.reduce((a, x) => a + (f(x) || 0), 0) / mrRecs.length;
+    mateRank.items = MR_DEF.map(def => {
+      const me = av(x => x.tPos[def.key].me);
+      const mate = av(x => x.tPos[def.key].mate);
+      const ps = mrRecs.map(x => x.tPos[def.key].pct).filter(v => v != null);
+      const pct = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
+      const ratio = mate > 0 ? me / mate : (me > 0 ? 2 : 1);
+      const verdict = def.dir !== 1 ? "" : (ratio >= 1.15 ? "strong" : ratio <= 0.87 ? "weak" : "even");
+      return { key: def.key, label: def.label, unit: def.unit, dec: def.dec, dir: def.dir,
+        me: me, mate: mate, ratio: ratio, pct: pct, verdict: verdict };
+    });
+    const posItems = mateRank.items.filter(x => x.dir === 1 && x.pct != null);
+    mateRank.pos = posItems.length
+      ? posItems.reduce((a, x) => a + x.pct, 0) / posItems.length : 0;
+    mateRank.idx = Math.round(mateRank.pos * 1000) / 10;      // 0~100
+    mateRank.sizeAvg = mrRecs.reduce((a, x) => a + (x.rankN || 0), 0) / mrRecs.length;
+    /* 平均名次由队内指数反推（而不是拿得分名次平均）：
+       两者口径不同，混着显示会出现「指数垫底、名次第 2」的自相矛盾。
+       idx 100 = 队内第一 → 名次 1；idx 0 = 垫底 → 名次 = 队内人数。 */
+    mateRank.rankAvg = mrRecs.length ? 1 + (1 - mateRank.pos) * Math.max(0, mateRank.sizeAvg - 1) : 0;
+    mateRank.strong = mateRank.items.filter(x => x.verdict === "strong").map(x => x.label);
+    mateRank.weak = mateRank.items.filter(x => x.verdict === "weak").map(x => x.label);
+    mateRank.label = mateRank.idx >= 70 ? "队里靠前"
+      : mateRank.idx >= 50 ? "队里中上"
+      : mateRank.idx >= 32 ? "队里中下" : "队里垫底";
+    if (mrRecs.length >= 8){
+      mateRank.adj = Math.max(-2, Math.min(2, (mateRank.idx - 50) / 50 * 2));
+    } else mateRank.why = "队友可比的场次不足 8 场，只读数不调分";
+  } else mateRank.why = "没有真人队友可比（名单里只有自己）";
+
   return {
     n: recs.length, botGames: botGames, wSum: wSum,
     avgHumans: sum("n") / n, myHumans: sum("myN") / n, opHumans: sum("opN") / n,
@@ -2036,7 +2447,8 @@ function battleEnvStats(recs){
     teamGames: recs.filter(x => (x.mates || []).length > 0).length,
     squadMax: recs.reduce((m, x) => Math.max(m, (x.mates || []).length), 0),
     mates: mates, fixMin: fixMin, fixed: mates.filter(x => x.n >= fixMin), recs: recs,
-    killLead: killLead, carried: carried, outnumbered: outnumbered
+    killLead: killLead, carried: carried, outnumbered: outnumbered, capMode: capMode,
+    capEval: capEval, mateCmp: mateCmp, mateRank: mateRank, openRecs: openRecs
   };
 }
 
@@ -2683,7 +3095,12 @@ function fillOf(s){
    `tankKills / aircraftKills / apcKills` 是「击毁的敌方载具数」（反甲战果），
    跟「开着坦克杀步兵」是两件事，拿它判🐵 完了会判反。所以只能从间接信号反推。
 
-   两条路，命中一条就算（判据不同、结论一样）：
+   第三条补充口径（2026-11-09 第二次）：**跟队友比**也算 ——
+     「K/D 高、对比队友战绩排前面的几个，击杀低、小队死亡数低、占点还低」照样直接判 🐵 完了。
+     这条路不跟标准1 比（他的绝对值可能都在及格线上），只跟他同场的真人队友比，
+     所以能抓住那些「绝对数不差、但一队里就他产出最低」的号。
+
+   三条路，命中一条就算（判据不同、结论一样，判定顺序 A → B → C）：
 
    【A 显性高 K/D】三条同时成立
      ① K/D ≥ 标准1 的 2 倍（≈7.5）：人在铁壳里，炮打不穿、步兵摸不到，几乎不死。
@@ -2695,6 +3112,15 @@ function fillOf(s){
      ① 场均阵亡 ≤ 标准1 的 65%（≈20.9 人/场）：步兵交火线上的号不可能这么干净。
      ② 场均击杀 ≤ 标准1 的 70%（≈84.5）：人也杀得不多，不是那种「又要人头又不死」的神仙。
      ③ 占旗 或 点内击杀至少有一项没到标准的九成（≈1.63 次/场 / 23.1%）：他不用去争夺点。
+
+   【C 队内视角】五条同时成立（用 battleDetail 名单里的真人队友比）
+     ① K/D ≥ 4.9（标准1 的 1.3 倍）且是队友平均 K/D 的 1.4 倍（比值比全队都漂亮）
+     ② 场均击杀 ≤ 队友均值的 85%（人头比队友少）
+     ③ 被打掉的班数 ≤ 队友均值的 75%（没在正面换命）
+     ④ 占点 ≤ 队友当场最高的 50%（旗子靠队友站）
+     队内得分名次（平均在前一半 = rankPct ≥ 0.5）只用来加判定强度，不作硬门槛 ——
+     击杀、班数都低的人本来分数就高不了，硬卡「排前面」会把该抓的全漏掉；
+     真正说明问题的是「K/D 比全队漂亮，但产出样样最少」。
 
    命中后果只有一条、且是硬的：
    **额外加分里的「K/D」那一项不计分**（K/D 是铁皮替他数的，不是他走位好），
@@ -2711,6 +3137,15 @@ const VEH_M = {
   k2: BENCH.avgK * 0.70,     // ≈84.5 杀/场
   cap2: BENCH.capAvg * 0.9,  // ≈1.63 次/场
   pin2: BENCH.pinRate * 0.9, // ≈23.1%
+  /* C：队内视角（2026-11-09 用户口径）——
+     「K/D 高、对比队友战绩排前面的几个，击杀低、小队死亡数低、占点还低」→ 一样判 🐵 完了。
+     这条路不设绝对门槛：一队里排前面但杀人、抗线、站旗三项都不如队友，就是没在正面。 */
+  kdC: BENCH.kd * 1.3,       // ≈4.9：比值照样好看，不用等到 7.5 才认
+  kdRatioC: 1.4,             // K/D 是队友平均的 1.4 倍以上（「比值比全队都漂亮」）
+  kRatio: 0.85,              // 击杀不到队友均值的 85%
+  sqRatio: 0.75,             // 被打掉的班不到队友的 75%（没在正面换命）
+  relC: 0.5,                 // 占点不到队友当场最高的一半
+  rankC: 0.5,                // 队内得分平均排前一半（rankPct 1 = 队内第一，0 = 垫底）
   minN: 8
 };
 function vehMonkeyOf(s){
@@ -2746,6 +3181,31 @@ function vehMonkeyOf(s){
       + "）+ 不占点（占旗 " + f2(cap) + "/场、点内 " + f1(pin) + "%）";
     return out;
   }
+
+  /* C：队内视角（2026-11-09 用户口径）—— 不跟标准1 比，跟他这一场的队友比。
+     ① K/D ≥ 4.9 且是队友平均的 1.4 倍（比值比全队都好看，名次因此排前面）
+     ② 击杀不到队友均值的 85%
+     ③ 被打掉的班不到队友的 75%（没在正面换命）
+     ④ 占点不到队友当场最高的一半（旗子基本靠队友站）
+     队内得分名次只进 intensity（rS），不作硬门槛：击杀和班数都低的人分数本来就上不去。 */
+  const MC = s && s.mateCmp;
+  if (MC && MC.n >= VEH_M.minN && kd >= VEH_M.kdC
+      && kd >= (MC.mateKd || 0) * VEH_M.kdRatioC
+      && MC.kRatio <= VEH_M.kRatio && MC.sqRatio <= VEH_M.sqRatio){
+    const rel = (s.capEval && s.capEval.relN >= CAP_E.minN) ? s.capEval.rel : (MC.capRel || 0);
+    if (rel <= VEH_M.relC){
+      const rS = c01(((MC.rankPct || 0) - 0.25) / 0.60);                    // 前排 1，中游 0
+      const kS = c01((VEH_M.kRatio - MC.kRatio) / VEH_M.kRatio);            // 85%→0，0→1
+      const dS = c01((VEH_M.sqRatio - MC.sqRatio) / VEH_M.sqRatio);         // 75%→0，0→1
+      const pS = c01((VEH_M.relC - rel) / VEH_M.relC);                      // 一半→0，0→1
+      out.hit = true; out.path = "mate";
+      out.power = 0.30 * rS + 0.30 * kS + 0.20 * dS + 0.20 * pS;
+      out.why = "队内对比：K/D " + f2(kd) + "（队友平均 " + f2(MC.mateKd) + "）、击杀 "
+        + f1(MC.kAvg) + " 少于队友 " + f1(MC.mateK) + "、被打掉 " + f1(MC.sqAvg) + " 班少于队友 "
+        + f1(MC.mateSq) + " 班、占点只有队友最高的 " + Math.round(rel * 100) + "%";
+      return out;
+    }
+  }
   return out;
 }
 
@@ -2779,7 +3239,12 @@ function gradeOf(s, B, ovBattles, fleeRate, env, who){
   const FL = s.fill || fillOf(s);
   const stressGain = (gun - gunLead) * BASE_SCORE;
   const core = gun * BASE_SCORE + bn.total;                 // 判级口径：枪法（含抗压 ×1.2）+ 加分
-  const envAdj = (FL.adj || 0) + ((OT && OT.adj) || 0);     // 填线 + 少打多
+  /* 队内相对修正（2026-11-09 用户口径）：所有战绩都要放回队友里看，单人绝对值不作数。
+     队内指数 idx 就是「五项正向产出的平均队内名次百分位」，中位 = 0 分，
+     队内第一 +2、垫底 −2。幅度刻意压小：它只调环境，不改枪法、不参与 over / suspect 判定。 */
+  const MR = s.mateRank || null;
+  const mateAdj = (MR && MR.n >= 8) ? (MR.adj || 0) : 0;
+  const envAdj = (FL.adj || 0) + ((OT && OT.adj) || 0) + mateAdj;   // 填线 + 少打多 + 队内相对
   const raw = selfBench ? OVER_SCORE : Math.max(0, core + envAdj);
   const over = !selfBench && core > OVER_SCORE + 0.0001;     // 比标准1强 → 6.2+
   const suspect = !selfBench && core > SUSPECT_SCORE + 1e-9; // 超出 15% → 数据有疑问
@@ -2794,6 +3259,7 @@ function gradeOf(s, B, ovBattles, fleeRate, env, who){
     bonus: bn.list, bonusSum: bn.total,
     fill: FL, fillAdj: FL.adj || 0,
     outnumbered: OT, outAdj: (OT && OT.adj) || 0, envAdj: envAdj,
+    mateRank: MR, mateAdj: mateAdj,
     idx: idx, g: g, selfBench: selfBench, over: over, suspect: suspect,
     gap: nextBand ? Math.max(0, nextBand - v) : 0
   };
@@ -2849,6 +3315,12 @@ function buildVerdict(D){
     if (i4 >= 0) tags.splice(i4, 1);
     tags.unshift({ t: "填线宝宝", tone: "bad" });
   }
+  /* 占点评价 / 队内对比（2026-11-09）：都在 battleDetail 名单层算，没有名单就没有这两块。
+     必须在 vehMonkeyOf 之前挂到 s 上 —— 第三条路靠这两块判。 */
+  const ENV0 = D.env || null;
+  s.capEval = ENV0 ? ENV0.capEval : null;
+  s.mateCmp = ENV0 ? ENV0.mateCmp : null;
+  s.mateRank = ENV0 ? ENV0.mateRank : null;
   /* 🐵 完了判定（2026-11-09，用户口径）：高 K/D + 低击杀 + 不占点 → 坐在铁壳里打的。
      先算出来存进 s，bonusOf 会因此关掉「K/D」那一项加分（枪法分不动） */
   const VM = vehMonkeyOf(s);
@@ -2881,7 +3353,7 @@ function buildVerdict(D){
   // 分级：六维加权 + 纪律扣分
   const GB = { winRate: s.winRate, kd: s.kd, avgK: s.avgK };
   const cs = D.country || countryStats(clean, ov);
-  const env = D.env || null;
+  const env = ENV0;
   const G = gradeOf(s, GB, ovBattles, fleeRate, env, { uid: uid, name: name });
   const gNext = GRADES[G.idx + 1] || null;
   const rnd = picker(String(uid) + "|" + name);
@@ -2969,8 +3441,49 @@ function buildVerdict(D){
   } else if (s.pinA > s.pinD * 2 && s.pinA > 80){
     p3 += "进攻点内击杀（" + num(s.pinA) + "）压过防守（" + num(s.pinD) + "）一大截，<b>是推着打的那种</b>，敢往旗子下面冲。";
   }
-  // 占领次数只作辅助，且明确说明它和点内击杀不是一回事
-  if (s.capAvg >= 1.5){
+  const CE = s.capEval || null;
+  const MC = s.mateCmp || null;
+  /* 占点段（2026-11-09 v3）：绝对 + 队友相对两条一起说。
+     绝对锚点：3 次/场 = 打满全场，5 次 = 大满贯；相对锚点：到队友当场最高的六成 = 跟满。
+     用户原话：「我方最高占点 5，你 1，那就拉完了，如果是 3 那就是跟着打满了全场。」 */
+  if (CE && CE.ok){
+    let pc = "占点这块单说。他实际<b>占下旗子 " + num(s.cap) + " 次</b>"
+      + (CE.n < s.n
+          ? "（只在有点可占的 " + CE.n + " 场里算：场均 <b>" + f2(CE.capAvg) + "</b>，被人推平的局不进他的账）"
+          : "（场均 <b>" + f2(CE.capAvg) + "</b>）") + "。";
+    if (CE.capAvg >= CAP_E.grand){
+      pc += "一局最多 5 个点，他这个数是<b>大满贯级</b>——整场在点里来回跑，旗子基本是他站下来的。";
+    } else if (CE.capAvg >= CAP_E.full){
+      pc += "<b>场均 3 次以上，这就是打满全场了</b>：3 点局他能占满，4~5 点局也能跟上换点。";
+    } else if (CE.capAvg >= 2){
+      pc += "场均 2 次出头，<b>差一口气到打满</b>，属于跟着走、但没把每个点都踩到。";
+    } else if (CE.capAvg >= 1){
+      pc += "场均只有 1 次多，<b>占点偏低</b>——他更多是在点外找人，旗子靠队友站。";
+    } else {
+      pc += "<span class=\"hlr\">场均不到 1 次，基本不站旗</span>。";
+    }
+    if (CE.relN >= CAP_E.minN && CE.mateMax > 0){
+      const pr = CE.rel;
+      pc += "跟他队友比（队友当场最高场均 <b>" + f2(CE.mateMax) + "</b>、均值 " + f2(CE.mateAvg) + "）：";
+      if (pr >= 0.9){
+        pc += CE.capAvg >= CAP_E.full
+          ? "他是<b>队里扛旗的那一个</b>，别人占多少他占多少，甚至更多。"
+          : "他在队里是占得最多的那个——可<b>全队都占得少</b>（" + f2(CE.capAvg) + " 次/场），这局大概没几个点可占。";
+      } else if (pr >= CAP_E.relFull){
+        pc += "<b>跟着打满了全场</b>——队友 5 他 3，旗子有他一份，不是挂名。";
+      } else if (pr >= 0.4){
+        pc += "只跟到<b>队友的一半上下</b>，前面有人把点踩完，他补个零头。";
+      } else {
+        pc += "<span class=\"hlr\"><b>这就是拉完了</b>——队友能占 " + f2(CE.mateMax) + " 次，他只有 "
+          + f2(CE.capAvg) + " 次</span>，旗子跟他基本没关系" + (CE.zeroRate >= 30
+            ? "（有 " + f1(CE.zeroRate) + "% 的局，队友在占、他一次没占）" : "") + "。";
+      }
+    }
+    pc += "占点评价 <b>" + CE.label + "</b>（" + Math.round(CE.score) + " 分 = 绝对达标 "
+      + Math.round(CE.abs * 100) + "% × 50 + 队友相对 " + Math.round(Math.min(1, CE.rel / CAP_E.relFull) * 100)
+      + "% × 40 + 满贯 " + Math.round(Math.min(1, Math.max(0, CE.capAvg - CAP_E.full) / 2) * 100) + "% × 10）。";
+    p3 += pc;
+  } else if (s.capAvg >= 1.5){
     p3 += "而且他实际<b>占下旗子 " + num(s.cap) + " 次</b>（场均 " + f2(s.capAvg) + "），<b>既清人也真站上去过</b>，不是只打不占。";
   } else {
     p3 += "他实际<b>占下旗子 " + num(s.cap) + " 次</b>（场均 " + f2(s.capAvg) + "），这个数低不代表不参与争夺——"
@@ -3112,6 +3625,37 @@ function buildVerdict(D){
     pv += " 口径说明：战绩接口<b>没有</b>「坐在载具上杀了多少人」这个字段（tankKills 是<b>击毁</b>敌方载具，属反甲战果），"
       + "所以这一判是间接信号反推出来的——高 K/D + 低击杀 + 不占点，按统计特征定性，不是拿到了他上车的证据。";
     P.push({ html: pv });
+  } else if (VM.hit && VM.path === "mate"){
+    /* C 路（2026-11-09 用户口径）：不跟标准1 比，跟同场队友比 ——
+       战绩排前面、K/D 比全队都漂亮，可击杀、被打掉的班、占点三项都低于队友 */
+    const mc = MC || {};
+    const kR = (mc.kRatio || 0) * 100, sqR = (mc.sqRatio || 0) * 100;
+    const relP = (CE && CE.relN >= CAP_E.minN) ? CE.rel : (mc.capRel || 0);
+    const kdX = (mc.mateKd || 0) > 0 ? VM.kd / mc.mateKd : 0;
+    let pv = rnd(["这一条得横向看：<b>他跟队友不是一个活法。</b>",
+        "先别只看他自己——<b>把他扔回队里，问题就露出来了。</b>",
+        "还有一层是队内对比出来的：<b>他的数据是队友替他兜住的。</b>"])
+      + "K/D <b>" + f2(VM.kd) + "</b>，同一队里队友平均只有 " + f2(mc.mateKd) + "（他是人家的 <b>"
+      + f1(kdX) + "</b> 倍），光看这个像队里最能活的；"
+      + "可场均击杀只有 <b>" + f1(mc.kAvg) + " 杀</b>，队友平均 <b>" + f1(mc.mateK) + " 杀</b>（他只到 "
+      + f1(kR) + "%）；冲点被打掉 <b>" + f1(mc.sqAvg) + " 个班</b>，队友 <b>" + f1(mc.mateSq) + " 个班</b>（"
+      + f1(sqR) + "%）。";
+    pv += "占点也是一样：队友当场最高能占 <b>" + f2(CE ? CE.mateMax : 0) + "</b> 次，他只有 <b>"
+      + f2(CE ? CE.capAvg : VM.cap) + "</b> 次，相当于队友的 <b>" + Math.round(relP * 100) + "%</b>"
+      + (relP <= CAP_E.relZero ? "——<span class=\"hlr\">这就是拉完了</span>" : "") + "。"
+      + "可他的战绩名次却排在队里前 <b>" + Math.round((1 - (mc.rankPct || 0)) * 100) + "%</b>"
+      + "（同场 " + (mc.n || 0) + " 场平均），排在前面的全靠那个比值。";
+    pv += "<span class=\"hl\">杀人比队友少、挨打比队友少、站旗比队友少，名次却排在队友前面</span>——"
+      + "这个组合说明他没在正面：<b>不在步兵交火线上换命，也不用去争夺点</b>，"
+      + "人头是顺手收的，命是铁壳（或者距离）保的。跟标准1 比他是「击杀偏低」，"
+      + "跟自己队友比他是<b>根本没在干队友在干的那些活</b>。";
+    pv += "评分上只动一处：他「K/D」这一项的额外加分<b>不计</b>（其余五项、枪法分照算），"
+      + "因为这个比值不是他打出来的战果，是别人替他扛出来的。"
+      + "<b>要看真实水平，得看他跟队友一样站在点里的那几场。</b>";
+    pv += " 口径说明：队内对比只取 battleDetail 名单里的<b>真人队友</b>（人机不进名单，不参与比较），"
+      + "名单不全的场次按实际在名单里的人算；判定口径仍是「统计特征反推」，"
+      + "不是拿到了他上车的证据——但「比队友少杀人、少挨打、少站旗」是名单里数出来的。";
+    P.push({ html: pv });
   } else if (VM.hit){
     /* B 路：K/D 只有 3 点多、「看着还行」的🐵 完了 —— 关键是**绝对死亡量**，不是比值 */
     const dPct = VM.D / Math.max(0.01, BENCH.avgD) * 100;
@@ -3160,6 +3704,72 @@ function buildVerdict(D){
     if (mn < 30 && spread >= 30) p4 += "最低那段只剩 <span class=\"hlr\">" + f1(mn) + "%</span>，那阵子基本是被按在地上反复教育。";
   }
   if (p4) P.push({ html: p4 });
+
+  /* 4.6 队内相对（2026-11-09 用户口径：「基本上战绩都要跟队友进行对比，不要单看个人」）
+     把每项都放回同场队友里排一遍：绝对值是「干了多少」，队内位次是「在这一队里算不算干活的人」。
+     阵亡 / 班数只读不判（死得多可能是在正面顶），所以那两项不进队内指数。 */
+  const MRK = s.mateRank || null;
+  if (MRK && MRK.n >= 3 && MRK.items.length){
+    const it = k => MRK.items.filter(x => x.key === k)[0];
+    const fm = (v, d) => (d === 0 ? num(Math.round(v)) : d === 1 ? f1(v) : f2(v));
+    const posTxt = p => p == null ? "" : p >= 0.9 ? "队里第一" : p >= 0.7 ? "队里靠前"
+      : p >= 0.4 ? "队里中游" : p >= 0.15 ? "队里靠后" : "队里垫底";
+    const POS = ["k", "kd", "pin", "cap", "sc"];
+    let pm = rnd(["光看绝对值不作数，得放回他这一队里看：",
+      "每个人的局不一样，所以所有数字都得跟同场队友比：",
+      "先把每个数放回队友里排一遍，再谈高不高："])
+      + "取样里有 <b>" + MRK.n + "</b> 场能拉出我方真人名单（每场平均 <b>" + f1(MRK.sizeAvg)
+      + "</b> 人，人机不进名单），把他和队友放同一张榜上排：";
+    pm += POS.map(k => {
+      const x = it(k); if (!x) return "";
+      return "<b>" + x.label + "</b> " + fm(x.me, x.dec) + x.unit
+        + "（队友 " + fm(x.mate, x.dec) + (x.unit || "") + "，是他的 "
+        + Math.round(x.ratio * 100) + "%，" + (posTxt(x.pct) || "—") + "）";
+    }).filter(Boolean).join("；") + "。";
+    /* 「前 X%」的下限卡到 1%：队内第一时 100−100 会算出「前 0%」，读着像没排上 */
+    const front = Math.max(1, Math.round(100 - MRK.idx));
+    if (MRK.idx >= 97){
+      pm += "五项正向产出<b>基本都排在队内第一档</b>（平均第 " + f1(MRK.rankAvg) + "/" + f1(MRK.sizeAvg)
+        + " 名）——<span class=\"hl\">这个号是队里真正干活的那个</span>，不是蹭队友的。";
+    } else if (MRK.idx >= 70){
+      pm += "五项正向产出平均排在<b>队内前 " + front + "%</b>（平均第 " + f1(MRK.rankAvg) + "/"
+        + f1(MRK.sizeAvg) + " 名）——<span class=\"hl\">这个号是队里真正干活的那个</span>，不是蹭队友的。";
+    } else if (MRK.idx >= 50){
+      pm += "五项平均排在队内前 " + front + "%（平均第 " + f1(MRK.rankAvg) + "/" + f1(MRK.sizeAvg)
+        + " 名），属于<b>队里能排上号</b>，但同一队里还有人比他更能打。";
+    } else if (MRK.idx >= 32){
+      pm += "五项平均只排到队内前 " + front + "%（平均第 " + f1(MRK.rankAvg) + "/" + f1(MRK.sizeAvg)
+        + " 名）——<span class=\"hla\">绝对值之所以看着还行，是因为队友也不高</span>，换个强一点的队他就是垫底那位。";
+    } else {
+      pm += "五项平均在<b>队内垫底</b>，平均第 " + f1(MRK.rankAvg) + "/" + f1(MRK.sizeAvg)
+        + " 名，<span class=\"hlr\">绝对数再好看，也是这一队里最低的一档</span>。";
+    }
+    if (MRK.strong.length){
+      pm += "明显强过队友的是 <b>" + MRK.strong.join(" / ") + "</b>（高出队友 15% 以上）。";
+    }
+    if (MRK.weak.length){
+      pm += "反过来拖后腿的是 <b>" + MRK.weak.join(" / ") + "</b>（不到队友的 87%）。";
+      const wPin = MRK.weak.indexOf("点内击杀") >= 0, wCap = MRK.weak.indexOf("占点") >= 0;
+      const sPin = MRK.strong.indexOf("点内击杀") >= 0;
+      if (wCap && sPin){
+        pm += "<b>点里清人是他干的，站旗是队友干的</b>——这两件事得分开说，不能合成一句「不占点」。";
+      } else if (wPin && wCap){
+        pm += "点内人头和站旗两样都低于队友，<b>说明他人确实不在争夺点上</b>。";
+      }
+    }
+    const dIt = it("d"), sqIt = it("sq");
+    if (dIt && sqIt && dIt.mate > 0){
+      pm += "阵亡 <b>" + f1(dIt.me) + "</b> 人（队友 " + f1(dIt.mate) + "）、被打掉 <b>" + f1(sqIt.me)
+        + "</b> 个班（队友 " + f1(sqIt.mate) + "）—— 这两项<b>只作读数不判优劣</b>："
+        + "高出队友说明他更常顶在正面，低出说明少挨打，到底算好算坏得看上面打法那一段。";
+    }
+    pm += "这一条在他的总分里按 <b>" + (MRK.adj >= 0 ? "+" : "") + f1(MRK.adj) + "</b> 分计"
+      + "（队内指数 " + f1(MRK.idx) + " / 100，队内中位 = 0 分，封顶 ±2；样本不足 8 场不调分）。";
+    P.push({ html: pm });
+  } else if (s.mateRank && s.mateRank.why){
+    P.push({ html: "队内相对这块先跳过：<b>" + s.mateRank.why + "</b>。下面的数字全是绝对值，"
+      + "横向跟别人比要打个折——同一个 130 杀，在强队里是垫底、在弱队里是扛把子。" });
+  }
 
   // 5 逃跑
   if (flee.length + quick.length === 0){
@@ -3244,6 +3854,21 @@ function buildVerdict(D){
       } else {
         pe += "<span class=\"hl\">基本都是满编真人局</span>——这种环境下打出这个数据，含金量比数字本身更高。";
       }
+    }
+    /* 占点模式（2026-11-09 用户口径）：整队一方 0 占点 = 这一方没有点能占 */
+    const CM = env.capMode || null;
+    if (CM && CM.denied){
+      pe += " 占点这块得单说：这 " + env.n + " 场里有 <b>" + CM.denied + " 场</b>是"
+        + "<b>他这边名单全员 0 占点、对面在占</b>——这不是他不去站，是<b>这一方根本没有点能占</b>"
+        + "（进攻推不进去，或者防守被一路推平），所以这些局不能算进他的占点账里";
+      pe += CM.deniedRate >= 40
+        ? "。<span class=\"hlr\"><b>四成以上都是这种局</b></span>，他的占点数据只在自己推得动的那几场里才有意义。"
+        : "。";
+      if (CM.lastStand) pe += " 不过其中 <b>" + CM.lastStand + " 场</b>，整队被压的时候他本人还在点里换人头，这是真在正面顶。";
+      if (CM.lowconf) pe += " 另有 " + CM.lowconf + " 场我方名单不足 4 人，撑不起「全队」两个字，仍按有点局算。";
+    }
+    if (CM && CM.none){
+      pe += " 还有 " + CM.none + " 场双方三个占点信号全 0，是<b>无占点模式</b>，本身就不该进占点统计。";
     }
     if (env.fixed.length){
       pe += " 组队方面：<b>" + env.teamGames + "/" + env.n + "</b> 场是跟人一起打的，其中 "
@@ -3525,7 +4150,13 @@ function renderBattles(D){
     + kv("爆头率", f1(s.hsRate) + "%")
     + kv("点内击杀占比", f1(s.pinRate) + "%")
     + kv("点内 攻 / 守", num(s.pinA) + " / " + num(s.pinD))
-    + kv("占领点场均", f2(s.capAvg))
+    + kv("占领点场均", f2(s.capAvg)
+        + (s.capEval && s.capEval.ok && s.capEval.relN >= CAP_E.minN ? "（队友最高 " + f2(s.capEval.mateMax) + "）" : ""))
+    + (s.capEval && s.capEval.ok
+        ? kv("占点评价", s.capEval.label + " · " + Math.round(s.capEval.score) + " 分") : "")
+    + (s.mateRank && s.mateRank.n >= 3
+        ? kv("队内位次", s.mateRank.label + " · " + f1(s.mateRank.idx) + "/100（均第 "
+            + f1(s.mateRank.rankAvg) + "/" + f1(s.mateRank.sizeAvg) + " 名）") : "")
     + kv("近战/雷/手枪", f1(s.meleeRate) + "% / " + f1(s.nadeRate) + "% / " + f1(s.pistolRate) + "%")
     + kv("一血", num(s.fb) + " 次（" + f2(s.fbPer) + "/场）")
     + kv("载具击杀", num(s.veh) + " 台（坦" + num(s.tk) + "/机" + num(s.ak) + "/运" + num(s.apc) + "）")
@@ -3688,6 +4319,9 @@ function renderEnv(D){
   if (e.avgHumans != null){
     const hCls = e.avgHumans >= 18 ? "hi" : e.avgHumans >= 8 ? "" : "bad";
     const botCls = e.botRate >= 50 ? "bad" : e.botRate >= 25 ? "" : "hi";
+    const CM = e.capMode || null;
+    const cmPlayed = CM ? CM.open + CM.denied : 0;
+    const cmCls = !CM ? "" : CM.deniedRate >= 40 ? "bad" : CM.deniedRate >= 20 ? "" : "hi";
     h += '<div class="metrics">'
       + m("样本场次", e.n + " 场")
       + m("平均全场真人", f1(e.avgHumans), "人", hCls)
@@ -3698,12 +4332,59 @@ function renderEnv(D){
       + m("人机局（&lt;7 人）", (e.botGames || 0) + " 场", "", (e.botGames ? "bad" : "hi"))
       + m("折合有效场次", f1(e.wSum != null ? e.wSum : e.n), "场", (e.wSum < e.n - 0.05 ? "bad" : ""))
       + m("固定队友", e.fixed.length ? e.fixed.length + " 人" : "无", "", e.fixed.length ? "" : "hi")
+      + (cmPlayed > 0 ? m("无点可占", (CM.denied || 0) + " 场", f1(CM.deniedRate) + "%", cmCls) : "")
       + "</div>"
       + '<div class="env-note">人机是<b>按席位差</b>算的：对局固定 10v10、一场 20 席，'
         + "战绩名单只列有战绩的真人（人机不进名单），所以缺出来的席位就是人机 —— 这 " + e.n
         + " 场一共 <b>" + e.bots + " 个人机席位</b>（我方 " + e.myBots
         + " / 对面 " + e.opBots + "），折 <b>" + f1(e.botRate) + "%</b>，不用回放去数。"
         + "人机占比高不等于场次全是人机：一边可能 1 个真人 + 9 个人机，也可能 8 真人 + 2 个人机。</div>"
+      + (CM && (CM.denied || CM.lowconf)
+          ? '<div class="env-note">占点模式：这 ' + e.n + " 场里 <b>" + CM.denied
+            + " 场</b>是<b>我方名单全员 0 占点、对面在占</b> —— 判定这一方<b>没有点能占</b>"
+            + "（进攻推不进去 / 防守被推平），这些局不进占点分母。"
+            + (CM.lastStand ? "其中 <b>" + CM.lastStand + " 场</b>他本人还在点里换人头（点内击杀 ≥20%），算孤军顶线。" : "")
+            + (CM.lowconf ? "另有 " + CM.lowconf + " 场我方名单不足 4 人，撑不起「全队」，仍按有点局算。" : "")
+            + "</div>"
+          : "")
+      + (CM && CM.none
+          ? '<div class="env-note">另有 <b>' + CM.none + " 场</b>双方三个占点信号全 0，判无占点模式（不计入占点统计）。</div>"
+          : "")
+      /* 占点评价（2026-11-09 v3）：绝对 3 次 = 打满，再跟队友当场最高比 */
+      + (e.capEval && e.capEval.n
+          ? '<div class="env-note" style="margin-top:10px">占点评价：有点可占的 <b>' + e.capEval.n + " 场</b>里场均 <b>"
+            + f2(e.capEval.capAvg) + " 次</b>（3 次/场 = 打满全场、5 次 = 大满贯），"
+            + "其中 " + f1(e.capEval.fullRate) + "% 的局占到 3 次以上；"
+            + (e.capEval.relN >= CAP_E.minN
+                ? "队友当场最高场均 <b>" + f2(e.capEval.mateMax) + "</b>、均值 " + f2(e.capEval.mateAvg)
+                  + "，他只有队友的 <b>" + Math.round(e.capEval.rel * 100) + "%</b>"
+                  + (e.capEval.zeroRate >= 5 ? "（" + f1(e.capEval.zeroRate) + "% 的局队友在占、他一次没占）" : "")
+                : "没有真人队友可比，这块只用绝对达标度算")
+            + " → 占点评价 <b>" + e.capEval.label + "</b>（" + Math.round(e.capEval.score) + " / 100 分 = 绝对达标 "
+            + Math.round(e.capEval.abs * 100) + "% × 50 + 队友相对 "
+            + Math.round(Math.min(1, e.capEval.rel / CAP_E.relFull) * 100) + "% × 40 + 满贯 "
+            + Math.round(Math.min(1, Math.max(0, e.capEval.capAvg - CAP_E.full) / 2) * 100) + "% × 10）。"
+            + (e.capEval.ok ? "" : "<b>样本不足 " + CAP_E.minN + " 场，这个分只作参考。</b>")
+            + "</div>"
+          : "")
+      /* 队内相对（2026-11-09 用户口径）：所有战绩都跟队友比，不单看个人绝对值 */
+      + (e.mateRank && e.mateRank.n >= 3
+          ? '<div class="env-note" style="margin-top:10px">队内相对：<b>' + e.mateRank.n
+            + " 场</b>有真人队友可比（每场名单平均 <b>" + f1(e.mateRank.sizeAvg) + "</b> 人），逐项跟他同场队友比 —— "
+            + e.mateRank.items.filter(x => x.dir === 1).map(x =>
+                x.label + " <b>" + (x.dec === 0 ? num(Math.round(x.me)) : x.dec === 1 ? f1(x.me) : f2(x.me))
+                + "</b>/队友 " + (x.dec === 0 ? num(Math.round(x.mate)) : x.dec === 1 ? f1(x.mate) : f2(x.mate))
+                + "（" + Math.round(x.ratio * 100) + "%）").join("｜")
+            + "。队内指数 <b>" + f1(e.mateRank.idx) + " / 100</b>（50 = 队内中位）→ <b>" + e.mateRank.label
+            + "</b>，平均队内第 <b>" + f1(e.mateRank.rankAvg) + "/" + f1(e.mateRank.sizeAvg) + "</b> 名"
+            + (e.mateRank.strong.length ? "；明显强过队友：" + e.mateRank.strong.join("、") : "")
+            + (e.mateRank.weak.length ? "；明显弱于队友：" + e.mateRank.weak.join("、") : "")
+            + "。阵亡与被打掉的班只作读数、不判优劣（死得多可能是顶在正面）。总分里按 <b>"
+            + (e.mateRank.adj >= 0 ? "+" : "") + f1(e.mateRank.adj) + "</b> 分计（封顶 ±2"
+            + (e.mateRank.why ? "；" + e.mateRank.why : "") + "）。</div>"
+          : (e.mateRank && e.mateRank.why
+              ? '<div class="env-note">队内相对：' + e.mateRank.why + " —— 这份数据只能用绝对值，横向比要打个折。</div>"
+              : ""))
       + (e.botGames
           ? '<div class="env-note">场均击杀：这 ' + e.botGames + " 场（双方真人 &lt;7）已<b>整场剔除</b>，只按 "
             + (e.n - e.botGames) + " 场满编局算；胜率 / K/D / 场均得分仍按 0.4、0.2 折权计入。</div>"
@@ -3971,16 +4652,21 @@ function renderVerdict(V){
     // 🐵 完了：K/D 这项加分被关掉，单列一行说明（只影响这一项，其他照旧）
     if (G.bonus && G.bonus.some(x => x.off)){
       const vm = (V.s && V.s.vehMonkey) || {};
-      const lowd = vm.path === "lowd";
+      const lowd = vm.path === "lowd", matep = vm.path === "mate";
       h += '<div class="scd"><span class="lb">🐵 完了（'
-        + (lowd
+        + (matep
+            ? "队内对比：战绩排前面，可击杀、被打掉班数、占点都比队友低 → 没在正面换命，K/D 这项加分不计"
+            : lowd
             ? "阵亡远低于标准 + 低击杀 + 不占点 → 人不在步兵交火线上，K/D 这项加分不计"
             : "高 K/D + 低击杀 + 不占点 → 坐在铁壳里打的，K/D 这项加分不计")
         + '）</span>'
         + '<span class="dn" title="A 路门槛：K/D ≥' + f2(VEH_M.kd) + '、场均击杀 ≤' + f1(VEH_M.k)
           + '、占旗 ≤' + f2(VEH_M.cap) + ' 次/场 或 点内击杀 ≤' + f1(VEH_M.pin) + '%'
           + '｜B 路门槛：场均阵亡 ≤' + f1(VEH_M.d) + ' 人、场均击杀 ≤' + f1(VEH_M.k2)
-          + '、占旗 ≤' + f2(VEH_M.cap2) + ' 次/场 或 点内击杀 ≤' + f1(VEH_M.pin2) + '%">'
+          + '、占旗 ≤' + f2(VEH_M.cap2) + ' 次/场 或 点内击杀 ≤' + f1(VEH_M.pin2) + '%'
+          + '｜C 路（队内）：K/D ≥' + f2(VEH_M.kdC) + ' 且是队友的 ' + VEH_M.kdRatioC + ' 倍、击杀 ≤ 队友 '
+          + Math.round(VEH_M.kRatio * 100) + '%、被打掉 ≤ 队友 ' + Math.round(VEH_M.sqRatio * 100)
+          + '%、占点 ≤ 队友最高的 ' + Math.round(VEH_M.relC * 100) + '%">'
         + "🐵 完了 <i>场均 " + f1(vm.K) + " 杀 · 阵亡 " + f1(vm.D) + " 人 · K/D " + f2(vm.kd)
         + " · 占旗 " + f2(vm.cap) + "</i></span>"
         + '<span class="tt">K/D 项不计</span></div>';
@@ -4273,9 +4959,19 @@ function aiFacts(D, V){
   /* 🐵 完了：K/D 那一项加分已经关掉，正文必须点明，不许再另扣 */
   const vm = (V && V.s && V.s.vehMonkey) || null;
   if (vm && vm.hit){
-    const lowd = vm.path === "lowd";
-    add("🐵 完了判定（载具版，必须在正文里点明）",
-      (lowd
+    const lowd = vm.path === "lowd", matep = vm.path === "mate";
+    const MC0 = (V && V.s && V.s.mateCmp) || null;
+    const CE0 = (V && V.s && V.s.capEval) || null;
+    const relP = CE0 && CE0.relN >= CAP_E.minN ? CE0.rel : (MC0 ? MC0.capRel : 0);
+    add("🐵 完了判定（" + (matep ? "队内版" : "载具版") + "，必须在正文里点明）",
+      (matep
+        ? "队内对比：K/D " + f2(vm.kd) + "（队友平均 " + f2(MC0 ? MC0.mateKd : 0) + "，是队友的 "
+          + f2(vm.kd / Math.max(0.01, (MC0 && MC0.mateKd) || 1)) + " 倍）"
+          + "+ 击杀低（场均 " + f1(MC0 ? MC0.kAvg : vm.K) + " 杀，队友平均 " + f1(MC0 ? MC0.mateK : 0) + "）"
+          + "+ 被打掉的班少（" + f1(MC0 ? MC0.sqAvg : 0) + " 班，队友平均 " + f1(MC0 ? MC0.mateSq : 0)
+          + "，没在正面换命）"
+          + "+ 占点低（只有队友当场最高的 " + Math.round(relP * 100) + "%）"
+        : lowd
         ? "阵亡远低于标准（场均 " + f1(vm.D) + " 人，标准1 " + f1(BENCH.avgD) + "，只有 "
           + f1(vm.D / Math.max(0.01, BENCH.avgD) * 100) + "%）"
           + "+ 低击杀（场均 " + f1(vm.K) + " 杀，标准1 " + f1(BENCH.avgK) + "）"
@@ -4284,7 +4980,12 @@ function aiFacts(D, V){
           + "+ 低击杀（场均 " + f1(vm.K) + " 杀，标准1 " + f1(BENCH.avgK) + "）"
           + "+ 不占点（占旗 " + f2(vm.cap) + " 次/场、点内击杀 " + f1(vm.pin) + "%）")
       + "→ 判「🐵 完了」：人不在步兵交火线上，人头不在点上、旗子也不站。"
-      + (lowd
+      + (matep
+        ? "**关键写法**：这不是跟标准1 比出来的，是**跟同场队友比**出来的——"
+          + "他的战绩名次排在队里前面（被 K/D 顶着），可击杀、被打掉的班数、占点三项都低于队友，"
+          + "说明他没在正面换命也没去站旗。正文要把这三项和队友的对比数写出来，"
+          + "**禁止**把高 K/D 说成「会走位 / 换得划算」，也**禁止**说成开挂。"
+        : lowd
         ? "**关键写法**：他的 K/D " + f2(vm.kd) + " 是「杀得少 + 死得更少」凑出来的，"
           + "分子分母同时缩水，比值本身不说明任何问题——正文必须先拆开讲清楚这点，"
           + "再用「阵亡只有标准的 " + f1(vm.D / Math.max(0.01, BENCH.avgD) * 100) + "%」下判断，"
@@ -4295,8 +4996,8 @@ function aiFacts(D, V){
       + "禁止因此再额外扣分，禁止把「死得少」夸成会走位 / 会算复活点，也不许说他开挂。"
       + "口径必须写清：接口没有「坐载具杀人」这个字段，这是信号反推的统计定性（载具还是远距蹲点分不出来，"
       + "但「人不在交火线上」是确定的）"
-      + "。注意「🐵 完了」有两个来源：这个是**载具版**（人在车上），另有**队友版**（🐵 被带，K/D 是队友垫的），"
-      + "别把两个原因混成一句");
+      + "。注意「🐵 完了」有三个来源：**A 路**高 K/D、**B 路**阵亡远低于标准、**C 路**队内对比（都比队友低）；"
+      + "另有**队友版**（🐵 被带，K/D 是队友垫的）是另一回事，别把几种原因混成一句");
   }
 
   /* 少打多：已经算进总分，正文必须提，禁止再叠加 */
@@ -4409,6 +5110,62 @@ function aiFacts(D, V){
       : (e.teamGames
           ? e.teamGames + "/" + e.n + " 场有队友，但没有固定搭档（路人拼车）"
           : "全是单排，一个固定队友都没有"));
+    /* 占点模式：整队一方 0 占点 = 这一方没有点能占（2026-11-09 用户口径） */
+    const CM = e.capMode || null;
+    if (CM && (CM.denied || CM.none)){
+      add("占点模式（如果正文写到占点，必须先说这一条）",
+        "这 " + e.n + " 场里 " + CM.denied + " 场是**我方名单全员 0 占点、对面却在占**"
+        + "（占所有有点玩法的局 " + f1(CM.deniedRate) + "%）—— 判定这一方**没有点能占**"
+        + "（进攻推不进去 / 防守被推平），这些局不能算进他的占点账；"
+        + (CM.lastStand ? "其中 " + CM.lastStand + " 场他本人还在点里换人头（点内击杀占比 ≥20%），属孤军顶线，可以正面写；" : "")
+        + (CM.lowconf ? "另有 " + CM.lowconf + " 场我方名单不足 4 人，撑不起「全队」，仍按有点局算；" : "")
+        + (CM.none ? "另有 " + CM.none + " 场双方三个占点信号全 0，判无占点模式、不计入占点统计；" : "")
+        + "口径：判定来自 battleDetail 名单（每个人都有自己的 pointsCaptured，按 country 分边求和），"
+        + "只认「我方全员 0 且对面真的占到点」，双方都 0 是僵持、不算。"
+        + "**禁止**把这种局写成「他不去站旗」「占点能力差」，也**禁止**拿它当加/扣分理由");
+    }
+    /* 占点评价（2026-11-09 v3）：绝对 3 次 = 打满，再跟队友当场最高比（六成 = 跟满） */
+    const CE2 = e.capEval || null;
+    if (CE2 && CE2.ok){
+      add("占点评价（正文必须写这一条）",
+        "有点可占的 " + CE2.n + " 场里场均占点 " + f2(CE2.capAvg) + " 次（" + f1(CE2.fullRate) + "% 的局到 3 次以上）；"
+        + "绝对锚点：3 次/场 = 打满全场，5 次/场 = 大满贯（每局 3~5 个点）。"
+        + (CE2.relN >= CAP_E.minN
+            ? "跟他队友比：队友当场最高场均 " + f2(CE2.mateMax) + "、均值 " + f2(CE2.mateAvg)
+              + "，他只有队友的 " + Math.round(CE2.rel * 100) + "%（六成 = 跟着打满；不到三成 = 拉完了）"
+              + (CE2.zeroRate >= 5 ? "，" + f1(CE2.zeroRate) + "% 的局是队友在占、他一次没占" : "")
+            : "这批场次没有真人队友可比，只用绝对达标度算")
+        + "。占点评价 " + CE2.label + "（" + Math.round(CE2.score) + "/100 = 绝对达标 "
+        + Math.round(CE2.abs * 100) + "% × 50 + 队友相对 " + Math.round(Math.min(1, CE2.rel / CAP_E.relFull) * 100)
+        + "% × 40 + 满贯 " + Math.round(Math.min(1, Math.max(0, CE2.capAvg - CAP_E.full) / 2) * 100) + "% × 10）。"
+        + "正文必须**同时**给绝对值和队友对比，"
+        + "**禁止**只拿绝对次数下结论——3 次在 5 点局里只是跟满，在 3 点局里才是满贯");
+    }
+  }
+  /* 队内相对（2026-11-09 用户口径：「基本上战绩都要跟队友进行对比，不要单看个人」）
+     所有数字都必须给「队友是多少」，禁止只拿个人绝对值下结论。 */
+  const MRK2 = (V && V.s && V.s.mateRank) || null;
+  if (MRK2 && MRK2.n >= 3 && MRK2.items.length){
+    const fd = (v, d) => (d === 0 ? num(Math.round(v)) : d === 1 ? f1(v) : f2(v));
+    const line = x => x.label + " " + fd(x.me, x.dec) + (x.unit || "")
+      + " / 队友 " + fd(x.mate, x.dec) + (x.unit || "") + "（" + Math.round(x.ratio * 100) + "%）";
+    const P2 = ["k", "kd", "pin", "cap", "sc"];
+    const dIt = MRK2.items.filter(x => x.key === "d")[0];
+    const sqIt = MRK2.items.filter(x => x.key === "sq")[0];
+    add("队内相对（正文必须写这一条）",
+      "有真人队友可比的 " + MRK2.n + " 场，每场我方名单平均 " + f1(MRK2.sizeAvg) + " 人（人机不进名单）。"
+      + P2.map(k => { const x = MRK2.items.filter(y => y.key === k)[0]; return x ? line(x) : ""; })
+        .filter(Boolean).join("；")
+      + "。队内指数 " + f1(MRK2.idx) + "/100（50 = 队内中位）→ " + MRK2.label + "，平均队内第 "
+      + f1(MRK2.rankAvg) + "/" + f1(MRK2.sizeAvg) + " 名。"
+      + (MRK2.strong.length ? "明显强过队友：" + MRK2.strong.join("、") + "；" : "")
+      + (MRK2.weak.length ? "明显弱于队友：" + MRK2.weak.join("、") + "；" : "")
+      + (dIt && sqIt ? "阵亡 " + f1(dIt.me) + " 人 / 队友 " + f1(dIt.mate) + "，被打掉 " + f1(sqIt.me)
+          + " 班 / 队友 " + f1(sqIt.mate) + "——这两项**只作读数不判优劣**（死得多可能是在正面顶，也可能是送）。" : "")
+      + "这一条在总分里按 " + (MRK2.adj >= 0 ? "+" : "") + f1(MRK2.adj) + " 分计（封顶 ±2，队友可比不足 8 场不调分）。"
+      + "**写法**：每一项都要带上队友的数和他占队友的百分比，再说队内位次；"
+      + "**禁止**只拿个人绝对值下结论（同一个 130 杀，在强队里是垫底、在弱队里是扛把子），"
+      + "**禁止**把「占点 / 点内击杀低于队友」直接写成「不参与争夺」——先分清是清点型（点内强、站旗靠队友）还是真不去");
   }
   if (items.length) add("加分/扣分项", items.join("；"));
   if (V.tags && V.tags.length) add("打法标签", V.tags.map(t => t.t).join("、"));
