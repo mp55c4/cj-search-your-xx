@@ -737,6 +737,14 @@ td{padding:8px 9px}
 .rpd-mini{padding:5px 11px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);
   color:var(--dim);font-size:12px;cursor:pointer;font-family:inherit}
 .rpd-mini:hover{border-color:var(--green-d);color:var(--green)}
+/* 分析完自动删录像的开关（2026-11-10） */
+.rpd-del{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px;padding:8px 11px;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:12.5px;
+  color:var(--dim);cursor:pointer;line-height:1.6}
+.rpd-del:hover{border-color:var(--green-d)}
+.rpd-del input{width:15px;height:15px;accent-color:#8fae74;cursor:pointer;flex:none}
+.rpd-del .note{color:var(--dim2);font-size:11.5px}
+.rpd-meta .gone{color:var(--dim2)}
 .rpd-box.hot{outline:2px dashed var(--green-d);outline-offset:-6px}
 </style>
 </head>
@@ -6048,6 +6056,11 @@ function aiBind(D, V){
    ②「录像分析」：解析 .erpl 的 GJRP 网络包流，从实体创建记录还原真人
      出击队列，不用任何「隔多少秒算换队」的时间阈值。分析完弹框，框里的
      「开始分析」＝主流程 analyze()，但把录像结论一起带进评价正文。
+   ③ 分析完自动删录像（2026-11-10 用户要求）：读进内存后调 rpPurge()，把这一轮
+     真读过的 .erpl 从下载夹删掉，免得越堆越多。删的是文件、不是数据——解析结果
+     已经在 RP.valid[].parsed 里，删文件不影响出分。要删得动「下载」目录，选目录
+     时必须给 **readwrite** 授权（允许「修改文件」）；只给读权限就只提示、不删。
+     拖进来 / 手选的文件没有句柄，浏览器不允许网页删，只能提示换「选择下载目录」。
 
    CORS 硬约束：录像直链在 cjreplay.zhanhuo.com（腾讯 COS），实测不带
    Access-Control-Allow-Origin，浏览器 fetch 读不到字节。所以默认走
@@ -6061,6 +6074,8 @@ const RP = {
   list:[], valid:[], logs:[], summary:null,
   sel:new Set(),                              // 弹框里勾选的 sessionId
   dirHandle:null, dirName:"", local:[],
+  /* 分析完自动删录像（2026-11-10 用户要求）：purgeOn 默认开，可在弹框里关掉并记住 */
+  purgeOn:(localStorage.getItem("cj_rp_purge") !== "0"), purgeN:0, canDel:false,
   downloading:false, down:null, countTouched:false
 };
 
@@ -6241,18 +6256,33 @@ function rpCountFix(){ rpSyncCount(); return RP.sel.size; }
 
 /* ============ 本地读入：选一次下载目录，之后按 sessionId 自动匹配 ============
    showDirectoryPicker 只在 Chrome / Edge 的 secure context 可用；不支持或拒绝时
-   降级到 <input webkitdirectory>，再不行还能多选文件 / 直接拖进弹框。 */
+   降级到 <input webkitdirectory>，再不行还能多选文件 / 直接拖进弹框。
+   2026-11-10 起要 **readwrite** 权限：网页没有删除权就删不掉「下载」里的 .erpl，
+   所以选目录时必须允许「修改文件」，否则这条自动清理走不通（读取照旧）。 */
 async function rpPickDir(){
   if(typeof showDirectoryPicker === "function"){
+    let h = null;
     try{
-      const h = await showDirectoryPicker({ mode:"read", id:"cj_replay_dl", startIn:"downloads" });
-      RP.dirHandle = h; RP.dirName = h.name;
-      rpLog("已选下载目录：" + h.name + "（本次会话内会自动重读）", "ok");
-      await rpReadDir();
-      return;
+      h = await showDirectoryPicker({ mode:"readwrite", id:"cj_replay_dl", startIn:"downloads" });
     }catch(e){
       if(e && e.name === "AbortError"){ rpLog("取消选择下载目录", "bad"); return; }
-      rpLog("目录授权不可用（" + (e && e.message || e) + "），改用文件选择器", "bad");
+      /* 只给了读权限 / 老版本浏览器：退一步只读，照样能读，只是删不掉 */
+      try{ h = await showDirectoryPicker({ mode:"read", id:"cj_replay_dl", startIn:"downloads" }); }
+      catch(e2){
+        if(e2 && e2.name === "AbortError"){ rpLog("取消选择下载目录", "bad"); return; }
+        rpLog("目录授权不可用（" + (e2 && e2.message || e2) + "），改用文件选择器", "bad");
+      }
+    }
+    if(h){
+      RP.dirHandle = h; RP.dirName = h.name;
+      try{ RP.canDel = (await h.queryPermission({ mode:"readwrite" })) === "granted"; }
+      catch(e){ RP.canDel = false; }
+      rpLog("已选下载目录：" + h.name + (RP.canDel
+        ? "（可读可删，分析完自动清理读过的 .erpl）"
+        : "（只读授权，删不掉录像；要自动清理请在授权框里允许「修改文件」）"),
+        RP.canDel ? "ok" : "bad");
+      await rpReadDir();
+      return;
     }
   }
   const inp = $("#rpDirFile");
@@ -6272,7 +6302,7 @@ async function rpReadDir(){
       if(!g || g.parsed) continue;
       try{
         const f = await h.getFile();
-        await rpIngest(name, await f.arrayBuffer());
+        await rpIngest(name, await f.arrayBuffer(), h);
         got++;
       }catch(e){ rpLog("✗ 读取 " + name + "：" + (e && e.message || e), "bad"); }
     }
@@ -6280,8 +6310,47 @@ async function rpReadDir(){
   RP.local = rpSelected().filter(g => g.parsed).map(g => g.file || g.sid);
   if(got) rpLog("从下载目录读入 " + got + " 场（勾选 " + sel.length + " 场）", "ok");
   RP.summary = rpBuildSummary();
+  await rpPurge();          // 数据已经在内存里了，这时候删文件不影响评价
   return got;
 }
+
+/* ===== 分析完自动删录像（2026-11-10 用户要求，防止下载夹越堆越多） =====
+   网页删不了「下载」目录里的任意文件，只有用户亲手授权的目录句柄才带删除权，
+   所以走的是 readwrite 句柄 + FileSystemHandle.remove()，按**句柄精确对应**删，
+   只删这一轮真正读进内存的那几场（g.fh 是读它时拿到的那个文件句柄）。
+   下载夹里别人的录像、没勾的场次、解析失败的场次一律不碰。
+   降级路径（拖文件 / input[type=file] / webkitdirectory）没有句柄，删不了，只提示。 */
+async function rpPurge(){
+  if(!RP.purgeOn || !RP.dirHandle) return 0;
+  const list = RP.valid.filter(g => g.fh && g.parsed && !g.del);
+  if(!list.length) return 0;
+  let perm = "denied";
+  try{ perm = await RP.dirHandle.queryPermission({ mode:"readwrite" }); }catch(e){}
+  if(perm !== "granted"){
+    try{ perm = await RP.dirHandle.requestPermission({ mode:"readwrite" }); }catch(e){ perm = "denied"; }
+  }
+  if(perm !== "granted"){
+    RP.canDel = false;
+    rpLog("下载目录只有读权限，录像留着没删（重选目录时允许「修改文件」就能自动清理）", "bad");
+    return 0;
+  }
+  RP.canDel = true;
+  let n = 0;
+  for(const g of list){
+    const nm = g.file || (g.sid + ".erpl");
+    try{
+      if(!g.fh || typeof g.fh.remove !== "function") throw new Error("这个浏览器不支持网页删文件");
+      await g.fh.remove();
+      g.del = true; n++;
+    }catch(e){
+      rpLog("✗ 删不掉 " + nm + "：" + (e && e.message || e), "bad");
+    }
+  }
+  RP.purgeN += n;
+  if(n) rpLog("🗑 已删除 " + n + " 个 .erpl（录像结论已存进这次评价，删文件不影响结果）", "ok");
+  return n;
+}
+
 
 /* 底部「⬇ 开始下载录像」：模拟用户点击直链，走浏览器原生下载。
    服务器强制 Content-Encoding: br，Chrome / Edge 下载时会自动解压，落盘就是 GJRP；
@@ -6316,7 +6385,7 @@ async function rpDownload(){
   }
   RP.down.running = false; RP.down.current = "";
   rpLog("已触发 " + sel.length + " 个下载（成功 " + RP.down.results.length + " / 失败 " + RP.down.errors.length
-    + "）。等浏览器下完，点「选择下载目录」自动读入，或直接把文件拖进这个框。", "ok");
+    + "）。等浏览器下完，点「选择下载目录」自动读入（授权时勾「修改文件」，分析完才能自动删录像）。", "ok");
   RP.downloading = false;
   rpDlgRender();
 }
@@ -6698,8 +6767,10 @@ function rpDlgRender(){
   h += '<div class="rpd-sum">'
     + '<span class="k">已勾 <b>' + sel.length + '</b> / 有效 ' + RP.valid.length + ' 场</span>'
     + '<span class="k">已解析 <b>' + sel.filter(g => g.parsed).length + '</b> 场</span>'
-    + '<span class="k">下载目录 <b>' + esc(RP.dirName || '未选') + '</b></span>'
-    + '<span class="k">本地读入 <b>' + RP.local.length + '</b> 个</span></div>';
+    + '<span class="k">下载目录 <b>' + esc(RP.dirName || '未选')
+      + (RP.dirHandle ? ' · ' + (RP.canDel ? '可删' : '只读') : '') + '</b></span>'
+    + '<span class="k">本地读入 <b>' + RP.local.length + '</b> 个</span>'
+    + (RP.purgeN ? '<span class="k">已删 <b>' + RP.purgeN + '</b> 个录像</span>' : '') + '</div>';
   if(RP.checked && RP.valid.length){
     h += '<div class="rpd-ckbar"><button class="rpd-mini" id="rpdAll">全选</button>'
       + '<button class="rpd-mini" id="rpdNone">全不选</button>'
@@ -6733,6 +6804,11 @@ function rpDlgRender(){
       + '<button class="rpd-pick" id="rpdDir">选择下载目录（自动读入）</button>'
       + '<button class="rpd-pick" id="rpdPick">选择本地录像（可多选 .erpl）</button></div>';
     h += '<div class="rpd-drop" id="rpdDrop">也可以把下载好的 .erpl 文件拖到这里（可多选）</div>';
+    /* 分析完自动删录像（2026-11-10）：默认开，关掉会记住 */
+    h += '<label class="rpd-del" title="只删这次真正读进内存的那几场；下载夹里别人的录像、没勾的场次、解析失败的都不碰">'
+      + '<input type="checkbox" id="rpPurge"' + (RP.purgeOn ? ' checked' : '') + '>'
+      + '<span>分析完自动删掉读过的 .erpl</span>'
+      + '<span class="note">只认「选择下载目录」授权过的那几场；关掉就原样留在下载夹</span></label>';
   }
   /* 已解析结果 */
   const done = sel.filter(g => g.parsed);
@@ -6785,7 +6861,8 @@ function rpDlgRender(){
         + '<span class="sid">' + esc(g.sid) + '</span>'
         + (p.whoFound ? '<span class="ok">实体已定位</span>' : '') + '</div>'
         + '<div class="rpd-meta">' + esc(g.start) + ' · ' + esc(g.dur) + ' · 真人 ' + g.real
-        + ' · 网络包 ' + p.packets + ' · ' + esc(g.file || '') + '</div>'
+        + ' · 网络包 ' + p.packets + ' · ' + esc(g.file || '')
+        + (g.del ? ' <span class="gone">（录像已删）</span>' : '') + '</div>'
         + '<div class="rpd-chain">' + chain + '</div>'
         + '<div class="rpd-models">本人车型（' + esc(p.modelNote || "") + '）：'
         + (p.models.length ? p.models.map(m => '<b>' + esc(rpModelLabel(m)) + '</b>').join('、') : '没定位到他的载具型号')
@@ -6805,6 +6882,12 @@ function rpDlgRender(){
       else RP.sel.delete(t.dataset.sid);
       RP.summary = rpBuildSummary();
       rpSyncCount(); rpDlgRender();
+    }
+    if(t && t.id === "rpPurge"){
+      RP.purgeOn = !!t.checked;
+      localStorage.setItem("cj_rp_purge", RP.purgeOn ? "1" : "0");
+      rpLog(RP.purgeOn ? "已开启：分析完自动删掉读过的 .erpl" : "已关闭：录像原样留在下载目录", RP.purgeOn ? "ok" : "bad");
+      rpDlgRender();
     }
   };
   body.onclick = e => {
@@ -6848,7 +6931,7 @@ async function rpCorsProbe(url){
     return !!r.ok;
   }catch(e){ return false; }
 }
-async function rpIngest(fname, buf){
+async function rpIngest(fname, buf, fh){
   const mm = /_([0-9a-f]{16})\.erpl/i.exec(fname || "");
   const sid = mm ? mm[1].toLowerCase() : "";
   const sel = rpSelected();
@@ -6857,6 +6940,7 @@ async function rpIngest(fname, buf){
   try{
     const p = rpParse(buf, RP.name, RP.uid);
     g.parsed = p; g.file = fname;
+    if(fh) g.fh = fh;          // 留着文件句柄，分析完按它精确删掉这一个文件
     rpLog("✓ " + fname + " → " + p.packets + " 个网络包 / 出击 " + p.deploys.length
       + " 队 / 本人车型 " + p.models.length + " 种（全场 " + p.allModels + " 种）"
       + (p.whoFound ? "" : "（没定位到 " + (RP.name || RP.uid) + " 的实体 id，出击队列为空）"),
@@ -6876,6 +6960,9 @@ async function rpFiles(files){
   RP.local = rpSelected().filter(g => g.parsed).map(g => g.file || g.sid);
   RP.summary = rpBuildSummary();
   RP.busy = false;
+  /* 拖进来 / 手选的文件拿不到文件句柄，浏览器不给网页删，说明白免得以为功能没生效 */
+  if(RP.purgeOn && rpSelected().some(g => g.parsed && !g.fh))
+    rpLog("这批是手动选/拖进来的，网页没权限删它们；要自动清理请用「选择下载目录」授权一次。", "bad");
   rpDlgRender();
 }
 async function rpAnalyze(){
@@ -6914,7 +7001,8 @@ async function rpAnalyze(){
           }catch(e){ rpLog("下载失败 " + g.sid + "：" + (e && e.message || e), "bad"); }
         }
       }else{
-        rpLog("勾选好场次 → 点「⬇ 开始下载录像」让浏览器下载 → 点「选择下载目录」读入（或直接把文件拖进来）。", "bad");
+        rpLog("勾选好场次 → 点「⬇ 开始下载录像」让浏览器下载 → 点「选择下载目录」读入"
+          + "（授权时勾「修改文件」，读完才能自动删录像）。", "bad");
       }
     }
     RP.summary = rpBuildSummary();
