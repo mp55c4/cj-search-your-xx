@@ -371,16 +371,24 @@ function bonusOf(s){
   return { total: Math.min(BONUS_CAP, total), list: list, vehOff: vm };
 }
 
-/* 判级刻度（比标准1强不再直接算挂，分两层）：
-   raw > 120        → 6.2+（比标准1强，刻度外第一格，真人能打出来）
-   raw > 138（+15%）→ 数据有疑问（超出一成半，采样噪声解释不了）
+/* 判级刻度（比标准1强不再直接算挂，分两层）；
+   2026-11-10 晚改口径：比较一律用**修正后**的总分，和标准1 的修正后分比。
+   raw > 138        → 6.2+（超过标准1 的修正后水平，刻度外第一格，真人能打出来）
+   raw > 158.7（+15%）→ 数据有疑问（超出一成半，采样噪声解释不了）
 
    及格线 = 标准1 本人**加完抗压权重**后的分：标准1 就是抗压大师，枪法权重 ×1.2，
    100 × 1.2 = 120 分。所以 6.2 的含义是「人头到标准1 的量、场面也吃得住」，
-   单拿 100 分（等于标准1 的原始枪法）只到 6.1。 */
-const OVER_SCORE = BASE_SCORE * OUT_M.mul;        // 120 分：标准1 本人（含抗压 ×1.2）
+   单拿 100 分（等于标准1 的原始枪法）只到 6.1。
+
+   为什么要两个数：标准1 的 120 是**不加录像修正**的原始分（他卡片上就显示 120，
+   分带末位也是 120）；但他录像侧该拿满 +15% 正向修正，所以他的「修正后」水平
+   是 138。别人吃修正、他吃不着，比出来的结果就虚高——所以判定改用 138 做基准，
+   两边同口径。 */
+const OVER_SCORE = BASE_SCORE * OUT_M.mul;        // 120 分：标准1 本人原始分（含抗压 ×1.2）
+const RP_MOD_MAX = 0.15;                          // 录像净修正上限 +15%（同 replayModOf 的夹取）
+const BENCH_RAW = OVER_SCORE * (1 + RP_MOD_MAX);  // 138 分：标准1 的修正后分 = 比较基准
 const SUSPECT_RATE = 1.15;                        // 超出 15% 就上「数据有疑问」
-const SUSPECT_SCORE = OVER_SCORE * SUSPECT_RATE;  // 138 分
+const SUSPECT_SCORE = BENCH_RAW * SUSPECT_RATE;   // 158.7 分
 
 const OVER_G = {
   no: "6.2+", name: "超出刻度", band: "超出刻度",
@@ -586,7 +594,8 @@ function vehMonkeyOf(s){
    枪法比 1.0 = 标准1 的原始枪法 = 100 分；他加完抗压权重是 120 分 = 6.2 的及格线
    枪法比会被两项放大：击杀领先 +0~18%、抗压大师 ×1.2（都只放大人头这一项）
    总分 = 枪法分（可超 120）+ 额外加分（封顶 +6）+ 环境修正（填线 ±、少打多 +，封顶 +11.5）
-   >120 → 6.2+；>138（超出 15%）→ 数据有疑问（只看枪法 + 加分，环境修正不参与判级） */
+   >138（标准1 的 120 + 15% 修正）→ 6.2+；>158.7（再超出 15%）→ 数据有疑问
+   判定用**修正后**的总分，和标准1 的修正后分同口径比 */
 function gunOf(s, B){
   return (B.avgK || 0) / BENCH.avgK;
 }
@@ -619,14 +628,16 @@ function gradeOf(s, B, ovBattles, fleeRate, env, who){
   const mateAdj = (MR && MR.n >= 8) ? (MR.adj || 0) : 0;
   const envAdj = (FL.adj || 0) + ((OT && OT.adj) || 0) + mateAdj;   // 填线 + 少打多 + 队内相对
   /* 录像标签修正（2026-11-10 晚定稿）：挂在「环境修正」层，和填线 / 少打多 / 队内相对并列。
-     只乘在总分上，不进 core（因此不影响 over / 数据有疑问判定），标准1 本人钉死 120 不参与。
+     只乘在总分上，不进 core；标准1 本人钉死 120，不吃修正。
+     **2026-11-10 晚二改：over / 存疑判定改用修正后的 raw，基准是标准1 的修正后分 138。**
+     原来拿 core 比 120，等于「玩家吃修正、标准1 不吃」，比出来的「强」是虚的。
      负向🐵按标签次数扣 5%~10%，正向按次数加 5%~15%，净额由 replayModOf 算好。 */
   const RM = s.replayMod || null;
   const replayRaw = selfBench ? OVER_SCORE : Math.max(0, core + envAdj);
   const replayRate = (!selfBench && RM && RM.ok && RM.applied !== false) ? RM.rate : 0;
   const raw = selfBench ? OVER_SCORE : Math.max(0, replayRaw * (1 + replayRate));
-  const over = !selfBench && core > OVER_SCORE + 0.0001;     // 比标准1强 → 6.2+
-  const suspect = !selfBench && core > SUSPECT_SCORE + 1e-9; // 超出 15% → 数据有疑问
+  const over = !selfBench && raw > BENCH_RAW + 1e-9;          // 修正后超过标准1（138）→ 6.2+
+  const suspect = !selfBench && raw > SUSPECT_SCORE + 1e-9;   // 修正后超 15%（158.7）→ 数据有疑问
   const v = Math.max(0, Math.min(OVER_SCORE, raw));
   let idx = GRADE_BANDS.findIndex(b => v < b);
   if (idx < 0) idx = GRADES.length - 1;
@@ -924,7 +935,8 @@ function replayModOf(R, F, FR, ST){
     BENCH: BENCH, BASE_SCORE: BASE_SCORE, D_SCALE: D_SCALE,
     W_FULL: W_FULL, W_MID: W_MID, W_LOW: W_LOW,
     BONUS_PER: BONUS_PER, BONUS_CAP: BONUS_CAP, BONUS_ITEMS: BONUS_ITEMS,
-    OVER_SCORE: OVER_SCORE, SUSPECT_RATE: SUSPECT_RATE, SUSPECT_SCORE: SUSPECT_SCORE,
+    OVER_SCORE: OVER_SCORE, BENCH_RAW: BENCH_RAW, RP_MOD_MAX: RP_MOD_MAX,
+    SUSPECT_RATE: SUSPECT_RATE, SUSPECT_SCORE: SUSPECT_SCORE,
     FILL: FILL, VEH_M: VEH_M, RP_MOD_MIN: RP_MOD_MIN,
     /* 分带与等级 */
     GRADES: GRADES, GRADE_BANDS: GRADE_BANDS,
@@ -945,11 +957,14 @@ function replayModOf(R, F, FR, ST){
       return [
         "从军·评价体系 v" + API.VERSION,
         "标尺：标准1（UID " + b.uid + "）取样 " + b.sample + " 场；枪法 1.0 = " + T.f1(b.avgK) + " 杀/场 = " + T.f1(BASE_SCORE) + " 分；"
-          + "标准1 抗压 ×" + OUT_M.mul + " → 及格线 " + T.f1(OVER_SCORE) + " 分 = 6.2",
+          + "标准1 抗压 ×" + OUT_M.mul + " → 原始分 " + T.f1(OVER_SCORE) + " 分；"
+          + "他录像侧拿满 +" + Math.round(RP_MOD_MAX * 100) + "% 修正 → 比较基准 " + T.f1(BENCH_RAW) + " 分",
         "K/D 口径：kills ÷ deaths，标准1 " + T.f2(b.kd) + "；冲点强度用 squadDeaths，标准1 " + T.f1(b.avgDSq) + " 班/场",
-        "总分 = (枪法分 + 六项加分(封顶 +" + BONUS_CAP + ") + 环境修正) × (1 + 录像净修正[" + "-10%,+15%]" + ")",
-        "判级：>" + T.f1(OVER_SCORE) + " → 6.2+ 超出刻度；>" + T.f1(SUSPECT_SCORE) + "（+" + Math.round((SUSPECT_RATE - 1) * 100) + "%）→ 数据有疑问",
-        "分带：" + GRADE_BANDS.join(" / "),
+        "总分 = (枪法分 + 六项加分(封顶 +" + BONUS_CAP + ") + 环境修正) × (1 + 录像净修正[-10%,+15%])",
+        "判级（用**修正后**总分比）：>" + T.f1(BENCH_RAW) + " → 6.2+ 超出刻度（= 标准1 的 "
+          + T.f1(OVER_SCORE) + " 分 +" + Math.round(RP_MOD_MAX * 100) + "% 修正）；>"
+          + T.f1(SUSPECT_SCORE) + "（+" + Math.round((SUSPECT_RATE - 1) * 100) + "%）→ 数据有疑问",
+        "分带：" + GRADE_BANDS.join(" / ") + "（标准1 卡片仍显示 " + T.f1(OVER_SCORE) + "，分带末位不动）",
         "人机口径：双方真人 <5 判人机局（≥5 满权 / 3~4 ×0.4 / ≤2 ×0.2）；场均击杀只算满编局；"
           + "全场真人只有他自己的单人局整场剔除（逃跑 / 早退不重复剔）",
         "录像标签：铁狙🐵 = 单局狙击线占**本场时长** >" + RP_MOD_MIN.sniperRate + "%（≥"
