@@ -669,7 +669,6 @@ td{padding:8px 9px}
 .rp-cnt .mx{color:var(--dim2)}
 .rpd-off{font-size:12px;font-family:var(--mono);color:var(--amber)}
 .rpd-prog{font:12px var(--mono);color:var(--blue);margin:8px 0;line-height:1.75}
-.rpd-txt{font:12px var(--mono);color:var(--green);margin:8px 0;word-break:break-all}
 .rpd-foot .btn:disabled{opacity:.45;cursor:not-allowed}
 #rpDlg{position:fixed;inset:0;z-index:130;display:none;background:rgba(8,10,9,.8);backdrop-filter:blur(3px)}
 #rpDlg.open{display:flex;align-items:center;justify-content:center;padding:24px}
@@ -3186,7 +3185,7 @@ function buildVerdict(D){
      没下载 .erpl 也能判：只要点过「检测录像」，RP 里就有回放库的有效场次和无效原因。 */
   const POOL = (RR && RR.pool) || rpPoolNow();
   s.botFarm = botFarmOf(s, POOL ? { pool: POOL } : null);
-  if (RR) RR.mod = RM;              // 给 replayFacts / 录像卡 / TXT 直接读
+  if (RR) RR.mod = RM;              // 给 replayFacts / 录像卡 直接读
   if (rpApply){
     if (RF) RF.tags.forEach(t => tags.unshift({ t: t.label, tone: t.tone }));
     if (FR && FR.tag) tags.unshift({ t: FR.tag.label, tone: FR.tag.tone });
@@ -4724,6 +4723,7 @@ function renderVerdict(V){
               + f1(RMV.pos) + ' 次 → +' + f1(RMV.posRate * 100) + '%；只改总分和档位">📼 录像 '
               + (RMV.rate > 0 ? "+" : "") + f1(RMV.rate * 100) + '%</span>')
         : "")
+    + '<button class="ai-run" id="vdPdf" title="把这张卡排成 A4 浅色文档，在打印框里选「另存为 PDF」">存 PDF</button>'
     + (canAI ? '<button class="ai-run" id="aiGo">AI 重写</button>' : "") + "</div>";
 
   // 分级条
@@ -4861,6 +4861,143 @@ function renderVerdict(V){
   h += "</div>";
   return h;
 }
+
+/* =====================================================================
+   评价卡 → PDF（2026-11-10 用户要求）
+   ─────────────────────────────────────────────────────────────────────
+   不引任何第三方库（jsPDF / html2canvas 都要外网 CDN，离线就废，中文还得
+   自己塞字体）：直接把评价卡复制成一份独立的、浅色排版的 A4 文档，塞进隐藏
+   iframe，调浏览器原生 print()。用户在打印框里选「另存为 PDF」就落盘，
+   文字是可选中、可搜索的真文本，不是截图。
+   ─────────────────────────────────────────────────────────────────────
+   为什么复制 DOM 而不是重新拼字符串：卡片里的数字、标签、录像引用框都是
+   renderVerdict 现场算的，再拼一遍必然漂移（AI 重写后的正文也在 #vdBody 里）。
+   克隆整张卡，AI 版正文、刷人机提示、黄框都天然跟着走。
+   ===================================================================== */
+const VD_PDF_CSS = `
+@page{ size:A4; margin:14mm 13mm 15mm; }
+:root{
+  color-scheme:light;
+  --bg:#ffffff; --panel:#ffffff; --panel2:#f5f6f5; --line:#c8cec9; --input:#ffffff;
+  --txt:#15181a; --dim:#495250; --dim2:#6d7572; --prose:#22282b;
+  --green:#2f6b33; --green-d:#255228; --red:#9b2b2b; --amber:#8a6317;
+  --blue:#1f5b8f; --purple:#5a3f8f;
+}
+html{background:#fff}
+body{
+  background:#fff;color:var(--txt);font:13.5px/1.8 var(--sans);
+  margin:0;padding:0;max-width:none;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+/* 卡头：白底文件不需要圆角边框，收敛成一段标题 */
+#verdictCard{
+  border:none!important;background:#fff!important;padding:0!important;
+  margin:0!important;border-radius:0!important;box-shadow:none!important;max-width:none!important;
+}
+/* 页眉已经写了「从军 · 成分评价」，卡内标题不再重复，直接让标签行接在下面 */
+#verdictCard .card-h{margin-bottom:13px}
+#verdictCard .card-h h2,#verdictCard .card-h .ln{display:none!important}
+#verdictCard .card-h .ai-run{display:none!important}
+#verdictCard .block,.rp-quote,.gstrip,.scd{break-inside:avoid}
+#verdictCard p,.ai-card .ai-body p{font-size:13.4px;line-height:1.92}
+#verdictCard .lead{font-size:14.2px}
+#verdictCard .final{font-size:14.5px}
+#verdictCard .rp-quote{font-size:13.2px}
+#verdictCard .rp-quote .qq{font-size:12.8px}
+/* 深底色的半透明白在做白底时等于隐形，补上描边 */
+.chip{border-color:#c8cec9!important;background:#f7f8f7!important;color:var(--dim)!important}
+.chip.hi{color:#2f6b33!important;border-color:#a8c49c!important;background:#eef5ea!important}
+.chip.bad{color:#9b2b2b!important;border-color:#d9a9a9!important;background:#fbeeee!important}
+.card-h .tag{border-color:#c8cec9!important}
+.card-h .tag.rpflavor,.card-h .tag.rpfront,.card-h .tag.rpmod{
+  color:#7a5310!important;border-color:#dcc08a!important;background:#fbf5e8!important
+}
+.card-h .tag.fill,.card-h .tag.rpmod.pos{color:#2f6b33!important;border-color:#a8c49c!important;background:#eef5ea!important}
+.card-h .tag.fillbaby,.card-h .tag.veh,.card-h .tag.botfarm,.card-h .tag.rpmod.neg{
+  color:#9b2b2b!important;border-color:#d9a9a9!important;background:#fbeeee!important
+}
+.tagrow .chip{font-size:11.5px}
+/* 页眉 / 页脚 */
+.pv-head{border-bottom:1.6px solid #15181a;padding-bottom:9px;margin-bottom:15px}
+.pv-head .t{font-size:17px;font-weight:700;letter-spacing:.6px}
+.pv-head .m{font-size:11.5px;color:#495250;font-family:var(--mono);margin-top:5px;line-height:1.7}
+.pv-foot{margin-top:16px;padding-top:9px;border-top:1px solid #c8cec9;
+  font-size:10.5px;color:#6d7572;line-height:1.75;font-family:var(--sans)}
+`;
+
+/* 打印文档：页眉（谁 / 取样 / 时间）+ 评价卡 + 页脚（口径来源） */
+function vdPrintDoc(){
+  const V = (typeof LAST !== "undefined" && LAST && LAST.V) || null;
+  const D = (typeof LAST !== "undefined" && LAST && LAST.D) || null;
+  const card = document.getElementById("verdictCard");
+  if(!card) return "";
+  const c = card.cloneNode(true);
+  /* 按钮不该印：AI 重写 / 存 PDF 都是操作，不是内容 */
+  c.querySelectorAll("#aiGo,#vdPdf,.ai-run").forEach(x => x.remove());
+
+  const who = (D && D.name) || (typeof RP !== "undefined" && RP.name) || "—";
+  const uid = (D && D.uid) || (typeof RP !== "undefined" && RP.uid) || "";
+  const nRaw = (D && D.rows && D.rows.length) || 0;
+  const nOk = (D && D.clean && D.clean.length) || 0;
+  const g = V && V.grade;
+  const line2 = [
+    uid ? "UID " + uid : "",
+    nRaw ? "取样最近 " + nRaw + " 场" + (nOk && nOk !== nRaw ? "（剔除逃跑 / 早退 / 单人局后 " + nOk + " 场）" : "") : "",
+    (g && g.g) ? (g.g.no + " " + g.g.name + " · 总分 " + f1(g.raw) + "/" + f1(OVER_SCORE)) : "",
+    new Date().toLocaleString("zh-CN")
+  ].filter(Boolean).join("　·　");
+
+  const style = (document.querySelector("style") || {}).textContent || "";
+  const title = "从军·成分评价_" + String(who).replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 24);
+  return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
+    + "<title>" + esc(title) + "</title>"
+    + "<style>" + style + "\n" + VD_PDF_CSS + "</style></head><body>"
+    + '<div class="pv-head"><div class="t">从军 · 成分评价</div>'
+    + '<div class="m">' + esc(who) + "</div>"
+    + '<div class="m">' + esc(line2) + "</div></div>"
+    + c.outerHTML
+    + '<div class="pv-foot">口径：枪法分 = 场均击杀 ÷ 标准1 的 ' + f1(BENCH.avgK) + " 杀 × 100；"
+    + "六项加分 4:2:1:1:1:1、每份 " + BONUS_PER + " 分封顶 +" + BONUS_CAP + "；"
+    + "环境修正 = 填线 + 少打多 + 队内相对；录像标签按次数修正 ±（净额夹在 −10%~+15%）。"
+    + "6.2 及格线 = " + f1(OVER_SCORE) + " 分。这份是抽样，不作生涯定性。</div>"
+    + "</body></html>";
+}
+
+/* 主入口：点「存 PDF」→ 隐藏 iframe 排版 → 原生打印框选「另存为 PDF」 */
+function vdPdf(){
+  const html = vdPrintDoc();
+  if(!html) return toastLine("还没有评价卡，先查一次再存 PDF", "var(--amber)", 3200);
+  const old = document.getElementById("vdPdfFrame");
+  if(old) old.remove();
+  const f = document.createElement("iframe");
+  f.id = "vdPdfFrame";
+  /* 不能 display:none —— 有的浏览器会把不可见的文档印成空白；挪到视口外即可 */
+  f.style.cssText = "position:fixed;right:0;bottom:0;width:210mm;height:297mm;"
+    + "border:0;opacity:0;pointer-events:none;z-index:-1";
+  document.body.appendChild(f);
+  const win = f.contentWindow;
+  const doc = win.document;
+  doc.open(); doc.write(html); doc.close();
+  const fire = () => {
+    try{ win.focus(); win.print(); }
+    catch(e){ toastLine("打印框打不开（" + (e && e.message || e) + "），试试 Ctrl+P", "var(--red)", 5200); }
+  };
+  /* 等排版 + 字体就绪再叫打印框，否则偶发只印出半页或空页 */
+  const kick = () => setTimeout(fire, 120);
+  setTimeout(() => {
+    if(doc.fonts && doc.fonts.ready && doc.fonts.ready.then) doc.fonts.ready.then(kick).catch(kick);
+    else kick();
+  }, 160);
+  win.onafterprint = () => { try{ f.remove(); }catch(e){} };
+  setTimeout(() => { const x = document.getElementById("vdPdfFrame"); if(x) x.remove(); }, 180000);
+  toastLine("已打开打印框：目标打印机选「另存为 PDF」，再点保存", "var(--green)", 6000);
+}
+
+/* 按钮是 renderVerdict 动态生成的，用事件委托绑一次就够，重渲染不用重绑 */
+document.addEventListener("click", e => {
+  const t = e.target;
+  if(t && t.id === "vdPdf"){ e.preventDefault(); vdPdf(); }
+});
 
 /* =====================================================================
    AI 配置｜写死在页面里，界面上不显示
@@ -5923,7 +6060,7 @@ const RP = {
   name:"", uid:"", target:"", note:"",
   list:[], valid:[], logs:[], summary:null,
   sel:new Set(),                              // 弹框里勾选的 sessionId
-  dirHandle:null, dirName:"", txtPath:"", local:[],
+  dirHandle:null, dirName:"", local:[],
   downloading:false, down:null, countTouched:false
 };
 
@@ -6042,7 +6179,7 @@ function rpModelLabel(m){
 }
 /* 出击链上的兵种后缀（2026-11-10 用户口径）：装甲运兵车**不算载具**，是另类复活点，
    一律标成「装甲车·复活点」，别让它跟坦克 / 飞机混在载具那一类里。
-   chips 用「·」分隔，正文 / TXT 用「〔〕」；没 role 的返回空串。 */
+   chips 用「·」分隔，正文用「〔〕」；没 role 的返回空串。 */
 function rpRoleLabel(role, open, close){
   if(!role) return "";
   const s = (role === "装甲车") ? "装甲车·复活点" : role;
@@ -6184,125 +6321,7 @@ async function rpDownload(){
   rpDlgRender();
 }
 
-/* 录像分析结果 → 纯文本，用浏览器的保存对话框写到用户选的位置（一般是桌面） */
-function rpTxt(S){
-  const L = [];
-  L.push("从军 · 录像分析结果（TXT）");
-  L.push("=".repeat(60));
-  L.push("玩家      ：" + (RP.name || RP.target || "—") + (RP.uid ? "   UID：" + RP.uid : ""));
-  L.push("生成时间  ：" + new Date().toLocaleString("zh-CN"));
-  L.push("检测结论  ：回放库 " + RP.list.length + " 场 / 有效 " + RP.valid.length
-    + " 场 / 本次勾选 " + rpSelected().length + " 场");
-  L.push("有效口径  ：时长 > 7 分钟、真人 > 2、有 .erpl 直链、本人在该场名单里");
-  L.push("录像目录  ：" + (RP.dirName || "浏览器下载目录"));
-  L.push("解析依据  ：.erpl = GJRP 网络包流，逐包实体创建记录 + 包自带毫秒时间戳；不是按时间间隔猜的");
-  L.push("=".repeat(60));
-  S.games.forEach((g, i) => {
-    L.push("");
-    L.push("【第 " + (i + 1) + " 场】" + (g.map || g.sid || "—"));
-    L.push("  sessionId ：" + (g.sid || "—"));
-    L.push("  开始/时长 ：" + (g.start || "—") + " / " + (g.dur || "—") + "   真人 " + g.real);
-    L.push("  文件      ：" + (g.file || "—") + "   网络包 " + g.packets);
-    L.push("  出击队列  ：" + (g.deploys.length
-      ? g.deploys.map(d => rpClock(d.t) + " " + d.unit + rpRoleLabel(d.role, "〔", "〕")).join(" → ")
-      : "没读到该玩家的创建记录" + (g.found ? "" : "（实体 id 没定位到）")));
-    L.push("  本人车型  ：" + (g.models.length ? g.models.map(rpModelLabel).join("、") : "没定位到他的载具型号")
-      + "   〔" + (g.modelNote || "") + "；全场共 " + (g.allModels || 0) + " 种，其余已剔除〕");
-  });
-  L.push("");
-  L.push("=".repeat(60));
-  L.push("【汇总】");
-  S.lines.forEach(x => L.push("  " + x));
-  L.push("");
-  L.push("=".repeat(60));
-  L.push("【录像成分判定】按在场时长，不按出击次数；标签按新口径参与总分修正（相似度门 <70% 不采用）");
-  if(S.flavor && S.flavor.ok){
-    S.flavor.lines.forEach(x => L.push("  " + x));
-    if(S.flavor.tags.length)
-      L.push("  → 成分标签：" + S.flavor.tags.map(t => t.label + "〔" + t.why + "〕").join("；"));
-  }else L.push("  可判时长不足，不出成分标签。");
-  L.push("");
-  L.push("=".repeat(60));
-  L.push("【录像评分标签】🐵族负向 / 正向评价，按标签次数改总分");
-  const STX = S.stamps || null;
-  if(STX && STX.ok){
-    STX.lines.forEach(x => L.push("  " + x));
-    if(STX.tags.length) L.push("  → 评分标签：" + STX.tags.map(t =>
-      "〔" + (t.side === "neg" ? "负" : "正") + "〕" + t.label + "〔" + t.why + "〕").join("；"));
-  }else L.push("  本次没有命中评分标签。");
-  L.push("  计次规则：硬档 1 次、倾向档 0.5 次，同一类最多 3 次、同类不重复计；");
-  L.push("  负向按次数扣 5%~10%，正向按次数加 5%~15%，净额夹在 −10% ~ +15%。");
-  L.push("  这笔只乘在总分上、能推档位；枪法分 / 六项加分 / over / 数据有疑问判定 / 原有打法标签不动。");
-  L.push("  最终修正幅度要等「开始分析」接上战绩后由评价卡算出，本 TXT 先于战绩查询生成，不含最终分数。");
-  L.push("");
-  L.push("=".repeat(60));
-  L.push("【纯步兵线形态】出击链一直是机枪/突击/步枪时，才结合战绩判「猛猛填线 / 战神下凡」");
-  if(S.flavor && S.flavor.ok){
-    const TT = S.flavor.total || 0, ir = TT ? S.flavor.inf / TT * 100 : 0;
-    const hard = (S.flavor.tags || []).some(t => t.level === "full");
-    const pass = !hard && S.flavor.inf >= 240 && ir >= 55 && S.inf >= 3
-      && (!S.totalDeploy || S.inf / S.totalDeploy * 100 >= 60);
-    L.push("  纯步兵线：" + Math.round(S.flavor.inf / 60) + " 分钟 / " + f1(ir)
-      + "% 可判时长；纯步兵班 " + S.inf + "/" + S.totalDeploy + " 队"
-      + (hard ? "（已硬判载具猴/狙猴，不进这套判定）" : ""));
-    L.push("  形态门槛：≥4 分钟、≥55% 时长、≥3 队、≥60% 出击、无载具猴/狙猴硬判 → "
-      + (pass ? "本次录像已过门槛" : "本次录像未过门槛"));
-  }else L.push("  可判时长不足，不判形态。");
-  L.push("  战绩对比在「开始分析」生成评价时做：逐场跟同场真人队友比击杀 / K-D / 阵亡位次 /");
-  L.push("  队内第一 / 点内击杀，并按局型分「有点可占 / 被压没点 / 无占点模式 / 名单不足 4 人」四档，");
-  L.push("  点内击杀只在有点可占的局里加权；人机重的局降权。最终标签写进评价卡、正文与 AI 事实清单，");
-  L.push("  并按新口径参与总分修正；本 TXT 先于战绩查询生成，因此不含最终标签与最终分数。");
-  L.push("=".repeat(60));
-  L.push("说明：");
-  L.push("  1. 车型只统计被查询的玩家：按他出击过的载具/飞机班的「阵营 + 兵种」从本场车型实体里筛，"
-    + "别人的、对面的、他没出过的兵种一律剔除。车型实体本身没有 owner 字段，所以标「候选」表示本方同兵种有多个型号，"
-    + "没做逐次绑定，别当成他每次开的具体车；一个都定位不到就写「没定位到」，不硬凑。");
-  L.push("  2.「开局队」是第一条创建记录之前就已存在的实体批次。");
-  L.push("  3. 这批录像是抽样佐证，按新口径**参与总分修正（负向🐵 5%~10% / 正向 5%~15%，按标签次数）**，"
-    + "但枪法分、六项加分、over 判定、原有打法标签不动；"
-    + "会按在场时长给出「🐵 载具猴 / 🎯 狙猴 / 铁狙🐵 / 迫击炮🐵」这类标签，写进评价正文与评价卡头。");
-  return L.join("\n");
-}
-async function rpSaveTxt(){
-  const S = rpBuildSummary();
-  if(!S.n) return "";
-  const txt = rpTxt(S);
-  const who = String(RP.name || RP.target || "玩家").replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 24);
-  const d = new Date(), p2 = x => String(x).padStart(2, "0");
-  const fn = "录像分析_" + who + "_" + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate())
-    + "_" + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds()) + ".txt";
-  const blob = new Blob(["\ufeff" + txt], { type:"text/plain;charset=utf-8" });
-  /* 首选原生保存框：弹一次让你选桌面，之后浏览器会记住这个位置 */
-  if(typeof showSaveFilePicker === "function"){
-    try{
-      const h = await showSaveFilePicker({
-        suggestedName:fn, id:"cj_replay_txt", startIn:"desktop",
-        types:[{ description:"文本文件", accept:{ "text/plain":[".txt"] } }]
-      });
-      const w = await h.createWritable();
-      await w.write(blob);
-      await w.close();
-      RP.txtPath = h.name + "（你选的位置）";
-      rpLog("✓ 录像分析结果已保存：" + h.name + "（在保存框里选桌面即可存到桌面）", "ok");
-      return RP.txtPath;
-    }catch(e){
-      if(e && e.name === "AbortError") rpLog("取消了保存 TXT，改成浏览器下载", "bad");
-      else if(e && e.name === "SecurityError")
-        rpLog("保存框要紧跟点击打开（这次前面解析太久，用户激活过期了），改成浏览器下载；"
-          + "先选好下载目录再点「开始分析」可避免", "bad");
-      else rpLog("保存对话框不可用（" + (e && e.message || e) + "），改成浏览器下载", "bad");
-    }
-  }
-  try{
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = fn; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 8000);
-    RP.txtPath = "（浏览器下载目录）" + fn;
-    rpLog("TXT 由浏览器下载，落到下载目录，不会自动到桌面", "bad");
-  }catch(e){ rpLog("TXT 导出失败：" + (e && e.message || e), "bad"); }
-  return RP.txtPath;
-}
+
 
 /* 回放库专用：不能用通用 api()。api() 把 500100 一律判成「TOKEN 失效」，
    但回放库对「查无此人」也回 500100；逐场详情偶尔还回 code=0 + data:null。
@@ -6337,7 +6356,7 @@ async function rpCheck(quiet, nested){
   if(RP.target && RP.target !== tg.input) RP.countTouched = false;   // 换人了就恢复默认全选
   RP.checked = false; RP.list = []; RP.valid = []; RP.summary = null; RP.note = "";
   RP.why = {}; RP.whyTxt = "";          // 换人 / 重查先清掉上一次的无效原因，免得串到别人的提示里
-  RP.txtPath = ""; RP.local = []; RP.down = null;
+  RP.local = []; RP.down = null;
   RP.name = tg.name; RP.uid = tg.uid; RP.target = tg.input;
   /* 检测是独立操作：把上一次查询可能留下的取消标记清掉，否则 api() 里的 guard() 会立刻抛 */
   RUN.cancelled = false; RUN.abort = null;
@@ -6700,7 +6719,6 @@ function rpDlgRender(){
       + (RP.down.current ? ' · 当前 ' + esc(RP.down.current) : '')
       + (RP.down.running ? ' · 进行中…' : ' · 已结束') + '</div>';
   }
-  if(RP.txtPath) h += '<div class="rpd-txt">✓ 录像分析结果 TXT：' + esc(RP.txtPath) + '</div>';
 
   /* 下载 / 读入：浏览器原生下载 + 选一次下载目录 */
   if(RP.checked){
@@ -6813,12 +6831,10 @@ function rpDlgRender(){
         + " 场 / 本次选 " + sel.length + " 场 / 已解析 " + sel.filter(g => g.parsed).length + " 场"
       : "检测回放库…";
   }
-  if(note) note.textContent = RP.txtPath
-    ? "结果 TXT：" + RP.txtPath + " ｜ 录像结论并进评价，评分与分级不动。"
-    : (RP.summary && RP.summary.ok)
-      ? "已解析 " + RP.summary.n + " 场：点「开始分析」先写 TXT，再把录像成分（🐵 载具猴 / 🎯 狙猴）"
-        + "与纯步兵线形态（🪖 猛猛填线 / ⚡ 战神下凡）并进评价标签、正文与 AI 事实清单，评分不动。"
-      : "没有录像结论时，这个「开始分析」等同于页面上的普通开始分析；不改评分。";
+  if(note) note.textContent = (RP.summary && RP.summary.ok)
+    ? "已解析 " + RP.summary.n + " 场：点「开始分析」把录像成分（🐵 载具猴 / 🎯 狙猴）"
+      + "与纯步兵线形态（🪖 猛猛填线 / ⚡ 战神下凡）并进评价标签、正文与 AI 事实清单。"
+    : "没有录像结论时，这个「开始分析」等同于页面上的普通开始分析；不改评分。";
 }
 
 /* ---------------- ④ 分析流程 ---------------- */
@@ -7765,7 +7781,7 @@ $("#rpCount").addEventListener("blur", e => rpCountApply(e.target.value));
 $("#rpdX").onclick = rpDlgClose;
 $("#rpDlg").addEventListener("click", e => { if (e.target && e.target.id === "rpDlg") rpDlgClose(); });
 /* 弹框里的「开始分析」＝页面上的 analyze()，只是多带一份录像结论；评分公式完全一样。
-   区别：先从已选的下载目录补读未解析场次，再用保存对话框写一份 TXT，然后进评价。 */
+   区别：先从已选的下载目录补读未解析场次，然后进评价（2026-11-10 起不再自动存 TXT）。 */
 $("#rpdGo").onclick = async () => {
   const n = readN();
   if (!n){ rpDlgClose(); return; }
@@ -7777,8 +7793,7 @@ $("#rpdGo").onclick = async () => {
       await rpReadDir();
     }
     RP.summary = rpBuildSummary();
-    if(RP.summary.n) await rpSaveTxt();      // 先落盘 TXT，再进评价
-    else rpLog("本次没有录像结论，「开始分析」等同普通分析。", "bad");
+    if(!RP.summary.n) rpLog("本次没有录像结论，「开始分析」等同普通分析。", "bad");
   }catch(e){
     rpLog("读取本地录像失败：" + (e && e.message || e), "bad");
     RP.summary = rpBuildSummary();
