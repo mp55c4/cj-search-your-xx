@@ -708,10 +708,13 @@ function rpSimilarityOf(V){
 /* ------------------------------------------------------------------
    录像评分标签阈值
    ------------------------------------------------------------------ */
-/* ---------------- 录像评分标签阈值（2026-11-10 新口径） ----------------
-   用户原话：远距离击杀占比高 → 疑似狙🐵；出狙队 → 铁狙🐵；非载具队伍一直活了
-   整局 40%~60% 还没死，工兵班 → 有起 AA 打飞机的嫌疑，其他 → 真能在后面🐵；
-   迫击炮出得多或占比长 → 迫击炮🐵。🐵 族负向扣分、正向评价加分，按标签次数改总分。 */
+/* ---------------- 录像评分标签阈值（2026-11-10 定稿） ----------------
+   用户原话（11-10 晚修订）：出狙队不一定是铁狙🐵，得那一局里狙击线占比时长超过 50% 才算；
+   远距离击杀数据取不到，这条判据直接删掉，不许编比例；录像标签至少要在超过全部局数 1/3
+   的场次里命中，才允许影响整体评价。
+   其余：非载具队伍一直活了整局 40%~60% 还没死，工兵班 → 起 AA 打飞机的嫌疑，
+   其他 → 真能在后面🐵（还得该场击杀比队内第一低 30%~80%）；迫击炮出得多或占比长 → 迫击炮🐵。
+   🐵 族负向扣分、正向评价加分，按标签次数改总分。 */
 /* ---------------- 刷人机嫌疑（2026-11-10 用户口径） ----------------
    口径：最近战绩打得不少（近期活跃），可回放库里能对上的**有效录像只有 0~4 场**
    → 这些局多半没进正式对局池（人机 / 自定义局），战绩要打折看，卡头分数后面挂提示。
@@ -751,7 +754,14 @@ function botFarmOf(s, replay){
 }
 
 const RP_MOD_MIN = {
-  distRate:35,        // 远距离击杀占全部击杀 ≥35% → 疑似狙🐵
+  /* 2026-11-10 晚修订（用户口径）：
+     ① 「出过狙队」不等于铁狙🐵 —— 必须那一局里**狙击线占本场时长 > 50%** 才算；
+     ② 远距离击杀数值 .erpl 里解不出、战绩接口也没有 → 「疑似狙🐵」这条判据整条删掉，
+        不留降级分支、不编比例；
+     ③ 录像标签要在**超过全部局数 1/3 的场次**里命中，才允许影响整体评价。 */
+  sniperRate:50,      // 单局狙击线占本场时长 > 50% → 该局算「铁狙局」（分母是本场时长，不是已识别兵种时长）
+  sniperMinSec:90,    // 且该局狙击线 ≥90 秒（防 60 秒小样本百分比失真）
+  tagCover:1/3,       // 标签覆盖率门槛：命中局数 > 总场次 × 1/3 才计分
   longRatio:0.40,     // 单条非载具出击占全场 ≥40%（40%~60% 是用户给的主区间，更长的照样判）
   mortarN:3,          // 迫击炮出击 ≥3 次
   mortarDepRate:25,   // 或占全部出击 ≥25%
@@ -764,38 +774,33 @@ const RP_MOD_MIN = {
 /* ------------------------------------------------------------------
    录像标签 → 总分修正
    ------------------------------------------------------------------ */
-/* ---------------- 录像评分标签：铁狙🐵 / 疑似狙🐵 / AA 嫌疑 / 后方🐵 / 迫击炮🐵 ----------------
+/* ---------------- 录像评分标签：铁狙🐵 / AA 嫌疑 / 后方🐵 / 迫击炮🐵 ----------------
    side: neg = 🐵族负向，pos = 正向评价；weight: 硬档 1、倾向档 0.5；n = 命中场次数（上限 3）。
    同一 key 在 replayModOf 里只取最高的一次，避免「狙猴 + 铁狙🐵」把同一个🐵扣两遍。 */
 function replayStamps(R, F, env){
   const tags = [], lines = [];
   if(!R || !R.ok || !F || !F.ok) return { ok:false, tags:tags, lines:lines, distNote:"" };
-  const add = (key, side, weight, n, label, why) => tags.push({
+  /* g = 这个标签「命中了几场」（局数，不是出击次数），后面 replayModOf 的局数门槛要用 */
+  const add = (key, side, weight, n, label, why, g) => tags.push({
     key:key, side:side, weight:weight, n:Math.max(1, Math.min(3, n || 1)),
+    g:Math.max(0, g || 0),
     level:weight < 1 ? "lean" : "full", label:label, tone:side === "neg" ? "bad" : "hi", why:why });
 
-  /* ① 远距离击杀占比高 → 疑似狙🐵；出狙队 → 铁狙🐵 */
-  const dr = F.distRate;
-  let distNote = "";
-  if(dr != null && dr >= RP_MOD_MIN.distRate){
-    add("sniper", "neg", 1, 1, "🎯 疑似狙🐵",
-      "远距离击杀占 " + T.f1(dr) + "%（" + F.dist.kills + "/" + F.dist.total + "），过了 "
-      + RP_MOD_MIN.distRate + "% 线");
-  }else if(dr == null){
-    distNote = "远距离击杀数值本次没读到：.erpl 里只有 long_range_kills 这个字段名、值在位打包里解不出，"
-      + "战绩接口也没有该字段；「疑似狙🐵」这条独立判据本次不生效，绝不编造这个比例"
-      + "（出过狙队的话按「铁狙🐵」判）。";
-  }else{
-    distNote = "远距离击杀占 " + T.f1(dr) + "%，没到 " + RP_MOD_MIN.distRate + "% 线，不判疑似狙🐵。";
+  /* ① 铁狙🐵（2026-11-10 晚改口径）：出过狙队不算数，得看**那一局里狙击线占本场时长
+     > 50%**，且 ≥90 秒，才算一个「铁狙局」。命中 ≥1 局 → 铁狙🐵。
+     远距离击杀那条判据已整条删除：.erpl 里只有字段名、值解不出，战绩接口也没有，
+     拿不到数据就不设这条规则，绝不编比例。 */
+  const sniperGames = F.hit.sniper50 || 0;
+  if(F.sniperDeploy >= 1 && sniperGames >= 1){
+    add("sniper", "neg", 1, sniperGames, "🎯 铁狙🐵",
+      "有 " + sniperGames + " 局狙击线占他本人可判时长过半（" + F.sniperDeploy + " 次狙击班出击，"
+      + "全场狙击线 " + Math.round(F.sniper / 60) + " 分钟 / " + T.f1(F.sniperRate) + "%）；"
+      + "占本场时长过半才算铁狙，只是出过狙队、时间不占多数的按普通成分算", sniperGames);
+  }else if(F.sniperDeploy >= 1){
+    lines.push("出过 " + F.sniperDeploy + " 次狙击班，但没有任何一局狙击线占本场时长过半（>"
+      + RP_MOD_MIN.sniperRate + "% 且 ≥" + RP_MOD_MIN.sniperMinSec + " 秒）→ 不判铁狙🐵，只记成分。");
   }
-  if(F.sniperDeploy >= 1){
-    add("sniper", "neg", 1, F.hit.sniper || F.sniperDeploy, "🎯 铁狙🐵",
-      "录像里实打实出过 " + F.sniperDeploy + " 次狙击班（狙击线 " + Math.round(F.sniper / 60)
-      + " 分钟 / " + T.f1(F.sniperRate) + "%），出狙队就是铁狙🐵");
-    if(dr == null) distNote += " 本次「疑似狙🐵」没有独立的远距数据可判，结论由铁狙🐵承载。";
-  }
-  /* 注：不再设「疑似狙🐵·倾向」的降级分支 —— 狙击线时长本来就来自狙击班出击，
-     不可能出现「有狙击线占比却没出过狙队」，那条分支是死代码，留着会误导。 */
+  const distNote = "";
 
   /* ② 非载具队一直活了整局 40%~60% 还没死，且这场击杀比队内第一低 30%~80%
      （2026-11-10 用户口径补：只有「活得久 + 击杀确实低」才算在后面；自己就是队内第一
@@ -824,10 +829,12 @@ function replayStamps(R, F, env){
     + (gaps && gaps[i] ? "，该场 " + gaps[i].myK + " 杀对队内第一 " + gaps[i].top
       + " 杀（低 " + T.f1(gaps[i].gap * 100) + "%）" : "")).join("；")
     + (arr.length > 3 ? " 等 " + arr.length + " 条" : "");
+  /* g 取「命中的不同场次数」：长活段可能一局里挂好几条，局数门槛不能按条数算 */
+  const gameCnt = arr => { const s = {}; arr.forEach(x => { s[String(x.sid || "")] = 1; }); return Object.keys(s).length; };
   if(AA.length) add("aa", "neg", 1, F.hit.longAA || AA.length, "⚠ 起AA打飞机的嫌疑",
-    whyLong(AA) + " —— 工兵班能这么久不倒，多半是在后场架 AA 打飞机，不是在前线顶");
+    whyLong(AA) + " —— 工兵班能这么久不倒，多半是在后场架 AA 打飞机，不是在前线顶", gameCnt(AA));
   if(BK.length) add("back", "neg", 1, BK.length, "🐵 真能在后面🐵",
-    whyLong(BK, BKg) + " —— 活得久 + 击杀比队内第一低 30%~80%，人基本不在正面交火线上");
+    whyLong(BK, BKg) + " —— 活得久 + 击杀比队内第一低 30%~80%，人基本不在正面交火线上", gameCnt(BK));
 
   /* ③ 迫击炮出得多 / 占比长 */
   const mN = R.mortar || 0, mDep = R.totalDeploy ? mN / R.totalDeploy * 100 : 0;
@@ -838,9 +845,8 @@ function replayStamps(R, F, env){
   if(mHard || mLean) add("mortar", "neg", mHard ? 1 : 0.5, mHard ? (F.hit.mortar || 1) : 1,
     mHard ? "💣 迫击炮🐵" : "💣 迫击炮🐵·倾向",
     "迫击炮出 " + mN + " 次（占全部出击 " + T.f1(mDep) + "%）、在场 " + Math.round(mSec / 60)
-    + " 分钟（占可判时长 " + T.f1(mRate) + "%）");
+    + " 分钟（占可判时长 " + T.f1(mRate) + "%）", mHard ? (F.hit.mortar || 0) : 0);
 
-  if(distNote) lines.push(distNote);
   lines.push("长活非载具队判据：单条出击占全场 ≥" + (RP_MOD_MIN.longRatio * 100)
     + "% 且不是载具 / 狙击 / 开局队，**还得这场击杀比队内第一低 30%~80%**（自己就是第一或低超过 80% 的不判）；"
     + "本次长活段命中 " + (F.longLived || []).length
@@ -852,6 +858,9 @@ function replayStamps(R, F, env){
     + (mHard ? "硬判" : mLean ? "倾向" : "不判") + "。");
   lines.push("新判的录像评分标签共 " + tags.length + " 条" + (tags.length
     ? "：" + tags.map(t => t.label).join("、") : "（本次一条没命中）") + "。");
+  lines.push("局数门槛：一个标签要在**超过全部局数 1/3 的场次**里命中才允许影响整体评价"
+    + "（本次 " + (R.n || F.n || 0) + " 场，门槛 >" + T.f1((R.n || F.n || 0) / 3) + " 场）；"
+    + "偶尔一两场的不进总分，只留在录像佐证里。");
   return { ok:true, tags:tags, lines:lines, distNote:distNote };
 }
 
@@ -862,15 +871,26 @@ function replayStamps(R, F, env){
 function replayModOf(R, F, FR, ST){
   if(!R || !R.ok) return null;
   const all = [];
-  const put = (key, side, weight, n, label, why) => all.push({
-    key:key, side:side, weight:weight || 1, n:Math.max(1, Math.min(3, n || 1)), label:label, why:why });
+  const put = (key, side, weight, n, label, why, g) => all.push({
+    key:key, side:side, weight:weight || 1, n:Math.max(1, Math.min(3, n || 1)),
+    g:Math.max(0, g || 0), label:label, why:why });
   ((F && F.ok) ? F.tags : []).forEach(t => put(t.key, "neg", t.level === "lean" ? 0.5 : 1,
-    t.key === "veh" ? F.hit.veh : F.hit.sniper, t.label, t.why));
+    t.key === "veh" ? F.hit.veh : F.hit.sniper, t.label, t.why,
+    t.g != null ? t.g : (t.key === "veh" ? F.hit.veh : F.hit.sniper)));
+  /* 形态标签是跨全部可判录像场次的整体结论，覆盖场数就取录像可判场次（F.n），
+     不是 FR.n（那是战绩样本场数，两码事，混用会让门槛永远过掉）。 */
   if(FR && FR.ok && FR.tag) put("front", FR.dir === "god" ? "pos" : "neg",
-    FR.tag.level === "lean" ? 0.5 : 1, FR.n || 1, FR.tag.label, FR.tag.why);
-  ((ST && ST.tags) || []).forEach(t => put(t.key, t.side, t.weight, t.n, t.label, t.why));
+    FR.tag.level === "lean" ? 0.5 : 1, FR.n || 1, FR.tag.label, FR.tag.why,
+    (F && F.n) || (R && R.n) || 0);
+  ((ST && ST.tags) || []).forEach(t => put(t.key, t.side, t.weight, t.n, t.label, t.why, t.g));
+  /* 局数门槛（2026-11-10 晚用户口径）：一个标签得在**超过全部局数 1/3 的场次**里命中，
+     才允许影响整体评价。只在零星一两场冒出来的一律不计分，只留作录像佐证。 */
+  const N = (+R.n) || (+F.n) || 0;
+  const need = N * RP_MOD_MIN.tagCover;
+  const pass = x => (N <= 0) || (x.g > need);
+  const counted = all.filter(pass), skipped = all.filter(x => !pass(x));
   const byKey = {};
-  all.forEach(x => { const w = x.weight * x.n; if(!byKey[x.key] || w > byKey[x.key].w) byKey[x.key] = { w:w, x:x }; });
+  counted.forEach(x => { const w = x.weight * x.n; if(!byKey[x.key] || w > byKey[x.key].w) byKey[x.key] = { w:w, x:x }; });
   const list = Object.keys(byKey).map(k => byKey[k].x);
   const cnt = side => list.filter(x => x.side === side).reduce((a, x) => a + x.weight * x.n, 0);
   const neg = cnt("neg"), pos = cnt("pos");
@@ -878,6 +898,10 @@ function replayModOf(R, F, FR, ST){
   const posRate = pos > 0 ? Math.min(0.15, Math.max(0.05, 0.05 + (pos - 1) * 0.05)) : 0;
   const rate = Math.max(-0.10, Math.min(0.15, posRate - negRate));
   const lines = [];
+  lines.push("局数门槛：本次 " + N + " 场，一个标签要在 >" + T.f1(need) + " 场（全部局数的 1/3）里命中才计分；"
+    + (skipped.length
+      ? "未过门槛、不进总分的有：" + skipped.map(x => x.label + "（" + x.g + " 场）").join("、")
+      : "本次标签都过了门槛。"));
   lines.push("参与评分的录像标签 " + list.length + " 类：负向 " + T.f1(neg) + " 次 / 正向 " + T.f1(pos)
     + " 次（硬档算 1 次、倾向档 0.5 次，同类最多 3 次，同一类不重复计）。");
   if(list.length) lines.push(list.map(x => "〔" + (x.side === "neg" ? "负" : "正") + "〕"
@@ -886,7 +910,8 @@ function replayModOf(R, F, FR, ST){
     + T.f1(posRate * 100) + "%（区间 5%~15%），净修正 " + (rate > 0 ? "+" : "") + T.f1(rate * 100)
     + "%；作用在总分上，不进枪法分、不进 over / 数据有疑问判定、不动六项加分。");
   return { ok:(list.length > 0 && Math.abs(rate) > 1e-9), tags:list, neg:neg, pos:pos,
-           negRate:negRate, posRate:posRate, rate:rate, lines:lines };
+           negRate:negRate, posRate:posRate, rate:rate, lines:lines,
+           cover:{ n:N, need:need, skipped:skipped.map(x => ({ key:x.key, label:x.label, g:x.g })) } };
 }
 
   /* ================= 对外接口 ================= */
@@ -927,6 +952,9 @@ function replayModOf(R, F, FR, ST){
         "分带：" + GRADE_BANDS.join(" / "),
         "人机口径：双方真人 <5 判人机局（≥5 满权 / 3~4 ×0.4 / ≤2 ×0.2）；场均击杀只算满编局；"
           + "全场真人只有他自己的单人局整场剔除（逃跑 / 早退不重复剔）",
+        "录像标签：铁狙🐵 = 单局狙击线占**本场时长** >" + RP_MOD_MIN.sniperRate + "%（≥"
+          + RP_MOD_MIN.sniperMinSec + " 秒），出过狙队但时间不到不算；远距离击杀无数据，该判据已删除",
+        "录像标签计分门：命中局数必须 > 全部局数 1/3 才进总分，零星几场只进佐证",
         "录像门：与战绩判定相似度 <70% 时录像修正不进总分；标准1 本人钉死 " + T.f1(OVER_SCORE) + " 分",
         "刷人机嫌疑：近期 ≥" + BOTFARM.minN + " 场（最近一场 ≤" + BOTFARM.maxDays + " 天）但回放库有效录像 ≤"
           + BOTFARM.effMax + " 场 → 分数后挂「刷人机来的」，并列出录像无效原因"
