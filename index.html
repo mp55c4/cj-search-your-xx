@@ -95,6 +95,79 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--green-d);bo
 .uid-tip{margin-top:9px;font-size:12.5px;line-height:1.65;color:var(--dim2)}
 .uid-tip b,.uid-tip code{color:var(--dim)}
 
+/* ---------- 该 UID 用过的昵称（按 UID 查完之后挂在输入框下面） ----------
+   搜索入口只在「按 UID 查」这一行下面，昵称是从战绩的 battleDetail 名单里
+   逐场抠出来的（同一份请求，不额外发），所以显示的是「近 N 场实际用过的名字」。 */
+.uid-names{display:none;margin-top:9px;padding:10px 13px;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel2)}
+.uid-names.show{display:block}
+.uid-names .un-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--dim);line-height:1.6}
+.uid-names .un-h b{font-size:13px;color:var(--txt);letter-spacing:.2px}
+.uid-names .un-h .un-n{font-family:var(--mono);color:var(--dim)}
+.uid-names .un-h .un-src{color:var(--dim2);font-size:11.5px}
+.uid-names .un-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.uid-names .un-c{display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);
+  color:var(--txt);font-size:12.5px;cursor:pointer;line-height:1.5}
+.uid-names .un-c:hover{border-color:var(--blue)}
+.uid-names .un-c .un-t{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uid-names .un-c i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--dim2)}
+.uid-names .un-c.cur{border-color:var(--green-d);background:rgba(95,141,71,.12)}
+.uid-names .un-warn{margin-top:8px;font-size:11.5px;line-height:1.6;color:var(--amber)}
+.uid-names .un-empty{margin-top:7px;font-size:12px;color:var(--dim2)}
+
+/* ---------- 隐身玩家查询 ----------
+   左边是提示（不是按钮），中间输入「局内用过的名字」，右边「开始索引」。
+   搜索完弹出录像列表，每行一个多选框 + 时间 + 地点；鼠标悬停给这场的真人昵称。 */
+.hid-lead{display:flex;flex-direction:column;justify-content:center;gap:1px;flex:none;padding-right:2px}
+.hid-lead b{font-size:13.5px;color:var(--txt);letter-spacing:.2px;font-weight:600}
+.hid-lead i{font-size:11.5px;font-style:normal;color:var(--dim2);line-height:1.4}
+#hidDlg{position:fixed;inset:0;z-index:135;display:none;background:rgba(8,10,9,.8);backdrop-filter:blur(3px)}
+#hidDlg.open{display:flex;align-items:center;justify-content:center;padding:24px}
+#hidOk{position:fixed;inset:0;z-index:140;display:none;background:rgba(8,10,9,.86);backdrop-filter:blur(3px)}
+#hidOk.open{display:flex;align-items:center;justify-content:center;padding:24px}
+.hid-ok-box{width:min(520px,100%)}
+.hid-lh{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--dim2);margin:14px 0 2px}
+.hid-lh label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--dim)}
+.hid-lh input{width:14px;height:14px;accent-color:#8fae74;cursor:pointer}
+.hid-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.hid-r{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;background:var(--panel2);cursor:pointer;font-size:13px;line-height:1.6}
+.hid-r:hover{border-color:var(--blue);background:rgba(138,183,228,.07)}
+.hid-r.on{border-color:var(--green-d)}
+.hid-r input{width:15px;height:15px;accent-color:#8fae74;flex:none;cursor:pointer}
+.hid-r .hid-time{flex:none;min-width:102px;font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.hid-r .hid-map{flex:1;min-width:120px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hid-r .hid-n{flex:none;font-family:var(--mono);font-size:11.5px;color:var(--dim2)}
+.hid-r .hid-flag{flex:none;font-size:11px;padding:1px 7px;border-radius:999px;
+  border:1px solid var(--green-d);color:var(--green)}
+.hid-ok-row{display:flex;gap:10px;align-items:baseline;font-size:13.5px;padding:5px 0;line-height:1.7}
+.hid-ok-row .k{flex:none;min-width:64px;color:var(--dim2);font-size:12.5px}
+.hid-ok-row .v{color:var(--txt);font-weight:600}
+.hid-ok-row .v.mono{font-family:var(--mono);letter-spacing:.3px;color:var(--blue)}
+/* 真实昵称那一行：主值是名字，右边挂极小的解析说明，UID 缩成小字跟在后面 */
+.hid-ok-row .v .sub{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:400;
+  line-height:1.5;color:var(--dim2)}
+.hid-ok-row .v .miss{color:var(--amber);font-weight:600}
+/* 真实昵称下面那行「用过的名字」清单：跟 k 列对齐的小字 */
+.hid-real-more{margin:1px 0 5px 74px;font-size:11.5px;line-height:1.7;color:var(--dim2)}
+.hid-real-more b{color:var(--dim);font-weight:600}
+.hid-tip{position:fixed;z-index:150;display:none;min-width:300px;max-width:560px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:10px;background:var(--panel);
+  box-shadow:0 14px 34px rgba(0,0,0,.38);font-size:12px;line-height:1.7;color:var(--dim);
+  pointer-events:none}
+.hid-tip.show{display:block}
+.hid-tip .th{font-size:12.5px;color:var(--txt);margin-bottom:7px;line-height:1.6}
+.hid-tip .th i{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--dim2)}
+.hid-tip .t2{display:flex;gap:14px}
+.hid-tip .tc{flex:1;min-width:0}
+.hid-tip .tc>b{display:block;font-size:11.5px;color:var(--dim2);margin-bottom:4px}
+.hid-tip .tn{display:flex;flex-wrap:wrap;gap:4px}
+.hid-tip .nm{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:1px 7px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);
+  color:var(--txt);font-size:11.5px}
+.hid-tip .nm.hit{border-color:var(--green-d);color:var(--green);font-weight:600}
+
 /* ---------- 评分标尺卡（写死在页面里的基准玩家） ---------- */
 .bench{margin-top:16px;padding:15px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel);position:relative;overflow:hidden}
 .bench::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--amber),rgba(220,185,110,0))}
@@ -786,6 +859,14 @@ td{padding:8px 9px}
       <input type="text" id="qu" inputmode="numeric" autocomplete="off">
       <button class="btn btn-ghost" id="goUid">按 UID 查</button>
     </div>
+    <!-- 按 UID 查完之后，在这里列这个 UID 近 N 场用过的昵称（隐身号每局随机，就靠这张表认人） -->
+    <div class="uid-names" id="uidNames"></div>
+    <!-- 隐身玩家查询（2026-11-15）：手里只有一个「局内用过的名字」时，用它反查回放阵容再提 UID -->
+    <div class="search-row hid-row" style="margin-top:9px">
+      <div class="hid-lead"><b>隐身玩家查询</b></div>
+      <input type="text" id="hq" placeholder="玩家在局内隐身的名字" autocomplete="off">
+      <button class="btn btn-ghost" id="hGo">开始索引</button>
+    </div>
     <div class="search-row rp-row" style="margin-top:9px">
       <button class="btn btn-ghost" id="rpCheck" title="按昵称/UID 查回放库，看能不能查到这个人的录像、有几场有效（>7分钟且真人>2）">检测录像</button>
       <button class="btn btn-ghost" id="rpAnalyze" title="解析 .erpl 里的实体创建记录，还原出击队列，再把结论并进成分评价">录像分析</button>
@@ -871,6 +952,44 @@ td{padding:8px 9px}
 </div>
 <input type="file" id="rpFile" multiple accept=".erpl" style="display:none">
 <input type="file" id="rpDirFile" webkitdirectory directory multiple style="display:none">
+
+<!-- 隐身玩家查询：按局内昵称索引到的录像列表（每场一行 + 悬浮看这场所有真人昵称） -->
+<div id="hidDlg">
+  <div class="rpd-box">
+    <div class="rpd-top">
+      <div>
+        <div class="rpd-tt">隐身玩家查询</div>
+        <div class="rpd-sub" id="hidSub"></div>
+      </div>
+      <button class="rpd-x" id="hidX" title="关闭（Esc）">×</button>
+    </div>
+    <div class="rpd-body" id="hidBody"></div>
+    <div class="rpd-foot">
+      <span class="note" id="hidNote"></span>
+      <button class="btn" id="hidGo" disabled>开始索引</button>
+    </div>
+  </div>
+</div>
+<!-- 提取结果（用户要求：提示的是「玩家昵称提取成功」，不是 UID 提取成功） -->
+<div id="hidOk">
+  <div class="rpd-box hid-ok-box">
+    <div class="rpd-top">
+      <div>
+        <div class="rpd-tt" id="hidOkTt">玩家昵称提取成功</div>
+        <div class="rpd-sub" id="hidOkSub"></div>
+      </div>
+      <button class="rpd-x" id="hidOkX" title="关闭（Esc）">×</button>
+    </div>
+    <div class="rpd-body" id="hidOkBody"></div>
+    <div class="rpd-foot">
+      <span class="note" id="hidOkNote"></span>
+      <button class="btn btn-ghost" id="hidOkCopy">复制编号</button>
+      <button class="btn" id="hidOkUse">用这个号查成分</button>
+    </div>
+  </div>
+</div>
+<!-- 悬浮窗：某一场录像里的真人昵称 -->
+<div class="hid-tip" id="hidTip"></div>
 
 <script type="text/plain" id="rbDoc"># 从军·成分分析 · 评价体系与可移植提示词
 
@@ -2492,6 +2611,9 @@ async function scanBattleEnv(rows, uid, log){
       recs.push({
         sid: r.sessionId, t: r.commitTime, c: c,
         n: d.length, myN: my.length, opN: op.length,
+        /* 本人这一场用的昵称（2026-11-15 新增）：battleDetail 每条记录都带 nickName，
+           隐身号每局随机，逐场收下来就是「这个 UID 用过的昵称」清单，不用额外请求。 */
+        myName: me ? String(me.nickName || "").trim() : "",
         /* 少打多判定要用的两个数：我方名单总击杀（算人均）、这一场赢没赢
            （胜负只在「出彩」里做加权，不单独算命中） */
         myKSum: my.reduce((a, x) => a + kOf(x), 0),
@@ -2773,8 +2895,14 @@ function battleEnvStats(recs){
     } else mateRank.why = "队友可比的场次不足 8 场，只读数不调分";
   } else mateRank.why = "没有真人队友可比（名单里只有自己）";
 
+  /* 昵称历史（2026-11-15 用户要求）：把逐场 myName 按名字归并 ——
+     给出每个昵称出现几场、第一次 / 最后一次是哪天。隐身号每局昵称随机，这里会列出一串；
+     没改过名就只有一个。只统计这一批战绩里真读到名字的场次（nameSaw）。 */
+  const nm = namesOf(recs);
+
   return {
     n: recs.length, botGames: botGames, wSum: wSum,
+    names: nm.names, nameN: nm.nameN, nameSaw: nm.nameSaw,
     avgHumans: sum("n") / n, myHumans: sum("myN") / n, opHumans: sum("opN") / n,
     /* 人机口径：名额固定、缺的席位就是人机（不再拿回放推断） */
     seats: seatsAll, bots: botSum, myBots: myBotSum, opBots: opBotSum,
@@ -2923,6 +3051,26 @@ function countryStats(rows, ov){
    数据只能从回放里取：按昵称拿到的最多 10 场，逐场 replaysData 读阵容。
    人机 = 阵容里没有 userid 的席位（即 UID 0）。
    组队 = 同队真人玩家在 ≥2 场里重复出现（回放没有小队字段，只能靠重复同队推断）。 */
+/* 昵称归并（2026-11-15）：两种样本（battleDetail 逐场 / 回放阵容）都带 myName，
+   统一在这里归并，给「该 UID 用过的昵称」那张表用。
+   排序：出现场次多的在前，同场次按最近一次出现的日期。 */
+function namesOf(recs){
+  const map = {};
+  let saw = 0;
+  (recs || []).forEach(x => {
+    const s = String((x && x.myName) || "").trim();
+    if (!s) return;
+    saw++;
+    if (!map[s]) map[s] = { name: s, n: 0, first: x.t, last: x.t };
+    const o = map[s];
+    o.n++;
+    if (x.t && (!o.first || x.t < o.first)) o.first = x.t;
+    if (x.t && (!o.last || x.t > o.last)) o.last = x.t;
+  });
+  const names = Object.keys(map).map(k => map[k])
+    .sort((a, b) => (b.n - a.n) || ((b.last || 0) - (a.last || 0)));
+  return { names: names, nameN: names.length, nameSaw: saw };
+}
 function envStats(recs){
   if (!recs || !recs.length) return null;
   let seats = 0, bots = 0, myBots = 0, oppBots = 0, realOpp = 0, mySeats = 0;
@@ -2942,8 +3090,10 @@ function envStats(recs){
   const mates = Object.keys(mc).map(k => mc[k]).sort((a, b) => b.n - a.n);
   const fixed = mates.filter(x => x.n >= 2);
   const teamGames = recs.filter(x => (x.mates || []).length > 0).length;
+  const nm = namesOf(recs);   // 回放阵容里也有 myName，只在只在拿不到 battleDetail 时兜底用
   return {
     n: recs.length, seats: seats, bots: bots,
+    names: nm.names, nameN: nm.nameN, nameSaw: nm.nameSaw,
     botRate: seats ? bots / seats * 100 : 0,
     myBots: myBots, oppBots: oppBots, mySeats: mySeats,
     realOpp: recs.length ? realOpp / recs.length : 0,
@@ -7583,6 +7733,409 @@ function replayFacts(R, D){
   return L;
 }
 
+/* ---------------- 该 UID 用过的昵称 ----------------
+   数据来源：scanBattleEnv 已经给这 N 场战绩逐场取过 battleDetail，而 battleDetail 每条记录
+   都带 nickName，所以这张表是「近 N 场里这个 UID 每局实际显示的名字」的真实读数，不额外发请求。
+   隐身号（每局随机昵称）在这里会列出好几串；没改过名就只有一个名字。
+   显示位置：按 UID 查的输入框正下方（#uidNames），点一下昵称就复制。 */
+function ymdOf(ts){
+  if (!ts) return "";
+  const d = new Date(ts * 1000), p = n => (n < 10 ? "0" : "") + n;
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function uidNamesClear(){
+  const box = $("#uidNames");
+  if (!box) return;
+  box.classList.remove("show");
+  box.innerHTML = "";
+}
+function uidNamesShow(D){
+  const box = $("#uidNames");
+  if (!box) return;
+  const env = (D && D.env) || {};
+  const names = env.names || [];
+  /* 昵称查 + 只有一个名字 = 没有信息量，不占地方；按 UID 查则一律显示（哪怕只有一个） */
+  if (!names.length || (names.length < 2 && !D.byUid)){ uidNamesClear(); return; }
+
+  const head = '<div class="un-h"><b>用过的昵称</b>'
+    + '<span class="un-n">' + names.length + " 个</span>"
+    + '<span class="un-src">近 ' + (env.n || 0) + " 场战绩逐场读出来的（battleDetail 的 nickName）</span></div>";
+
+  const chips = '<div class="un-chips">' + names.map(o => {
+    const cur = !!(D.name && o.name === D.name);
+    const tip = "出现 " + o.n + " 场"
+      + (o.first ? "｜首次 " + ymdOf(o.first) : "")
+      + (o.last ? "｜最后 " + ymdOf(o.last) : "")
+      + (cur ? "｜本次查询显示的就是这个名字" : "")
+      + "｜点击复制昵称";
+    return '<span class="un-c' + (cur ? " cur" : "") + '" data-name="' + esc(o.name) + '" title="' + esc(tip) + '">'
+      + '<span class="un-t">' + esc(o.name) + "</span>"
+      + "<i>" + o.n + " 场" + (names.length > 1 && o.last ? " · " + ymdOf(o.last).slice(5) : "") + "</i></span>";
+  }).join("") + "</div>";
+
+  let warn = "";
+  if (names.length >= 2){
+    warn = '<div class="un-warn">⚠ 这 ' + names.length + " 个名字都挂在同一个号上"
+      + (names.length >= 3 ? "，名字换得很勤" : "") + "：要么改过名，要么开了隐身 ID（每局随机昵称）。"
+      + "按昵称查会漏人，认人要认这个号。</div>";
+  } else {
+    warn = '<div class="un-empty">这 ' + (env.n || 0) + " 场里一直用同一个名字"
+      + (env.nameSaw && env.nameSaw < (env.n || 0) ? "（" + env.nameSaw + " 场读到名字）" : "") + "</div>";
+  }
+
+  box.innerHTML = head + chips + warn;
+  box.classList.add("show");
+  box.querySelectorAll(".un-c").forEach(el => {
+    el.onclick = () => {
+      const s = el.getAttribute("data-name") || "";
+      const done = () => toastLine("已复制昵称：" + s, "var(--green)", 2200);
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(s).then(done, () => toastLine("复制失败，手动选一下：" + s, "var(--amber)", 3000));
+      } else toastLine("复制失败，手动选一下：" + s, "var(--amber)", 3000);
+    };
+  });
+}
+
+/* ---------------- 隐身玩家查询（按局内昵称反查 UID） ----------------
+   为什么要有这一块：隐身号每局昵称随机，按昵称在战绩里查永远查不到；但只要手里有一个
+   「他在局内显示的名字」，回放库是按昵称精确索引的，就能反查：
+     ① /cj-replays/replaysDetail?name=  → 这个名字出现在哪些录像里（最多 20 场）
+     ② /cj-replays/replaysData?id=       → 每场的完整阵容（20 席，真人带 userid）
+     ③ 阵容里 name 与输入完全一致的那一条 → 他的 userid 就是 UID
+   所以弹窗里列的是「录像清单」，勾选哪几场就用哪几场投票，取出现次数最多的那个 UID。
+   接口口径（2026-11-08 实测）：replaysDetail 的 name 要完全一致（大小写敏感）；
+   回放库每个昵称只留最近 10~20 场，所以这里拿到的是「最近一段时间的名字」，不是全部历史。 */
+const HID = { busy:false, q:"", rows:[], rawN:0, uid:"", name:"", others:[],
+  real:"", realSeq:0, realCache:{} };
+
+function hidSub(t){ const e = $("#hidSub"); if(e) e.textContent = t || ""; }
+function hidNote(t){ const e = $("#hidNote"); if(e) e.textContent = t || ""; }
+function hidBody(html){ const e = $("#hidBody"); if(e) e.innerHTML = html || ""; }
+function hidOpen(){ $("#hidDlg").classList.add("open"); }
+function hidClose(){
+  $("#hidDlg").classList.remove("open");
+  hidTipHide();
+  $("#hGo").disabled = false;
+  $("#hGo").textContent = "开始索引";
+}
+function hidTipHide(){ const t = $("#hidTip"); if(t) t.classList.remove("show"); }
+
+/* ① 搜录像列表：这个昵称命中哪些录像。接口会抖，按 rpCheck 的老办法连问 3 次。 */
+async function hidFindReplays(name){
+  let last = "";
+  for(let k = 0; k < 3; k++){
+    try{
+      const d = await api("/cj-replays/replaysDetail", { name:name, mission:"", from:1, size:20 }, 1);
+      const arr = (d && d.replayDataList) || [];
+      if(arr.length) return arr;
+      last = "没有这个名字的录像";
+    }catch(e){
+      last = (e && e.message) || String(e);
+      if(e && e.fatal) throw e;              // TOKEN 死了就别装成抖动
+    }
+    await sleep(500 + k * 400);
+  }
+  throw new Error(last || "录像列表没返回数据");
+}
+
+/* ② 逐场取阵容，只看「这个名字真在这场的名单里」的局 */
+async function hidLoadDetails(list){
+  const out = [];
+  const CONC = 5;
+  for(let i = 0; i < list.length; i += CONC){
+    const batch = list.slice(i, i + CONC);
+    const got = await Promise.all(batch.map(x =>
+      api("/cj-replays/replaysData", { id:x.id }, 2).catch(() => null)));
+    batch.forEach((x, k) => {
+      const d = got[k];
+      if(!d) return;
+      const pick = arr => (arr || []).filter(p => p && p.userid)
+        .map(p => ({ uid:String(p.userid), name:String(p.name || "").trim() || "（无名）" }));
+      const red = pick(d.redTeam), blue = pick(d.blueTeam);
+      const hits = red.concat(blue).filter(p => p.name === HID.q);
+      if(!hits.length) return;               // 这场没这个名字 → 不是他，跳过
+      out.push({
+        id:String(x.id), t:d.startTime || x.startTime || 0,
+        map:d.missionNameTranslated || x.missionNameTranslated || x.missionName || "",
+        mode:d.missionType || x.missionType || "",
+        dur:d.totalPlayTime || x.totalPlayTime || 0,
+        red:red, blue:blue, hits:hits, ck:true
+      });
+    });
+  }
+  return out;
+}
+
+/* ③ 列表渲染 + 悬浮窗（悬停显示这场所有真人昵称，按两边分列） */
+function hidRender(){
+  const rows = HID.rows;
+  if(!rows.length){
+    hidBody('<div class="rpd-empty">没找到「' + esc(HID.q) + "」这个名字的录像。</div>");
+    hidSub(""); hidNote("");
+    $("#hidGo").disabled = true;
+    return;
+  }
+  const head = '<div class="hid-lh"><label><input type="checkbox" id="hidAllCk" checked>全选</label>'
+    + "<span>共 " + rows.length + " 场 · 名字「" + esc(HID.q) + "」出现在名单里</span></div>";
+  const list = '<div class="hid-list">' + rows.map((r, i) =>
+    '<label class="hid-r on" data-i="' + i + '">'
+    + '<input type="checkbox" class="hid-ck" data-i="' + i + '" checked>'
+    + '<span class="hid-time">' + ts(r.t) + "</span>"
+    + '<span class="hid-map">' + esc(r.map || "未知地点") + (r.mode ? " · " + esc(r.mode) : "") + "</span>"
+    + '<span class="hid-n">' + (r.red.length + r.blue.length) + " 人</span>"
+    + '<span class="hid-flag">他在这场</span>'
+    + "</label>").join("") + "</div>";
+  hidBody(head + list);
+  hidSub(""); hidNote("");
+
+  const box = $("#hidBody");
+  box.querySelectorAll(".hid-ck").forEach(ck => {
+    ck.onchange = () => {
+      const i = +ck.getAttribute("data-i");
+      HID.rows[i].ck = ck.checked;
+      const row = box.querySelector('.hid-r[data-i="' + i + '"]');
+      if(row) row.classList.toggle("on", ck.checked);
+      hidSyncGo();
+    };
+  });
+  const all = $("#hidAllCk");
+  if(all) all.onchange = () => {
+    HID.rows.forEach((r, i) => {
+      r.ck = all.checked;
+      const ck = box.querySelector('.hid-ck[data-i="' + i + '"]');
+      if(ck) ck.checked = all.checked;
+      const row = box.querySelector('.hid-r[data-i="' + i + '"]');
+      if(row) row.classList.toggle("on", all.checked);
+    });
+    hidSyncGo();
+  };
+  box.querySelectorAll(".hid-r").forEach(row => {
+    const i = +row.getAttribute("data-i");
+    row.addEventListener("mouseenter", ev => hidTipShow(ev, HID.rows[i]));
+    row.addEventListener("mousemove", hidTipMove);
+    row.addEventListener("mouseleave", hidTipHide);
+  });
+  box.onscroll = hidTipHide;
+  hidSyncGo();
+}
+function hidSyncGo(){
+  const n = HID.rows.filter(r => r.ck).length;
+  const btn = $("#hidGo");
+  btn.disabled = !n;
+  btn.textContent = n ? ("开始索引（" + n + "）") : "开始索引";
+}
+
+function hidTipShow(ev, r){
+  const tip = $("#hidTip");
+  if(!tip || !r) return;
+  const cell = (title, arr) => '<div class="tc"><b>' + title + " · " + arr.length + " 人</b><div class=\"tn\">"
+    + arr.map(p => '<span class="nm' + (p.name === HID.q ? " hit" : "") + '" title="' + esc(p.name) + '">'
+      + esc(p.name) + "</span>").join("") + "</div></div>";
+  tip.innerHTML = '<div class="th"><b>' + esc(r.map || "未知地点") + "</b>"
+    + ' <i>' + ts(r.t) + (r.dur ? " · " + dur(r.dur) : "") + "</i></div>"
+    + '<div class="t2">' + cell("红队", r.red) + cell("蓝队", r.blue) + "</div>";
+  tip.classList.add("show");
+  hidTipMove(ev);
+}
+function hidTipMove(ev){
+  const tip = $("#hidTip");
+  if(!tip || !tip.classList.contains("show")) return;
+  const w = tip.offsetWidth || 320, h = tip.offsetHeight || 200;
+  let x = ev.clientX + 18, y = ev.clientY + 16;
+  if(x + w > innerWidth - 12) x = Math.max(12, ev.clientX - w - 18);
+  if(y + h > innerHeight - 12) y = Math.max(12, innerHeight - h - 14);
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+}
+
+/* ④ 主流程：搜 → 取阵容 → 弹列表 */
+async function hidSearch(){
+  const name = ($("#hq").value || "").trim();
+  if(!name){ $("#hq").focus(); toastLine("先填一个他在局内用过的名字", "var(--amber)", 2600); return; }
+  if(HID.busy) return;
+  /* 上一次成分分析被取消过的话 RUN.cancelled 还是 true，api() 里的 guard() 会直接抛「已取消」，
+     所以这里跟 rpCheck 一样先清掉，别让一次中途取消把后面的查询全带死。 */
+  RUN.cancelled = false; RUN.abort = null;
+  if(!token()){ $("#tkPanel").classList.add("open"); openTkDlg(); toastLine("先设置 TOKEN（右上角）", "var(--amber)", 3000); return; }
+  HID.busy = true;
+  HID.q = name; HID.rows = []; HID.rawN = 0; HID.uid = ""; HID.name = ""; HID.others = []; HID.real = "";
+  const btn = $("#hGo");
+  btn.disabled = true; btn.textContent = "索引中…";
+  hidOpen();
+  /* 过程不铺任何说明文字（2026-11-15 用户要求）：副标题、body、note 一律留空，只留最终列表 */
+  hidSub(""); hidBody(""); hidNote("");
+  $("#hidGo").disabled = true;
+  try{
+    const list = await hidFindReplays(name);
+    HID.rawN = list.length;
+    HID.rows = await hidLoadDetails(list);
+    hidRender();
+  }catch(e){
+    const m = (e && e.message) || String(e);
+    hidBody('<div class="rpd-empty">没读出来：' + esc(m)
+      + (/500100/.test(m) ? "<br>TOKEN 可能过期了（右上角换一份）" : "") + "</div>");
+    hidSub(""); hidNote("");
+    $("#hidGo").disabled = true;
+  }finally{
+    HID.busy = false;
+    btn.disabled = false; btn.textContent = "开始索引";
+  }
+}
+
+/* ⑤ 勾选完 → 投票提 UID（取出现次数最多的那个；并列时提示） */
+function hidExtract(){
+  const sel = HID.rows.filter(r => r.ck && r.hits.length);
+  if(!sel.length){ toastLine("先勾至少一场录像", "var(--amber)", 2400); return; }
+  const cnt = {}, first = {}, newest = {};
+  sel.forEach(r => r.hits.forEach(h => {
+    const k = String(h.uid);
+    cnt[k] = (cnt[k] || 0) + 1;
+    if(!newest[k] || (r.t || 0) > newest[k]) newest[k] = r.t || 0;
+    if(!first[k] || (r.t || 0) > (first[k].t || 0))
+      first[k] = { t:r.t, map:r.map, name:h.name };
+  }));
+  /* 场次多的优先；场次一样就看谁最近还叫这个名字（同名可能真的换过人） */
+  const keys = Object.keys(cnt).sort((a, b) => (cnt[b] - cnt[a]) || (newest[b] - newest[a]));
+  const top = keys[0];
+  HID.uid = top;
+  HID.name = first[top].name;
+  HID.real = "";
+  HID.others = keys.slice(1).map(k => ({ uid:k, n:cnt[k], name:first[k].name }));
+  hidOkShow(sel.length, cnt[top], first[top]);
+}
+
+/* ⑥ 真实昵称：拿提取出来的 UID 拉最近 N 场战绩，逐场 battleDetail 里读他自己那行的 nickName，
+   归并出「反复出现的那个名字」——隐身号每局随机名，重复出现的才是账号真名。
+   归并直接用「按 UID 查」下面那张昵称表同一套 namesOf()，口径不分家。 */
+async function hidRealName(uid, limit){
+  const key = String(uid);
+  if(HID.realCache[key]) return HID.realCache[key];
+  const N = limit || 24;
+  const bd = await api("/cj-record-rankings/combat/hisBattles",
+    { uid: Number(uid), pageSize: N, pageNum: 1 }, 3);
+  const list = (bd && bd.data) || [];
+  const recs = [];
+  const CONC = 5;
+  for(let i = 0; i < list.length; i += CONC){
+    const batch = list.slice(i, i + CONC);
+    const got = await Promise.all(batch.map(r =>
+      api("/cj-record-rankings/combat/battleDetail",
+        { uid: Number(uid), sessionId: r.sessionId }, 3).catch(() => null)));
+    batch.forEach((r, k) => {
+      const d = got[k];
+      if(!d || !d.length) return;
+      const me = d.filter(x => String(x.userId) === key)[0];
+      if(!me || !me.nickName) return;
+      recs.push({ myName: String(me.nickName).trim(), t: r.commitTime });
+    });
+  }
+  const st = namesOf(recs);
+  const out = { uid:key, names:st.names, saw:st.nameSaw, total:list.length };
+  HID.realCache[key] = out;
+  return out;
+}
+
+async function hidFillReal(){
+  const uid = HID.uid;
+  const seq = ++HID.realSeq;
+  const put = inner => {
+    const e = $("#hidReal");
+    if(!e || seq !== HID.realSeq || String(HID.uid) !== String(uid)) return;
+    e.innerHTML = inner;      /* 不挂 UID（2026-11-15 用户要求：提示里不出现任何 UID 字样） */
+  };
+  /* 「按 UID 查」那张昵称表的口径：把读到的每个名字和场次都摆出来，不藏 */
+  const more = inner => {
+    const m = $("#hidRealMore");
+    if(!m || seq !== HID.realSeq) return;
+    m.innerHTML = inner;
+  };
+  more("");
+  try{
+    const r = await hidRealName(uid);
+    if(seq !== HID.realSeq || String(HID.uid) !== String(uid)) return;
+    const nm = r.names || [];
+    /* 出现 ≥2 次才算「固定的名字」；只出现一次的基本都是隐身随机名 */
+    const fixed = nm.filter(o => o.n >= 2);
+    if(fixed.length){
+      const top = fixed[0];
+      HID.real = top.name;
+      put(esc(top.name) + '<span class="sub">最近 ' + r.saw + " 场里 " + top.n + " 场用这个名字"
+        + (nm.length > 1 ? "；另用过 " + (nm.length - 1) + " 个名字" : "") + "</span>");
+    }else if(nm.length){
+      put('<span class="miss">读不到固定昵称</span><span class="sub">最近 ' + r.saw
+        + " 场每局都换一个名字（隐身）</span>");
+    }else{
+      put('<span class="miss">读不到</span><span class="sub">'
+        + (r.total ? "最近 " + r.total + " 场的阵容都取不到" : "他还没有战绩记录") + "</span>");
+    }
+    /* 名字多于一个就把清单铺出来（跟按 UID 查那张表同口径：名字 + 场次） */
+    if(nm.length > 1){
+      const showN = nm.slice(0, 8);
+      more("<b>用过的名字</b> " + showN.map(o => esc(o.name) + "（" + o.n + " 场）").join("、")
+        + (nm.length > showN.length ? " 等 " + nm.length + " 个" : ""));
+    }
+  }catch(e){
+    if(seq !== HID.realSeq) return;
+    put('<span class="miss">读取失败</span><span class="sub">'
+      + esc((e && e.message) || String(e)) + "</span>");
+  }
+}
+
+/* ⑦ 结果弹窗：文案按用户要求说「玩家昵称提取成功」 */
+function hidOkShow(nSel, nHit, last){
+  $("#hidOkTt").textContent = "玩家昵称提取成功";
+  $("#hidOkSub").textContent = HID.name + " · 命中 " + nHit + "/" + nSel + " 场";
+  const row = (k, v, mono) => '<div class="hid-ok-row"><span class="k">' + k + '</span>'
+    + '<span class="v' + (mono ? " mono" : "") + '">' + v + "</span></div>";
+  /* 真实昵称（2026-11-15 用户要求）：原来这一行放的是 UID，改成「他真实用过的昵称」。
+     数据来自这个号的历史战绩逐场昵称归并（跟「按 UID 查」下面那张昵称表同一套算法），
+     异步读，先占位，读到再填；界面上不出现任何编号。 */
+  let html = row("昵称", esc(HID.name))
+    + '<div class="hid-ok-row"><span class="k">真实昵称</span>'
+      + '<span class="v" id="hidReal">读取中…</span></div>'
+    + '<div id="hidRealMore"></div>'
+    + row("命中", "勾选的 " + nSel + " 场里有 " + nHit + " 场是他")
+    + (last && last.t ? row("最近一场", ts(last.t) + (last.map ? " · " + esc(last.map) : "")) : "");
+  if(HID.others.length){
+    html += '<div class="rpd-tip">这个名字在勾选的场次里还对应 ' + HID.others.length
+      + " 个别的号，默认取出现最多的那个；要换人就把其它场的勾去掉再索引一次。</div>";
+  }
+  $("#hidOkBody").innerHTML = html;
+  $("#hidOkNote").textContent = "";
+  $("#hidDlg").classList.remove("open");
+  hidTipHide();
+  $("#hidOk").classList.add("open");
+  hidFillReal();
+}
+function hidOkClose(){ $("#hidOk").classList.remove("open"); }
+
+$("#hGo").onclick = hidSearch;
+$("#hq").addEventListener("keydown", e => { if(e.key === "Enter") hidSearch(); });
+$("#hidX").onclick = hidClose;
+$("#hidDlg").addEventListener("click", e => { if(e.target && e.target.id === "hidDlg") hidClose(); });
+$("#hidGo").onclick = hidExtract;
+$("#hidOkX").onclick = hidOkClose;
+$("#hidOk").addEventListener("click", e => { if(e.target && e.target.id === "hidOk") hidOkClose(); });
+$("#hidOkCopy").onclick = () => {
+  if(!HID.uid) return;
+  const done = () => toastLine("已复制", "var(--green)", 2200);
+  if(navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(HID.uid).then(done, () => toastLine("复制失败", "var(--amber)", 3000));
+  else toastLine("复制失败", "var(--amber)", 3000);
+};
+$("#hidOkUse").onclick = () => {
+  if(!HID.uid) return;
+  hidOkClose();
+  $("#q").value = "";
+  $("#qu").value = HID.uid;
+  $("#goUid").click();
+};
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  if($("#hidOk").classList.contains("open")){ hidOkClose(); return; }
+  if($("#hidDlg").classList.contains("open")) hidClose();
+});
+
 /* ---------------- 主流程 ---------------- */
 let busy = false;
 let LAST = null;          // { D, V } 最近一次分析结果，供"AI 重写"按钮复用（规则版也要用，别放进 AI 段）
@@ -7601,6 +8154,7 @@ async function analyze(target, n, replay){
   $("#go").textContent = "查询中…";
   stReset();
   $("#result").innerHTML = "";
+  uidNamesClear();          // 上一个 UID 的昵称清单先清掉，免得看串了
 
   RUN.cancelled = false;
   RUN.abort = (typeof AbortController !== "undefined") ? new AbortController() : null;
@@ -7710,6 +8264,10 @@ async function analyze(target, n, replay){
     }
     /* 只有「阵容一条都没取到」时才退回回放口径（那时候人机也只能按回放算） */
     if (!env && replayEnv) env = replayEnv;
+    /* 昵称兜底：battleDetail 一条名字都没读到的话（极端情况），用回放阵容里的补上 */
+    if (env && replayEnv && !(env.names || []).length && (replayEnv.names || []).length){
+      env.names = replayEnv.names; env.nameN = replayEnv.nameN; env.nameSaw = replayEnv.nameSaw;
+    }
     ovlStage();
 
     if (!rows.length) throw new Error("没有逐场记录");
@@ -7739,6 +8297,8 @@ async function analyze(target, n, replay){
 
     const D = {
       uid: uid, name: rg.name || ("UID " + uid), src: rg.src,
+      /* byUid：这次是不是「按 UID 查」进来的（决定输入框下面那张昵称表显不显示） */
+      byUid: /^\d+$/.test(target),
       srcWhen: rg.when, srcMap: rg.map, weak: rg.weak, weakNote: rg.weakNote,
       ov: ov, country: countryStats(clean, ov), env: env,
       rows: rows, clean: clean, flee: flee, quick: quick, solo: solo, sq: sq, segs: segs,
@@ -7756,6 +8316,9 @@ async function analyze(target, n, replay){
       + renderCountry(D) + renderEnv(D) + renderSquads(sq) + renderVerdict(V)
       + renderReplay(D.replay, D)
       + '<div id="aiBox"></div>';
+
+    /* 输入框下面那张「用过的昵称」表（2026-11-15）：按 UID 查必显，昵称查只在改过名/隐身时显 */
+    uidNamesShow(D);
 
     LAST = { D: D, V: V };
     aiBind(D, V);
